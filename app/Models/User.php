@@ -10,6 +10,8 @@ use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
 use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
+use Illuminate\Database\Eloquent\Relations\HasMany;
+
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -70,4 +72,54 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->admin_access;
     }
+
+    /**
+     * Les fonds créés par cet utilisateur
+     */
+    public function createdFonds(): HasMany
+    {
+        return $this->hasMany(Fond::class, 'created_by'); // Changé de Fonds à Fond
+    }
+
+    /**
+     * Les corpus créés par cet utilisateur
+     */
+    public function createdCorpuses(): HasMany // Renommé pour la clarté
+    {
+        return $this->hasMany(Corpus::class, 'created_by');
+    }
+
+
+    /**
+     * Les collections créées par cet utilisateur
+     */
+    public function createdCollections(): HasMany
+    {
+        return $this->hasMany(Collection::class, 'created_by');
+    }
+
+    /**
+     * Les types d'items créés par cet utilisateur
+     */
+    public function createdItemTypes(): HasMany
+    {
+        return $this->hasMany(ItemType::class, 'created_by');
+    }
+
+    /**
+     * Les items créés par cet utilisateur
+     */
+    public function createdItems(): HasMany
+    {
+        return $this->hasMany(Item::class, 'created_by');
+    }
+
+    /**
+     * Les items uploadés par cet utilisateur
+     */
+    public function uploadedItems(): HasMany
+    {
+        return $this->hasMany(Item::class, 'uploaded_by');
+    }
+
 }
