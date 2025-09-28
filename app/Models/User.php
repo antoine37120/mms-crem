@@ -12,6 +12,8 @@ use Filament\Models\Contracts\FilamentUser;
 use Filament\Panel;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 
+use App\Enums\UserRole;
+
 
 class User extends Authenticatable implements FilamentUser
 {
@@ -27,7 +29,9 @@ class User extends Authenticatable implements FilamentUser
         'name',
         'email',
         'password',
+        'role',
         'admin_access',
+
     ];
 
     /**
@@ -41,20 +45,17 @@ class User extends Authenticatable implements FilamentUser
     ];
 
     /**
-     * Get the attributes that should be cast.
+     * The attributes that should be cast.
      *
-     * @return array<string, string>
+     * @var array<string, string>
      */
-    protected function casts(): array
-    {
-        return [
-            'email_verified_at' => 'datetime',
-            'password' => 'hashed',
-            'admin_access' => 'boolean',
+    protected $casts = [
+        'email_verified_at' => 'datetime',
+        'password' => 'hashed',
+        'role' => UserRole::class,
+        'admin_access' => 'boolean',
+    ];
 
-
-        ];
-    }
 
     /**
      * Get the user's initials
@@ -121,5 +122,62 @@ class User extends Authenticatable implements FilamentUser
     {
         return $this->hasMany(Item::class, 'uploaded_by');
     }
+
+    /**
+     * Vérifie si l'utilisateur a un ou plusieurs rôles
+     */
+    public function hasRole(string|array|UserRole $roles): bool
+    {
+        if (is_string($roles)) {
+            $roles = [$roles];
+        }
+
+        if ($roles instanceof UserRole) {
+            return $this->role === $roles;
+        }
+
+        $userRole = $this->role?->value ?? UserRole::CHERCHEUR->value;
+
+        // Convertir les enums en string si nécessaire
+        $rolesToCheck = array_map(function ($role) {
+            return $role instanceof UserRole ? $role->value : $role;
+        }, (array) $roles);
+
+        return in_array($userRole, $rolesToCheck);
+    }
+
+    /**
+     * Vérifier si l'utilisateur est administrateur
+     */
+    public function isAdmin(): bool
+    {
+        return $this->role?->isAdmin() ?? false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur est super administrateur
+     */
+    public function isSuperAdmin(): bool
+    {
+        return $this->role?->isSuperAdmin() ?? false;
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut gérer les items
+     */
+    public function canManageItems(): bool
+    {
+        return $this->hasRole([UserRole::DOCUMENTALISTE, UserRole::ADMINISTRATEUR]);
+    }
+
+    /**
+     * Vérifier si l'utilisateur peut accéder à l'admin
+     */
+    public function canAccessAdmin(): bool
+    {
+        return $this->admin_access && $this->isAdmin();
+    }
+
+
 
 }

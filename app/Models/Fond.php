@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Fond extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'code',
@@ -22,6 +24,15 @@ class Fond extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+    protected $appends = ['full_code'];
+
+    /**
+     * Code complet pour le Fond (identique au code simple)
+     */
+    public function getFullCodeAttribute(): string
+    {
+        return $this->code;
+    }
 
     /**
      * Un fonds appartient à un utilisateur (créateur)
@@ -62,4 +73,39 @@ class Fond extends Model
     {
         return $this->items()->whereNotNull('item_type_id');
     }
+
+    /**
+     * Calculer la taille totale des fichiers du fonds
+     */
+    public function getTotalFileSizeAttribute(): int
+    {
+        $directItems = $this->items()->sum('file_size') ?? 0;
+
+        $corpusItems = $this->corpuses()
+            ->with(['items', 'collections.items'])
+            ->get()
+            ->sum(function ($corpus) {
+                return $corpus->items->sum('file_size') +
+                    $corpus->collections->sum(function ($collection) {
+                        return $collection->items->sum('file_size');
+                    });
+            });
+
+        return $directItems + $corpusItems;
+    }
+
+    /**
+     * Scope pour charger les statistiques
+     */
+    public function scopeWithStatistics($query)
+    {
+        return $query->withCount([
+            'corpuses',
+            'items',
+            'corpuses as collections_count' => function ($q) {
+                $q->withCount('collections');
+            }
+        ]);
+    }
+
 }

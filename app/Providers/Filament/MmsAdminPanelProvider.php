@@ -18,6 +18,8 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
+use Filament\Navigation\NavigationGroup;
+use Filament\Support\Enums\Width;
 
 class MmsAdminPanelProvider extends PanelProvider
 {
@@ -29,8 +31,9 @@ class MmsAdminPanelProvider extends PanelProvider
             ->path('mms-admin')
             ->login()
             ->colors([
-                'primary' => Color::Amber,
+                'primary' => Color::Blue,
             ])
+            ->maxContentWidth(Width::Full)
             ->discoverResources(in: app_path('Filament/Resources'), for: 'App\Filament\Resources')
             ->discoverPages(in: app_path('Filament/Pages'), for: 'App\Filament\Pages')
             ->pages([
@@ -54,6 +57,24 @@ class MmsAdminPanelProvider extends PanelProvider
             ])
             ->authMiddleware([
                 Authenticate::class,
-            ]);
+            ])
+            ->navigationGroups([
+                NavigationGroup::make('Gestion des Archives')
+                    //->icon('heroicon-o-archive-box')
+                    ->collapsible(),
+                NavigationGroup::make('Explorateur')
+                    //->icon('heroicon-o-folder-tree')
+                    ->collapsible(),
+                NavigationGroup::make('Médias & Items')
+                    //->icon('heroicon-o-photo')
+                    ->collapsible(),
+                NavigationGroup::make('Administration')
+                    //->icon('heroicon-o-cog-6-tooth')
+                    ->collapsible(),
+            ])
+            ->brandName('MMS CREM')
+            ->spa()
+            ->viteTheme('resources/css/filament/mms-admin/theme.css')
+            ;
     }
 }

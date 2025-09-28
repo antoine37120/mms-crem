@@ -1,0 +1,26 @@
+@import '../../../../vendor/filament/filament/resources/css/theme.css';
+
+@source '../../../../app/Filament/**/*';
+@source '../../../../resources/views/filament/**/*';
+
+/* Couleurs spécifiques MMS */
+:root {
+    --primary: theme('colors.blue.600');
+    --primary-50: theme('colors.blue.50');
+    --primary-400: theme('colors.blue.400');
+    --primary-600: theme('colors.blue.600');
+}
+
+/* Styles pour la vue hiérarchique */
+.hierarchy-column {
+    @apply border border-gray-200 rounded-lg bg-white;
+}
+
+.hierarchy-item {
+    @apply p-3 cursor-pointer hover:bg-gray-50 rounded-md transition-colors;
+}
+
+.hierarchy-item.selected {
+    @apply bg-blue-50 border-blue-200;
+}
+

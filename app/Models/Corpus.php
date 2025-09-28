@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Corpus extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'fond_id',
@@ -23,6 +25,19 @@ class Corpus extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+    protected $appends = ['full_code'];
+
+    /**
+     * Code complet assemblé avec le fonds parent
+     */
+    public function getFullCodeAttribute(): string
+    {
+        if ($this->fond && $this->fond->code) {
+            return $this->fond->code . '_' . $this->code;
+        }
+        return $this->code;
+    }
+
 
     /**
      * Un corpus appartient à un fonds

@@ -7,10 +7,12 @@ use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Collection extends Model
 {
     use HasFactory;
+    use SoftDeletes;
 
     protected $fillable = [
         'corpus_id',
@@ -23,6 +25,29 @@ class Collection extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
+    protected $appends = ['full_code'];
+
+    /**
+     * Code complet assemblé avec corpus et fonds
+     */
+    public function getFullCodeAttribute(): string
+    {
+        $parts = [];
+
+        if ($this->corpus?->fond?->code) {
+            $parts[] = $this->corpus->fond->code;
+        }
+
+        if ($this->corpus?->code) {
+            $parts[] = $this->corpus->code;
+        }
+
+        $parts[] = $this->code;
+
+        return implode('_', $parts);
+    }
+
+
 
     /**
      * Une collection appartient à un corpus
