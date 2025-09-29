@@ -5,6 +5,7 @@ namespace App\Filament\Resources\Collections\Pages;
 use App\Filament\Infolists\Components\CollectionStatsAndLogs;
 use App\Filament\Resources\Collections\CollectionResource;
 use App\Filament\Resources\Corpuses\CorpusResource;
+use App\Filament\Resources\fonds\FondResource;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Infolists\Components\TextEntry;
@@ -51,7 +52,9 @@ class ViewCollection extends ViewRecord
                         TextEntry::make('id')
                             ->hiddenLabel()
                             ->formatStateUsing(fn ($record) => new HtmlString(
-                                '< <a href="' . CorpusResource::getUrl('view', ['record' => $record->corpus->id]) . '" class="text-primary-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
+                                '< <a href="' . FondResource::getUrl('view', ['record' => $record->corpus->fond->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
+                                $record->corpus->fond->code . '</a>'.
+                                ' < <a href="' . CorpusResource::getUrl('view', ['record' => $record->corpus->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
                                 $record->corpus->code . '</a>'
                             ))
                             ->size(TextSize::Medium)

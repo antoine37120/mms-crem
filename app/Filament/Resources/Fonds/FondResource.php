@@ -22,7 +22,7 @@ class FondResource extends Resource
     protected static ?string $model = Fond::class;
 
     // Icône spécifique pour les fonds d'archives
-    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-archive-box-arrow-down';
+    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-building-library';
 
     // Navigation groupée et triée selon la documentation
     protected static string|null|\UnitEnum $navigationGroup = 'Gestion des Archives';

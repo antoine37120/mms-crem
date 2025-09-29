@@ -55,7 +55,7 @@ class ViewCorpus extends ViewRecord
                         TextEntry::make('id')
                             ->hiddenLabel()
                             ->formatStateUsing(fn ($record) => new HtmlString(
-                                '< <a href="' . FondResource::getUrl('view', ['record' => $record->fond->id]) . '" class="text-primary-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
+                                '< <a href="' . FondResource::getUrl('view', ['record' => $record->fond->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
                                 $record->fond->code . '</a>'
                             ))
                             ->size(TextSize::Medium)
@@ -91,7 +91,7 @@ class ViewCorpus extends ViewRecord
                                 ->schema([
                                     TextEntry::make('fond.code')
                                         ->label('Fonds parent')
-                                        ->icon('heroicon-o-archive-box-arrow-down')
+                                        ->icon('heroicon-o-building-library')
                                         ->badge()
                                         ->color('primary')
                                         ->formatStateUsing(fn ($record) =>

@@ -58,7 +58,7 @@
                                     <div class="flex-1 min-w-0">
                                         <p class="text-sm font-medium text-gray-900 dark:text-gray-100">
                                             @if(isset($activity['url']))
-                                                <a href="{{ $activity['url'] }}" class="text-primary-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 underline decoration-dotted">
+                                                <a href="{{ $activity['url'] }}" class="text-gray-600 hover:text-primary-800 dark:text-primary-400 dark:hover:text-primary-300 underline decoration-dotted">
                                                     {{ $activity['action'] }}
                                                 </a>
                                             @else

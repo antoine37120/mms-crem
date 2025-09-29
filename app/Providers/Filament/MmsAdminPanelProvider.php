@@ -75,6 +75,7 @@ class MmsAdminPanelProvider extends PanelProvider
             ->brandName('MMS CREM')
             ->spa()
             ->viteTheme('resources/css/filament/mms-admin/theme.css')
+            ->sidebarCollapsibleOnDesktop()
             ;
     }
 }

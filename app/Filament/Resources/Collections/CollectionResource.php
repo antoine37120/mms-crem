@@ -22,8 +22,7 @@ use UnitEnum;
 class CollectionResource extends Resource
 {
     protected static ?string $model = Collection::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedArchiveBoxArrowDown;
     protected static string | UnitEnum | null $navigationGroup = 'Gestion des Archives';
     protected static ?int $navigationSort = 3;
     protected static ?string $recordTitleAttribute = 'code';
