@@ -56,7 +56,7 @@ class FondResource extends Resource
         return [
 
             // Relations qui seront affichées dans des onglets
-            RelationManagers\CollecttionsRelationManager::class,
+            RelationManagers\CorpusesRelationManager::class,
             \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
 
         ];
