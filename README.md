@@ -5,8 +5,7 @@ Une application Laravel de gestion de collections et d'archives utilisant Filame
 Le système permet de gérer des fonds, collections, corpus et éléments avec leurs types associés.
 
 ## Installation
-```
-bash
+```bash
 # Cloner le projet
 git clone https://git.artefacts.coop/adupre/mms-crem.git
 cd mms-crem
@@ -33,5 +32,5 @@ npm run dev
 - Livewire 3.6 avec Flux UI
 - MariaDB
 - Tailwind CSS 4.1
-```
+
 
