@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasHierarchicalItems;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,8 +12,7 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Corpus extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, HasHierarchicalItems;
 
     protected $fillable = [
         'fond_id',
@@ -25,17 +25,27 @@ class Corpus extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-    protected $appends = ['full_code'];
+
+    protected $appends = ['full_code', 'stats'];
+
 
     /**
      * Code complet assemblé avec le fonds parent
      */
     public function getFullCodeAttribute(): string
     {
-        if ($this->fond && $this->fond->code) {
+        /*if ($this->fond && $this->fond->code) {
             return $this->fond->code . '_' . $this->code;
-        }
+        }*/
         return $this->code;
+    }
+
+    /**
+     * Implémentation requise par HasHierarchicalItems
+     */
+    protected function getHierarchyPrefix(): string
+    {
+        return $this->full_code;
     }
 
 
@@ -63,27 +73,15 @@ class Corpus extends Model
         return $this->hasMany(Collection::class);
     }
 
-    /**
-     * Un corpus peut avoir des items directement associés
-     */
-    public function items(): MorphMany
-    {
-        return $this->morphMany(Item::class, 'itemable');
-    }
 
     /**
-     * Obtenir tous les items principaux du corpus
+     * Scope avec statistiques complètes
      */
-    public function mainItems(): MorphMany
+    public function scopeWithCompleteStats($query)
     {
-        return $this->items()->whereNull('item_type_id');
+        return $query->withItemStats()
+            ->withCount(['collections'])
+            ->with(['fond:id,code,title']);
     }
 
-    /**
-     * Obtenir tous les items secondaires du corpus
-     */
-    public function secondaryItems(): MorphMany
-    {
-        return $this->items()->whereNotNull('item_type_id');
-    }
 }

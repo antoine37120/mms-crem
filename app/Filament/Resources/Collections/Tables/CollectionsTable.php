@@ -23,9 +23,9 @@ class CollectionsTable
                     ->sortable(),
                 TextColumn::make('code')
                     ->searchable(),
-                TextColumn::make('full_code')
+                TextColumn::make('title')
                     ->searchable(),
-                TextColumn::make('created_by')
+                TextColumn::make('creator.name')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')

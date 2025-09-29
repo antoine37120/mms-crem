@@ -22,8 +22,7 @@ use UnitEnum;
 class CorpusResource extends Resource
 {
     protected static ?string $model = Corpus::class;
-
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
     protected static string | UnitEnum | null $navigationGroup = 'Gestion des Archives';
     protected static ?int $navigationSort = 2;
 
@@ -55,7 +54,7 @@ class CorpusResource extends Resource
         return [
             // Relations qui seront affichées dans des onglets
             RelationManagers\CollectionsRelationManager::class,
-            RelationManagers\ItemsRelationManager::class,
+            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
 
         ];
     }

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Fonds\RelationManagers;
+namespace App\Filament\Resources\Items\RelationManagers;
 
 use App\Models\ItemType;
 use App\Models\Item;
@@ -34,7 +34,11 @@ use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Components\FusedGroup;
 use Illuminate\Validation\Rules\Unique;
 
-class ItemsRelationManager extends RelationManager
+use Filament\Schemas\Components\Text;
+
+use Filament\Infolists\Components\TextEntry;
+
+class SubItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
 
@@ -54,46 +58,6 @@ class ItemsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                FusedGroup::make([
-                    TextInput::make('code_prefix')
-                        ->label('Code de l\'Item')
-                        ->autofocus(false)
-                        ->default(function (RelationManager $livewire): string {
-                            return $livewire->getOwnerRecord()->full_code ;
-                        })
-                        ->required()
-                        //->unique(ignoreRecord: true)
-                        ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
-                            return $rule->where('code', $get('code_prefix').$get('code_suffix'));
-                        })
-                        ->placeholder('Ex: CNRSMH_Arnaud_001'),
-                    TextInput::make('code_suffix')
-                        ->label('Code de l\'Item')
-                        ->autofocus(false)
-                        ->visible(function (Get $get): bool {
-                            $itemTypeId = $get('item_type_id');
-
-                            if (!$itemTypeId) {
-                                return false;
-                            }
-                            return true;
-                        })
-                        ->required(function (Get $get): bool {
-                            $itemTypeId = $get('item_type_id');
-
-                            if (!$itemTypeId) {
-                                return false;
-                            }
-                            return true;
-                        })
-                        ->placeholder('Ex: _TRA_en_01'),
-                ])->label('code')
-                    ->columns(2)->columnSpanFull(),
-                TextInput::make('title')
-                    ->label('Titre')
-                    ->placeholder('Ex: Documentation générale')
-                    ->columnSpan(2),
-
                 Select::make('item_type_id')
                     ->label('Type d\'Item')
                     ->relationship('itemType', 'name')
@@ -144,12 +108,69 @@ class ItemsRelationManager extends RelationManager
                         $itemType = ItemType::find($itemTypeId)->suffix ;
                         if($itemType) {
                             if (!$state) {
-                                $set('code_suffix', '_' . $itemType);
+                                $set('code_suffix', $itemType);
                             } else {
-                                $set('code_suffix', '_' . $itemType . '_' . $state);
+                                $set('code_suffix', $itemType . '_' . $state);
                             }
                         }
                     }),
+                FusedGroup::make([
+                    TextInput::make('code_prefix')
+                        ->label('Code de l\'Item')
+                        ->autofocus(false)
+                        ->default(function (RelationManager $livewire): string {
+                            return $livewire->getOwnerRecord()->code ;
+                        })
+                        ->disabled()
+                        ->dehydrated()
+                        ->required()
+                        //->unique(ignoreRecord: true)
+                        ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
+                            if($get('code_suffix') != '') {
+                                return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'));
+                            }
+                            return $rule->where('code', $get('code_prefix'));
+                        })
+                        ->placeholder('Ex: CNRSMH_Arnaud_001'),
+                    TextInput::make('code_suffix')
+                        ->label('Code de l\'Item')
+                        ->prefix('_')
+                        ->autofocus(false)
+                        /*->visible(function (Get $get): bool {
+                            $itemTypeId = $get('item_type_id');
+
+                            if (!$itemTypeId) {
+                                return false;
+                            }
+                            return true;
+                        })*/
+                        ->required(function (Get $get): bool {
+                            $itemTypeId = $get('item_type_id');
+
+                            if (!$itemTypeId) {
+                                return false;
+                            }
+                            return true;
+                        })
+                        ->placeholder('Ex: TRA_en ou 02'),
+                        Text::make(<<<'JS'
+                            $get('code_suffix') ? `Cote enregistrée : ${$get('code_prefix')}_${$get('code_suffix')}` : `Cote enregistrée : ${$get('code_prefix')}`
+                            JS)
+                        ->js()
+                ])->label('code')
+
+                    /*->afterLabel(function (Get $get): string {
+                        if($get('code_suffix') != '') {
+                            return $get('code_prefix').'_'.$get('code_suffix') ;
+                        }
+                        return $get('code_prefix');
+                    })*/
+                    ->columns(2)->columnSpanFull(),
+                TextInput::make('title')
+                    ->label('Titre')
+                    ->placeholder('Ex: Documentation générale')
+                    ->columnSpan(2),
+
                 FileUpload::make('file_path')
                     ->label('Fichier')
                     ->required()
@@ -158,6 +179,8 @@ class ItemsRelationManager extends RelationManager
                     ->storeFileNamesIn('file_name')
                     ->columnSpanFull(),
                 // Champs cachés auto-remplis
+                Hidden::make('is_sub')
+                    ->default(true),
                 Hidden::make('created_by')
                     ->default(auth()->id()),
                 Hidden::make('uploaded_by')

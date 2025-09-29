@@ -1,0 +1,34 @@
+<?php
+
+use Illuminate\Database\Migrations\Migration;
+use Illuminate\Database\Schema\Blueprint;
+use Illuminate\Support\Facades\Schema;
+
+return new class extends Migration
+{
+    /**
+     * Run the migrations.
+     */
+    public function up(): void
+    {
+        Schema::table('items', function (Blueprint $table) {
+            $table->boolean('is_sub')->default(false)->after('item_type_id');
+            $table->string('code_suffix')->nullable()->change();
+
+            $table->index('is_sub');
+        });
+
+    }
+
+    /**
+     * Reverse the migrations.
+     */
+    public function down(): void
+    {
+        Schema::table('items', function (Blueprint $table) {
+            $table->dropIndex(['is_sub']);
+            $table->dropColumn('is_sub');
+        });
+
+    }
+};

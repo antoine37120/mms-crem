@@ -28,7 +28,7 @@ class FondsTable
                 TextColumn::make('items_count')
                     ->counts('items')
                     ->label('Items'),
-                TextColumn::make('created_by')
+                TextColumn::make('creator.name')
                     ->numeric()
                     ->sortable(),
                 TextColumn::make('created_at')

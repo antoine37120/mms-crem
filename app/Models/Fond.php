@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasHierarchicalItems;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
@@ -11,8 +12,8 @@ use Illuminate\Database\Eloquent\SoftDeletes;
 
 class Fond extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, HasHierarchicalItems;
+
 
     protected $fillable = [
         'code',
@@ -24,7 +25,9 @@ class Fond extends Model
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-    protected $appends = ['full_code'];
+
+    protected $appends = ['full_code', 'stats'];
+
 
     /**
      * Code complet pour le Fond (identique au code simple)
@@ -33,6 +36,15 @@ class Fond extends Model
     {
         return $this->code;
     }
+
+    /**
+     * Implémentation requise par HasHierarchicalItems
+     */
+    protected function getHierarchyPrefix(): string
+    {
+        return $this->full_code;
+    }
+
 
     /**
      * Un fonds appartient à un utilisateur (créateur)
@@ -51,61 +63,29 @@ class Fond extends Model
     }
 
     /**
-     * Un fonds peut avoir des items directement associés
+     * Méthodes spécifiques au Fond
      */
-    public function items(): MorphMany
+    public function getCorpusesStatsAttribute(): array
     {
-        return $this->morphMany(Item::class, 'itemable');
+        return $this->corpuses->map(function ($corpus) {
+            return [
+                'corpus' => $corpus->full_code,
+                'title' => $corpus->title,
+                'stats' => $corpus->stats,
+            ];
+        })->toArray();
     }
 
     /**
-     * Obtenir tous les items principaux du fonds
+     * Scope avec statistiques complètes
      */
-    public function mainItems(): MorphMany
+    public function scopeWithCompleteStats($query)
     {
-        return $this->items()->whereNull('item_type_id');
-    }
-
-    /**
-     * Obtenir tous les items secondaires du fonds
-     */
-    public function secondaryItems(): MorphMany
-    {
-        return $this->items()->whereNotNull('item_type_id');
-    }
-
-    /**
-     * Calculer la taille totale des fichiers du fonds
-     */
-    public function getTotalFileSizeAttribute(): int
-    {
-        $directItems = $this->items()->sum('file_size') ?? 0;
-
-        $corpusItems = $this->corpuses()
-            ->with(['items', 'collections.items'])
-            ->get()
-            ->sum(function ($corpus) {
-                return $corpus->items->sum('file_size') +
-                    $corpus->collections->sum(function ($collection) {
-                        return $collection->items->sum('file_size');
-                    });
-            });
-
-        return $directItems + $corpusItems;
-    }
-
-    /**
-     * Scope pour charger les statistiques
-     */
-    public function scopeWithStatistics($query)
-    {
-        return $query->withCount([
-            'corpuses',
-            'items',
-            'corpuses as collections_count' => function ($q) {
+        return $query->withItemStats()
+            ->withCount(['corpuses', 'corpuses as collections_count' => function ($q) {
                 $q->withCount('collections');
-            }
-        ]);
+            }]);
     }
+
 
 }

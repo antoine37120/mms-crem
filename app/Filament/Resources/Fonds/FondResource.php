@@ -56,8 +56,8 @@ class FondResource extends Resource
         return [
 
             // Relations qui seront affichées dans des onglets
-            RelationManagers\CorpusesRelationManager::class,
-            RelationManagers\ItemsRelationManager::class,
+            RelationManagers\CollecttionsRelationManager::class,
+            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
 
         ];
     }
@@ -96,7 +96,7 @@ class FondResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->withStatistics()
+            ->withCompleteStats()
             ->with(['creator']);
 
     }

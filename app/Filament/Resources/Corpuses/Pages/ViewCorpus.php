@@ -73,7 +73,7 @@ class ViewCorpus extends ViewRecord
                                     TextEntry::make('code')
                                         ->label('Code du Corpus')
                                         ->iconColor('gray')
-                                        ->icon('heroicon-o-rectangle-stack')
+                                        ->icon(Heroicon::OutlinedClipboardDocument)
                                         ->iconPosition(IconPosition::After)
                                         ->copyable()
                                         ->copyMessage('Code copié!')

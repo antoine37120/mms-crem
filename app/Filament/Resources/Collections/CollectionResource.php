@@ -23,10 +23,16 @@ class CollectionResource extends Resource
 {
     protected static ?string $model = Collection::class;
 
-    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedRectangleStack;
+    protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedCube;
     protected static string | UnitEnum | null $navigationGroup = 'Gestion des Archives';
     protected static ?int $navigationSort = 3;
     protected static ?string $recordTitleAttribute = 'code';
+    protected static ?string $navigationLabel = 'Collection';
+    protected static ?string $pluralModelLabel = 'Collections';
+
+
+    // Configuration des permissions par défaut
+    protected static bool $shouldRegisterNavigation = true;
 
     public static function form(Schema $schema): Schema
     {
@@ -47,6 +53,7 @@ class CollectionResource extends Resource
     {
         return [
             //
+            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
         ];
     }
 
@@ -66,5 +73,52 @@ class CollectionResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ]);
+    }
+
+    // Configuration des badges de navigation pour afficher des statistiques
+    public static function getNavigationBadge(): ?string
+    {
+        return static::getModel()::count();
+    }
+
+    public static function getNavigationBadgeColor(): string|array|null
+    {
+        return 'primary';
+    }
+
+    // Configuration globale des requêtes pour optimiser les performances
+    public static function getEloquentQuery(): Builder
+    {
+        return parent::getEloquentQuery()
+            ->with(['corpus', 'creator']);
+    }
+
+    // Configuration des permissions basées sur les rôles (similaire aux fonds)
+    public static function canCreate(): bool
+    {
+        return auth()->user()?->hasRole(['documentaliste', 'administrateur']) ?? false;
+    }
+
+    public static function canEdit($record): bool
+    {
+        return auth()->user()?->hasRole(['documentaliste', 'administrateur']) ||
+            $record->created_by === auth()->id();
+    }
+
+    public static function canDelete($record): bool
+    {
+        return auth()->user()?->hasRole(['administrateur']) ||
+            ($record->created_by === auth()->id() && $record->collections()->count() === 0);
+    }
+
+    public static function canDeleteAny(): bool
+    {
+        return auth()->user()?->hasRole(['administrateur']) ?? false;
+    }
+
+    // Configuration pour les actions en lot
+    public static function canBulkDelete(): bool
+    {
+        return auth()->user()?->hasRole(['administrateur']) ?? false;
     }
 }

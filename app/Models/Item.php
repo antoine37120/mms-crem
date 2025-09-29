@@ -2,6 +2,7 @@
 
 namespace App\Models;
 
+use App\Traits\HasHierarchicalItems;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
@@ -14,13 +15,14 @@ use Illuminate\Support\Facades\Process;
 
 class Item extends Model
 {
-    use HasFactory;
-    use SoftDeletes;
+    use HasFactory, SoftDeletes, HasHierarchicalItems;
+
 
     protected $fillable = [
         'itemable_type',
         'itemable_id',
         'item_type_id',
+        'is_sub',
         'code',
         'code_prefix',
         'code_suffix',
@@ -38,13 +40,35 @@ class Item extends Model
     ];
 
     protected $casts = [
+        'is_sub' => 'boolean',
         'file_size' => 'integer',
         'duration' => 'integer',
         'upload_date' => 'date',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
-    protected $appends = ['full_code'];
+
+    protected $appends = ['full_code', 'stats'];
+
+
+
+
+    /**
+     * Code complet assemblé selon l'entité parente
+     */
+    public function getFullCodeAttribute(): string
+    {
+        return $this->code;
+    }
+
+    /**
+     * Implémentation pour les items (enfants)
+     */
+    protected function getHierarchyPrefix(): string
+    {
+        return $this->full_code;
+    }
+
 
     /**
      * Boot du modèle - événements automatiques
@@ -56,20 +80,53 @@ class Item extends Model
         static::creating(function ($item) {
             $item->code = $item->code_prefix ;
             if (isset($item->code_suffix) && $item->code_suffix != '') {
-                $item->code = $item->code.$item->code_suffix ;
+                $item->code = $item->code.'_'.$item->code_suffix ;
             }
             $item->processFileUpload();
             //$item->generateCodeIfEmpty();
             $item->setDefaultUploadDate();
             $item->setDefaultUsers();
+
         });
 
         static::updating(function ($item) {
+            $item->code = $item->code_prefix ;
+            if (isset($item->code_suffix) && $item->code_suffix != '') {
+                $item->code = $item->code.'_'.$item->code_suffix ;
+            }
             // Si le fichier a changé, retraiter les métadonnées
             if ($item->isDirty('file_path')) {
                 $item->processFileUpload();
             }
+
         });
+
+        static::created(function ($item) {
+            $item->invalidateParentsCache();
+        });
+
+        static::updated(function ($item) {
+            $item->invalidateParentsCache();
+        });
+
+        static::deleted(function ($item) {
+            $item->invalidateParentsCache();
+        });
+
+
+
+    }
+
+    /**
+     * Invalider le cache des entités parentes
+     */
+    protected function invalidateParentsCache(): void
+    {
+        if ($this->itemable) {
+            if (method_exists($this->itemable, 'clearStatsCache')) {
+                $this->itemable->clearStatsCache();
+            }
+        }
     }
 
     /**
@@ -214,48 +271,6 @@ class Item extends Model
         }
     }
 
-
-    /**
-     * Code complet assemblé selon l'entité parente
-     */
-    public function getFullCodeAttribute(): string
-    {
-        $parentCode = $this->getParentCode();
-
-        if ($parentCode) {
-            // Si c'est un item secondaire, ajouter le suffixe du type
-            if ($this->itemType) {
-                $suffix = $this->itemType->suffix;
-                if ($this->language_code && $this->itemType->requires_language) {
-                    $suffix .= '_' . $this->language_code;
-                }
-                return $parentCode . '_' . $this->code . $suffix;
-            }
-
-            return $parentCode . '_' . $this->code;
-        }
-
-        return $this->code;
-    }
-
-    /**
-     * Obtenir le code de l'entité parente
-     */
-    private function getParentCode(): ?string
-    {
-        if (!$this->itemable) {
-            return null;
-        }
-
-        return match ($this->itemable_type) {
-            Fond::class => $this->itemable->code,
-            Corpus::class => $this->itemable->full_code,
-            Collection::class => $this->itemable->full_code,
-            Item::class => $this->itemable->full_code,
-            default => null,
-        };
-    }
-
     /**
      * Relation polymorphique vers l'entité parente
      */
@@ -301,7 +316,7 @@ class Item extends Model
      */
     public function scopeMain($query)
     {
-        return $query->whereNull('item_type_id');
+        return $query->where('is_sub', false);
     }
 
     /**
@@ -309,7 +324,7 @@ class Item extends Model
      */
     public function scopeSecondary($query)
     {
-        return $query->whereNotNull('item_type_id');
+        return $query->where('is_sub', true);
     }
 
     /**
@@ -325,7 +340,7 @@ class Item extends Model
      */
     public function isMain(): bool
     {
-        return is_null($this->item_type_id);
+        return $this->is_sub == false;
     }
 
     /**
@@ -333,7 +348,7 @@ class Item extends Model
      */
     public function isSecondary(): bool
     {
-        return !is_null($this->item_type_id);
+        return $this->is_sub == true;
     }
 
     /**
