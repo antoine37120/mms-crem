@@ -593,48 +593,140 @@ Actions par ligne : [👁 Voir] [✏️ Éditer] [⬇ Télécharger] [🌳 Hiér
 ### 🌳 SECTION 3 : PAGES CUSTOM
 
 ---
+Basé sur votre demande de redéfinition du cahier des charges pour la page de l'admin, voici la section mise à jour de l'explorateur hiérarchique avec une approche en deux panneaux :
+
+## 🌳 SECTION 3 : PAGES CUSTOM
+
+---
+
+Voici la section mise à jour pour l'Explorateur Hiérarchique selon vos contraintes de design :
+
+## 🌳 SECTION 3 : PAGES CUSTOM
+
+---
 
 #### 3.1 HierarchyExplorer
 
 **Navigation** : `Explorateur > Vue Hiérarchique`  
-**Objectif** : Navigation interactive dans l'arborescence complète
+**Objectif** : Navigation interactive dans l'arborescence complète avec exploration hiérarchique à gauche et liste détaillée à droite
 
-##### **Interface 4 Colonnes**
+##### **Contraintes de Design**
+- **Interface épurée** : Éviter l'aspect caricatural d'un explorateur de fichiers
+- **Usage minimal d'icônes** : Privilégier le texte et la typographie pour la navigation
+- **Proportions équilibrées** : Panneau gauche (1/3) et panneau droit (2/3)
+- **Filtres en en-tête** : Remplacer la barre d'actions par les contrôles essentiels
+- **Interface condensée** : Pas de panneau d'informations contextuelles en bas
+- **Hiérarchie claire** : Organisation visuelle par indentation et espacement
+
+##### **Interface 2 Panneaux (1/3 - 2/3)**
 ```
-┌─ BARRE D'ACTIONS GLOBALES ───────────────────────────────────┐
-│ [🏠 Racine] [🔄 Actualiser] [📊 Statistiques] [🔍 Recherche] │
-└─────────────────────────────────────────────────────────────┘
+┌─ CONTRÔLES & FILTRES ────────────────────────────────────────────────────────┐
+│ Recherche: [_________________________] [Afficher items directs] [Compact]   │
+│ Contrôle densité: ●─────○                                                   │
+└─────────────────────────────────────────────────────────────────────────────┘
 
-┌─ COLONNES NAVIGATION ────────────────────────────────────────┐
-│ 🏛️ FONDS      │📚 CORPUS     │📦 COLLECTIONS │🎵 ITEMS      │
-│ ┌───────────┐ │┌───────────┐ │┌────────────┐ │┌────────────┐ │
-│ │CNRSMH_A ◄─┼─┤A_001 ◄────┼─┤I_2011_001◄─┼─┤001_001.wav │ │
-│ │  (3 corp.)│ │  Rituels  │ │  Mariages  │ │ ├─TRA_en.pdf│ │
-│ │CNRSMH_B   │ │A_002      │ │I_2011_002  │ │ └─TRS_fr.txt│ │
-│ │  (1 corp.)│ │  Musique  │ │  Funéraire │ │002_001.wav │ │
-│ │           │ │A_003      │ │            │ │002_002.mp4 │ │
-│ └───────────┘ │└───────────┘ │└────────────┘ │└────────────┘ │
-│               │              │               │              │
-│ Items directs:│Items directs:│Items directs: │Actions:      │
-│ • doc1.pdf    │ • livret.pdf │ • pochette.jpg│ [👁][✏️][⬇] │
-│ [➕ Nouveau] │ [➕ Nouveau] │ [➕ Nouveau]  │ [🗑] [📋]    │
-└───────────────┴──────────────┴───────────────┴──────────────┘
-
-┌─ PANNEAU INFORMATIONS (Bas) ─────────────────────────────────┐
-│ Sélection: 📦 CNRSMH_I_2011_001 - Cérémonies de mariage    │
-│ Contenu: 25 items principaux, 45 items associés, 2.1 GB     │
-│ Dernière modification: 25/09/2024 par Marie Dupont          │
-│ [Voir Détails] [Éditer] [Exporter Liste]                   │
-└─────────────────────────────────────────────────────────────┘
+┌─ PANNEAU GAUCHE (1/3) ──────────────────┬─ PANNEAU DROITE (2/3) ─────────────┐
+│ ┌─────────────────────────────────────┐ │ ┌─ Informations Sélection ────────┐ │
+│ │ ▼ CNRSMH_Arnaud                     │ │ │ Collection: Cérémonies mariage  │ │
+│ │   ├─ ▼ Rituels                      │ │ │ 15 items • 23 sub • 3.2 GB     │ │
+│ │   │  ├─ ► Mariages ◄                │ │ │ Modifié: 25/09/24 - M. Dupont   │ │
+│ │   │  ├─ ► Funéraires                │ │ └─────────────────────────────────┘ │
+│ │   │  └─ ► Saisonniers               │ │                                     │
+│ │   └─ ► Musique                      │ │ ┌─ Items (non sub) ──────────────┐ │
+│ │                                     │ │ │ ▼ CNRSMH_I_2011_001_001.wav    │ │
+│ │ ▼ CNRSMH_Béart                      │ │ │   └─ TRA_en.pdf                 │ │
+│ │   └─ ► Archives                     │ │ │   └─ TRS_fr.txt                 │ │
+│ │                                     │ │ │                                 │ │
+│ │ Items directs fonds:                │ │ │ ► CNRSMH_I_2011_001_002.wav    │ │
+│ │   presentation.pdf                  │ │ │   (2 items sub)                │ │
+│ │   bibliography.pdf                  │ │ │                                 │ │
+│ │                                     │ │ │ ► CNRSMH_I_2011_001_003.mp4    │ │
+│ │ Items directs corpus:               │ │ │   (aucun item sub)              │ │
+│ │   corpus_notes.pdf                  │ │ └─────────────────────────────────┘ │
+│ │                                     │ │                                     │
+│ │ Items directs collection:           │ │ ┌─ Items Sub Directs ─────────────┐ │
+│ │   pochette.jpg                      │ │ │ ▼ CNRSMH_I_2011_001_livret.pdf │ │
+│ │   livret.pdf                        │ │ │   └─ TRA_en.pdf                 │ │
+│ │                                     │ │ │                                 │ │
+│ │ Nouveau Fonds                       │ │ │ ► CNRSMH_I_2011_001_notes.txt  │ │
+│ │ Nouveau Corpus                      │ │ │   (aucun item sub)              │ │
+│ │ Nouvelle Collection                 │ │ └─────────────────────────────────┘ │
+│ │ Nouvel Item                         │ │                                     │
+│ └─────────────────────────────────────┘ │ Actions: [Voir] [Éditer] [Export]  │
+└─────────────────────────────────────────┴─────────────────────────────────────┘
 ```
 
+
+##### **Fonctionnalités Clés du Panneau Gauche**
+
+###### **Arbre Hiérarchique Épuré**
+- **Navigation textuelle** : Utilisation de caractères `▼` `►` `◄` pour l'état des nœuds
+- **Indentation progressive** : Structure claire par espacement sans surutilisation d'icônes
+- **État persistant** : Conservation des éléments dépliés pendant la navigation
+- **Sélection active** : Indication visuelle `◄` pour l'élément actuellement sélectionné
+- **Hauteur adaptative** : Contrôle de densité via curseur pour optimiser l'affichage
+
+###### **Affichage Contextuel des Items**
+- **Items directs visibles** : Listage textuel simple selon le niveau sélectionné
+- **Toggle contrôlé** : Possibilité de masquer/afficher les items directs via le filtre
+- **Actions de création** : Liens textuels simples en bas de colonne
+- **Mise à jour dynamique** : Affichage adapté selon la sélection active
+
+##### **Fonctionnalités Clés du Panneau Droite**
+
+###### **Informations de Contexte (En-tête)**
+- **Résumé synthétique** : Type d'élément, nom, et statistiques essentielles
+- **Métadonnées clés** : Nombre d'items, taille totale, dernière modification
+- **Pas de redondance** : Remplace le panneau d'informations contextuelles du bas
+
+###### **Organisation en 3 Niveaux**
+1. **Section "Items (non sub)"**
+    - Items principaux avec mécanisme de dépliant (`▼` déplié, `►` plié)
+    - Indication textuelle du nombre d'items sub disponibles
+    - Affichage des items sub indentés sous leur parent
+
+2. **Section "Items Sub Directs"**
+    - Items secondaires associés directement au niveau sélectionné
+    - Même mécanisme de dépliant récursif
+    - Organisation distincte pour clarifier la hiérarchie
+
+3. **Dépliant Récursif**
+    - Support jusqu'à 3+ niveaux avec indentations croissantes
+    - Indicateurs textuels pour les éléments expandables
+    - Navigation fluide sans surcharge visuelle
+
+###### **Interface Adaptive**
+- **Dépliant intelligent** : Indication textuelle du nombre d'éléments disponibles
+- **Actions contextuelles** : Boutons d'action adaptés au type d'item sélectionné
+- **Navigation rapide** : Liens directs vers les ressources Filament
+
+##### **Contrôles & Filtres (En-tête)**
+
+###### **Recherche Unifiée**
+- **Champ de recherche principal** : Recherche textuelle sur codes et titres
+- **Filtrage temps réel** : Mise à jour immédiate de l'affichage
+
+###### **Options d'Affichage**
+- **Toggle "Afficher items directs"** : Contrôle de la visibilité dans l'arbre gauche
+- **Toggle "Compact"** : Mode d'affichage dense ou aéré
+- **Curseur de densité** : Contrôle fin de l'espacement et de la taille des éléments
+
+##### **Avantages de cette Approche Épurée**
+
+1. **Interface Professionnelle** : Évite l'aspect "explorateur de fichiers" par un design textuel épuré
+2. **Proportions Équilibrées** : Répartition 1/3 - 2/3 pour un affichage optimal du contenu
+3. **Navigation Efficace** : Conservation de l'état d'exploration avec contrôles minimalistes
+4. **Contexte Toujours Visible** : Informations synthétiques en en-tête du panneau droit
+5. **Flexibilité d'Affichage** : Contrôles de densité pour s'adapter aux préférences utilisateur
+6. **Actions Contextuelles** : Boutons d'action situés logiquement sans encombrement
 
 ##### **Actions Contextuelles Dynamiques**
-- **Clic droit sur élément** : Menu contextuel avec actions appropriées
-- **Double-clic** : Ouverture en édition rapide
-- **Glisser-déposer** : Réorganisation (si permissions)
-- **Breadcrumb cliquable** : Navigation rapide vers parents
+- **Sélection dans l'arbre** : Met à jour automatiquement le panneau droit et les informations de contexte
+- **Dépliant textuel** : Indicateurs visuels minimalistes pour les éléments contenant des sous-éléments
+- **Actions de création** : Liens textuels simples adaptés au contexte de sélection
+- **Filtrage intelligent** : Mise à jour temps réel selon la recherche et les options d'affichage
 
+Cette approche respecte vos contraintes de design en privilégiant une interface épurée, textuelle et équilibrée, tout en conservant la fonctionnalité complète de navigation hiérarchique et de gestion des items à plusieurs niveaux.
 ---
 
 #### 3.2 UploadItems
