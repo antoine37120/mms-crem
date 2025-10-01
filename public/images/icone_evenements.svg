@@ -1,0 +1,27 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- 6. ÉVÉNEMENTS / CONFÉRENCES : Le Rassemblement -->
+    <g transform="translate(50, 50)">
+        <!-- Figure 1 (gauche, légèrement inclinée) -->
+        <g transform="translate(-28, -4) rotate(-12)">
+            <circle cx="0" cy="0" r="6.5" stroke="#2c3e50" stroke-width="2" fill="none"/>
+            <rect x="-3.5" y="7" width="7" height="18" stroke="#2c3e50" stroke-width="2" fill="none"/>
+        </g>
+
+        <!-- Figure 2 (centre-gauche) -->
+        <circle cx="-10" cy="0" r="6.5" stroke="#2c3e50" stroke-width="2" fill="none"/>
+        <rect x="-13.5" y="7" width="7" height="18" stroke="#2c3e50" stroke-width="2" fill="none"/>
+
+        <!-- Figure 3 (centre-droite) -->
+        <circle cx="10" cy="0" r="6.5" stroke="#2c3e50" stroke-width="2" fill="none"/>
+        <rect x="6.5" y="7" width="7" height="18" stroke="#2c3e50" stroke-width="2" fill="none"/>
+
+        <!-- Figure 4 (droite, légèrement inclinée) -->
+        <g transform="translate(28, -4) rotate(12)">
+            <circle cx="0" cy="0" r="6.5" stroke="#2c3e50" stroke-width="2" fill="none"/>
+            <rect x="-3.5" y="7" width="7" height="18" stroke="#2c3e50" stroke-width="2" fill="none"/>
+        </g>
+
+        <!-- Arc de cercle suggérant l'espace de performance (pointillé) -->
+        <path d="M -28 28 Q 0 40 28 28" stroke="#2c3e50" stroke-width="1" fill="none" stroke-dasharray="3,3"/>
+    </g>
+</svg>

@@ -1,0 +1,10 @@
+<svg viewBox="0 0 100 100" xmlns="http://www.w3.org/2000/svg">
+    <!-- 5. MISSION / IDENTITÉ : Le Flux Immatériel -->
+    <g transform="translate(50, 50)">
+        <!-- Ruban torsadé / infini déformé (mouvement continu) -->
+        <path d="M -30 -4 Q -17 -22 0 -4 Q 17 13 30 -4 Q 22 13 13 22 Q -4 38 -13 22 Q -4 13 4 22 Q 13 30 22 22"
+              stroke="#2c3e50" stroke-width="2" fill="none"/>
+        <path d="M 0 -4 Q 4 4 9 -4 Q 13 -13 17 -4"
+              stroke="#2c3e50" stroke-width="2" fill="none"/>
+    </g>
+</svg>

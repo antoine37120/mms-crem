@@ -76,6 +76,8 @@ class MmsAdminPanelProvider extends PanelProvider
             ->spa()
             ->viteTheme('resources/css/filament/mms-admin/theme.css')
             ->sidebarCollapsibleOnDesktop()
+            ->topbar(false)
+            ->brandLogo(asset('images/icone_archives-logo.svg'))
             ;
     }
 }

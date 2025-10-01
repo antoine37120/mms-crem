@@ -1,0 +1,15 @@
+<svg viewBox="0 0 114 57" xmlns="http://www.w3.org/2000/svg">
+    <!-- 3. PUBLICATIONS / ARCHIVES : Bobine magnétique -->
+    <g transform="translate(57, 28.5)">
+        <!-- Deux cercles de bobine -->
+        <circle cx="-25.65" cy="0" r="25.65" stroke="#2c3e50" stroke-width="1" fill="none"/>
+        <circle cx="25.65" cy="0" r="25.65" stroke="#2c3e50" stroke-width="1" fill="none"/>
+
+        <!-- Noyaux intérieurs -->
+        <circle cx="-25.65" cy="0" r="8.5" fill="#2c3e50"/>
+        <circle cx="25.65" cy="0" r="8.5" fill="#2c3e50"/>
+
+        <!-- Axe central diagonal -->
+        <line x1="0" y1="-11.4" x2="11.4" y2="11.4" stroke="#2c3e50" stroke-width="6"/>
+    </g>
+</svg>
