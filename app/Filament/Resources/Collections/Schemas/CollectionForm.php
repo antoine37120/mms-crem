@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Collections\Schemas;
 
+use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
@@ -19,9 +20,9 @@ class CollectionForm
                     ->required(),
                 TextInput::make('title')
                     ->default(null),
-                TextInput::make('created_by')
-                    ->required()
-                    ->numeric(),
+                // Auto-remplir l'utilisateur connecté
+                Hidden::make('created_by')
+                    ->default(auth()->id()),
             ]);
     }
 }

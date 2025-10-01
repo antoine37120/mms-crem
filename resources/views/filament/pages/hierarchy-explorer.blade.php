@@ -1,48 +1,35 @@
 <x-filament-panels::page>
     <div x-data="hierarchyExplorer()" class="space-y-4">
-        {{-- En-tête avec contrôles et filtres --}}
-        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-            <div class="flex items-center justify-between">
-                <div class="flex items-center space-x-4">
+        {{-- Interface 3 colonnes égales (33% - 33% - 33%) --}}
+        <div class="grid grid-cols-3 gap-6 h-[700px]">
+
+            {{-- COLONNE 1 (33%) - Arbre hiérarchique principal --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                {{-- Champ recherche intégré --}}
+                <div class="p-4 border-b border-gray-200 dark:border-gray-600">
                     {{ $this->form }}
                 </div>
 
-                <div class="flex items-center space-x-2">
-                    <label class="text-sm font-medium text-gray-700 dark:text-gray-200">Contrôle densité:</label>
-                    <input
-                        type="range"
-                        min="0"
-                        max="100"
-                        wire:model.live="density"
-                        class="w-24 h-2 bg-gray-200 rounded-lg appearance-none cursor-pointer dark:bg-gray-700"
-                    >
-                </div>
-            </div>
-        </div>
-
-        {{-- Interface 2 panneaux (1/3 - 2/3) --}}
-        <div class="grid grid-cols-3 gap-6 h-[700px]">
-
-            {{-- PANNEAU GAUCHE (1/3) - Arbre hiérarchique épuré --}}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
                 <div class="overflow-y-auto h-full p-4">
                     @if($fonds->isNotEmpty())
                         @foreach($fonds as $fond)
-                            <div class="mb-2" wire:key="fond-{{ $fond->id }}">
+                            <div class="mb-1" wire:key="fond-{{ $fond->id }}">
                                 {{-- Ligne du fonds --}}
-                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer"
-                                     wire:click="selectElement('fond', {{ $fond->id }})"
-                                     :class="{ 'bg-primary-50 dark:bg-primary-900/50': selectedType === 'fond' && selectedId === {{ $fond->id }} }">
+                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'fond' && $selectedId == $fond->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
+                                     wire:click="selectElement('fond', {{ $fond->id }})">
 
-                                    <button
-                                        wire:click.stop="toggleFond({{ $fond->id }})"
-                                        class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700">
-                                        @if(in_array($fond->id, $expandedFonds))
-                                            <span class="text-xs"><x-heroicon-o-chevron-up-down /></span>
-                                        @else
-                                            <span class="text-xs"><x-heroicon-o-chevron-up-down /></span>
-                                        @endif
-                                    </button>
+                                    {{-- Icône de dépliant ou point --}}
+                                    @if($fond->corpuses_count > 0)
+                                        <button
+                                            wire:click.stop="toggleFond({{ $fond->id }})"
+                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($fond->id, $expandedFonds) ? 'rotate-180' : '' }}">
+                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                        </button>
+                                    @else
+                                        <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                        </span>
+                                    @endif
 
                                     <div class="flex-1 min-w-0">
                                         <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -57,29 +44,30 @@
                                     </div>
 
                                     @if($selectedType === 'fond' && $selectedId == $fond->id)
-                                        <span class="text-xs text-primary-600 ml-2">◄</span>
+                                        <span class="text-sm text-primary-600 ml-2">◄</span>
                                     @endif
                                 </div>
 
-                                {{-- Corpus du fonds (si expanded) - SANS items directs --}}
+                                {{-- Corpus du fonds (si expanded) --}}
                                 @if(in_array($fond->id, $expandedFonds))
-                                    <div class="ml-6 mt-1 space-y-1">
+                                    <div class="ml-6">
                                         @foreach($this->getCorpusesForFond($fond->id) as $corpus)
                                             <div wire:key="corpus-{{ $corpus->id }}">
-                                                {{-- Ligne du corpus --}}
-                                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer"
-                                                     wire:click="selectElement('corpus', {{ $corpus->id }})"
-                                                     :class="{ 'bg-primary-50 dark:bg-primary-900/50': selectedType === 'corpus' && selectedId === {{ $corpus->id }} }">
+                                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'corpus' && $selectedId == $corpus->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
+                                                     wire:click="selectElement('corpus', {{ $corpus->id }})">
 
-                                                    <button
-                                                        wire:click.stop="toggleCorpus({{ $corpus->id }})"
-                                                        class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700">
-                                                        @if(in_array($corpus->id, $expandedCorpuses))
-                                                            <span class="text-xs"><x-heroicon-o-chevron-up-down /></span>
-                                                        @else
-                                                            <span class="text-xs"><x-heroicon-o-chevron-up-down /></span>
-                                                        @endif
-                                                    </button>
+                                                    {{-- Icône de dépliant ou point --}}
+                                                    @if($corpus->collections_count > 0)
+                                                        <button
+                                                            wire:click.stop="toggleCorpus({{ $corpus->id }})"
+                                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($corpus->id, $expandedCorpuses) ? 'rotate-180' : '' }}">
+                                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                                        </button>
+                                                    @else
+                                                        <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                        </span>
+                                                    @endif
 
                                                     <div class="flex-1 min-w-0">
                                                         <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -94,21 +82,22 @@
                                                     </div>
 
                                                     @if($selectedType === 'corpus' && $selectedId == $corpus->id)
-                                                        <span class="text-xs text-primary-600 ml-2">◄</span>
+                                                        <span class="text-sm text-primary-600 ml-2">◄</span>
                                                     @endif
                                                 </div>
 
-                                                {{-- Collections du corpus (si expanded) - SANS items directs --}}
+                                                {{-- Collections du corpus (si expanded) --}}
                                                 @if(in_array($corpus->id, $expandedCorpuses))
-                                                    <div class="ml-6 mt-1 space-y-1">
+                                                    <div class="ml-6">
                                                         @foreach($this->getCollectionsForCorpus($corpus->id) as $collection)
                                                             <div wire:key="collection-{{ $collection->id }}">
-                                                                {{-- Ligne de la collection --}}
-                                                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer"
-                                                                     wire:click="selectElement('collection', {{ $collection->id }})"
-                                                                     :class="{ 'bg-primary-50 dark:bg-primary-900/50': selectedType === 'collection' && selectedId === {{ $collection->id }} }">
+                                                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'collection' && $selectedId == $collection->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
+                                                                     wire:click="selectElement('collection', {{ $collection->id }})">
 
-                                                                    <span class="flex-shrink-0 w-4 h-4 mr-2"></span>
+                                                                    {{-- Point simple (pas d'enfants hiérarchiques) --}}
+                                                                    <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                                        <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                                    </span>
 
                                                                     <div class="flex-1 min-w-0">
                                                                         <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -123,7 +112,7 @@
                                                                     </div>
 
                                                                     @if($selectedType === 'collection' && $selectedId == $collection->id)
-                                                                        <span class="text-xs text-primary-600 ml-2">◄</span>
+                                                                        <span class="text-sm text-primary-600 ml-2">◄</span>
                                                                     @endif
                                                                 </div>
                                                             </div>
@@ -136,28 +125,6 @@
                                 @endif
                             </div>
                         @endforeach
-
-                        {{-- Actions de création --}}
-                        <div class="mt-6 pt-4 border-t border-gray-200 dark:border-gray-600 space-y-2">
-                            <button wire:click="createFond" class="block text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400">
-                                Nouveau Fonds
-                            </button>
-                            @if($selectedType === 'fond')
-                                <button wire:click="createCorpus" class="block text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400">
-                                    Nouveau Corpus
-                                </button>
-                            @endif
-                            @if($selectedType === 'corpus')
-                                <button wire:click="createCollection" class="block text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400">
-                                    Nouvelle Collection
-                                </button>
-                            @endif
-                            @if(in_array($selectedType, ['fond', 'corpus', 'collection', 'item']))
-                                <button wire:click="createItem" class="block text-sm text-primary-600 hover:text-primary-800 dark:text-primary-400">
-                                    Nouvel Item
-                                </button>
-                            @endif
-                        </div>
                     @else
                         <div class="text-center text-gray-500 py-8">
                             <p class="text-sm">Aucun fonds disponible</p>
@@ -166,155 +133,314 @@
                 </div>
             </div>
 
-            {{-- PANNEAU DROITE (2/3) - Contenu générique --}}
-            <div class="col-span-2 space-y-4">
-                {{-- En-tête contextuel générique --}}
-                @if($selectedElement)
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-4">
-                        <div class="flex justify-between items-start">
-                            <div>
-                                <h3 class="font-semibold text-gray-900 dark:text-gray-100">
-                                    {{ $this->getSelectedElementTypeLabel() }}: {{ $selectedElement['code'] ?? $selectedElement['file_name'] ?? 'Sans nom' }}
-                                </h3>
-                                @if(isset($selectedElement['title']) && $selectedElement['title'])
-                                    <p class="text-gray-600 dark:text-gray-400">{{ $selectedElement['title'] }}</p>
-                                @endif
-                                <p class="text-sm text-gray-600 dark:text-gray-400 mt-1">
-                                    {{ count($this->selectedElementItems) }} items directs
-                                    @if($this->selectedElementChildren->isNotEmpty())
-                                        • {{ count($this->selectedElementChildren) }} éléments enfants
-                                    @endif
-                                </p>
-                            </div>
-                            <div class="flex space-x-2">
-                                @if($this->getSelectedElementResourceRoute('view'))
-                                    <x-filament::button size="sm" color="primary" tag="a"
-                                                        href="{{ $this->getSelectedElementResourceRoute('view') }}" target="_blank">
-                                        Voir
-                                    </x-filament::button>
-                                @endif
-                                @if($this->getSelectedElementResourceRoute('edit'))
-                                    <x-filament::button size="sm" color="gray" tag="a"
-                                                        href="{{ $this->getSelectedElementResourceRoute('edit') }}" target="_blank">
-                                        Éditer
-                                    </x-filament::button>
+            {{-- COLONNE 2 (33%) - Arbre Items hiérarchique --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="overflow-y-auto h-full">
+                    @if($selectedType && $selectedId)
+                        <div class="p-4">
+                            {{-- Titre contextuel --}}
+                            <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
+                                {{ $this->getSelectedElementTypeLabel() }}: {{ $selectedElement['code'] ?? 'Sans nom' }}
+                                @if($selectedItemId)
+                                    <span class="text-primary-600">◄</span>
                                 @endif
                             </div>
-                        </div>
-                    </div>
-                @else
-                    <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 p-8 text-center">
-                        <div class="text-gray-400 dark:text-gray-500">
-                            <svg class="mx-auto h-12 w-12 mb-4" fill="none" viewBox="0 0 24 24" stroke="currentColor">
-                                <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12h6m-6 4h6m2 5H7a2 2 0 01-2-2V5a2 2 0 012-2h5.586a1 1 0 01.707.293l5.414 5.414a1 1 0 01.293.707V19a2 2 0 01-2 2z" />
-                            </svg>
-                            <h3 class="text-lg font-medium text-gray-900 dark:text-gray-100 mb-2">Navigation Hiérarchique</h3>
-                            <p class="text-gray-600 dark:text-gray-400">Sélectionnez un élément dans l'arborescence à gauche pour voir ses détails et son contenu</p>
-                        </div>
-                    </div>
-                @endif
 
-                {{-- Items directs (générique) --}}
-                @if($this->selectedElementItems->isNotEmpty())
-                    {{-- Items principaux --}}
-                    @php $mainItems = $this->selectedElementItems->where('is_sub', false); @endphp
-                    @if($mainItems->isNotEmpty())
-                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                                <h4 class="font-medium text-gray-900 dark:text-gray-100">Items principaux</h4>
-                            </div>
-                            <div class="p-4 space-y-2">
-                                @foreach($mainItems as $item)
-                                    <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <div class="flex-1 min-w-0">
-                                            <div class="flex items-center space-x-2">
-                                                @if($item->childItems->count() > 0)
-                                                    @if(in_array($item->id, $expandedItems))
-                                                        <button wire:click="toggleItem({{ $item->id }})" class="text-xs text-gray-500">▼</button>
+                            @php
+                                $items = $this->selectedElementItems;
+                                $metaItems = $items->filter(fn($item) => $item->is_sub === true);
+                                $standardItems = $items->filter(fn($item) => $item->is_sub !== true);
+                            @endphp
+
+                            {{-- Section Meta Items --}}
+                            @if($metaItems->isNotEmpty())
+                                <div class="mb-2">
+                                    <h4 class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1 border-b border-gray-200 pb-1">
+                                        Meta Items
+                                    </h4>
+                                    <div class="">
+                                        @foreach($metaItems as $item)
+                                            @php $hasChildren = $item->childItems && $item->childItems->count() > 0; @endphp
+                                            <div wire:key="meta-item-{{ $item->id }}" class="ml-2">
+                                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $item->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
+                                                     wire:click="selectItem({{ $item->id }})">
+
+                                                    {{-- Icône de dépliant ou point --}}
+                                                    @if($hasChildren)
+                                                        <button
+                                                            wire:click.stop="toggleItem({{ $item->id }})"
+                                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($item->id, $expandedItems) ? 'rotate-180' : '' }}">
+                                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                                        </button>
                                                     @else
-                                                        <button wire:click="toggleItem({{ $item->id }})" class="text-xs text-gray-500">►</button>
+                                                        <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                        </span>
                                                     @endif
-                                                @else
-                                                    <span class="w-4 h-4"></span>
-                                                @endif
-                                                <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate cursor-pointer"
-                                                     wire:click="selectElement('item', {{ $item->id }})">
-                                                    {{ $item->file_name ?? $item->code }}
-                                                </div>
-                                            </div>
-                                            <div class="text-xs text-gray-500 mt-1">
-                                                {{ $item->file_extension }} • {{ $this->formatFileSize($item->file_size) }}
-                                                @if($item->childItems->count() > 0)
-                                                    • {{ $item->childItems->count() }} items sub
-                                                @endif
-                                            </div>
 
-                                            {{-- Items enfants (sub) --}}
-                                            @if(in_array($item->id, $expandedItems) && $item->childItems->count() > 0)
-                                                <div class="ml-6 mt-2 space-y-1">
-                                                    @foreach($item->childItems as $childItem)
-                                                        <div class="text-xs text-gray-600 dark:text-gray-400 py-1 px-2 bg-gray-50 dark:bg-gray-700 rounded cursor-pointer"
-                                                             wire:click="selectElement('item', {{ $childItem->id }})">
-                                                            {{ $childItem->file_name ?? $childItem->code }}
-                                                            @if($childItem->itemType)
-                                                                <span class="text-gray-500">({{ $childItem->itemType->name }})</span>
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+                                                            {{ $item->code }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-500">
+                                                            {{ $item->file_extension }} • {{ $this->formatFileSize($item->file_size) }}
+                                                            @if($hasChildren)
+                                                                • {{ $item->childItems->count() }} enfants
                                                             @endif
                                                         </div>
-                                                    @endforeach
+                                                    </div>
+
+                                                    @if($selectedItemId == $item->id)
+                                                        <span class="text-sm text-primary-600 ml-2">◄</span>
+                                                    @endif
                                                 </div>
-                                            @endif
-                                        </div>
-                                        <div class="flex space-x-1 ml-3">
-                                            <x-filament::icon-button
-                                                icon="heroicon-o-eye"
-                                                size="sm"
-                                                color="primary"
-                                                tag="a"
-                                                href="{{ route('filament.mms-admin.resources.items.view', ['record' => $item->id]) }}"
-                                                target="_blank"
-                                            />
-                                        </div>
+
+                                                {{-- Items enfants (si expanded) --}}
+                                                @if($hasChildren && in_array($item->id, $expandedItems))
+                                                    <div class="ml-6">
+                                                        @foreach($item->childItems as $childItem)
+                                                            <div wire:key="child-item-{{ $childItem->id }}"
+                                                                 class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $childItem->id ? 'bg-primary-50 dark:bg-primary-900/50' : '' }}"
+                                                                 wire:click="selectItem({{ $childItem->id }})">
+                                                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                                                    {{ $childItem->code }}
+                                                                    @if($childItem->itemType)
+                                                                        <span class="text-gray-500">({{ $childItem->itemType->name }})</span>
+                                                                    @endif
+                                                                    @if($selectedItemId == $childItem->id)
+                                                                        <span class="text-primary-600 ml-2">◄</span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
                                     </div>
-                                @endforeach
+                                </div>
+                            @endif
+
+                            {{-- Section Items Standards --}}
+                            @if($standardItems->isNotEmpty())
+                                <div>
+                                    <h4 class="font-medium text-sm text-gray-700 dark:text-gray-300 mb-1 border-b border-gray-200 pb-1">
+                                        Items
+                                    </h4>
+                                    <div class="">
+                                        @foreach($standardItems as $item)
+                                            @php $hasChildren = $item->childItems && $item->childItems->count() > 0; @endphp
+                                            <div wire:key="standard-item-{{ $item->id }}" class="ml-2">
+                                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $item->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
+                                                     wire:click="selectItem({{ $item->id }})">
+
+                                                    {{-- Icône de dépliant ou point --}}
+                                                    @if($hasChildren)
+                                                        <button
+                                                            wire:click.stop="toggleItem({{ $item->id }})"
+                                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($item->id, $expandedItems) ? 'rotate-180' : '' }}">
+                                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                                        </button>
+                                                    @else
+                                                        <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                            <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
+                                                        </span>
+                                                    @endif
+
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+                                                            {{ $item->code }}
+                                                        </div>
+                                                        <div class="text-xs text-gray-500">
+                                                            {{ $item->file_extension }} • {{ $this->formatFileSize($item->file_size) }}
+                                                            @if($hasChildren)
+                                                                • {{ $item->childItems->count() }} enfants
+                                                            @endif
+                                                        </div>
+                                                    </div>
+
+                                                    @if($selectedItemId == $item->id)
+                                                        <span class="text-sm text-primary-600 ml-2">◄</span>
+                                                    @endif
+                                                </div>
+
+                                                {{-- Items enfants (si expanded) --}}
+                                                @if($hasChildren && in_array($item->id, $expandedItems))
+                                                    <div class="ml-6">
+                                                        @foreach($item->childItems as $childItem)
+                                                            <div wire:key="child-item-{{ $childItem->id }}"
+                                                                 class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $childItem->id ? 'bg-primary-50 dark:bg-primary-900/50' : '' }}"
+                                                                 wire:click="selectItem({{ $childItem->id }})">
+                                                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                                                    {{ $childItem->code }}
+                                                                    @if($childItem->itemType)
+                                                                        <span class="text-gray-500">({{ $childItem->itemType->name }})</span>
+                                                                    @endif
+                                                                    @if($selectedItemId == $childItem->id)
+                                                                        <span class="text-primary-600 ml-2">◄</span>
+                                                                    @endif
+                                                                </div>
+                                                            </div>
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @endif
+
+                            {{-- État vide pour les items --}}
+                            @if($metaItems->isEmpty() && $standardItems->isEmpty())
+                                <div class="text-center text-gray-500 py-8">
+                                    <p class="text-sm">Aucun item dans cet élément</p>
+                                </div>
+                            @endif
+                        </div>
+                    @else
+                        {{-- État vide --}}
+                        <div class="h-full flex items-center justify-center text-center text-gray-500">
+                            <div>
+                                <svg class="mx-auto h-12 w-12 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 19v-6a2 2 0 00-2-2H5a2 2 0 00-2 2v6a2 2 0 002 2h2a2 2 0 002-2zm0 0V9a2 2 0 012-2h2a2 2 0 012 2v10m-6 0a2 2 0 002 2h2a2 2 0 002-2m0 0V5a2 2 0 012-2h2a2 2 0 012 2v14a2 2 0 01-2 2h-2a2 2 0 01-2-2z" />
+                                </svg>
+                                <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Items Hiérarchiques</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Sélectionnez un élément à gauche pour voir ses items</p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
+            </div>
+
+            {{-- COLONNE 3 (33%) - Informations et Actions --}}
+            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
+                <div class="overflow-y-auto h-full space-y-4 p-4">
+
+                    {{-- Section 1: Informations sélection Colonne 1 --}}
+                    @if($selectedElement)
+                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                            <h4 class="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3 border-b border-gray-200 pb-2">
+                                Sélection Colonne 1
+                            </h4>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-gray-100">
+                                        {{ $this->getSelectedElementTypeIcon() }} {{ $selectedElement['code'] ?? 'Sans nom' }}
+                                    </div>
+                                    @if(isset($selectedElement['title']) && $selectedElement['title'])
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">{{ $selectedElement['title'] }}</div>
+                                    @endif
+                                </div>
+
+                                <div class="text-sm text-gray-600 dark:text-gray-400">
+                                    @if($selectedType === 'fond')
+                                        {{ $selectedElement['corpuses_count'] ?? 0 }} corpus • {{ $selectedElement['items_count'] ?? 0 }} items
+                                    @elseif($selectedType === 'corpus')
+                                        {{ $selectedElement['collections_count'] ?? 0 }} collections • {{ $selectedElement['items_count'] ?? 0 }} items
+                                    @else
+                                        {{ $selectedElement['items_count'] ?? 0 }} items
+                                    @endif
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 pt-2">
+                                    @if($this->getSelectedElementResourceRoute('view'))
+                                        <x-filament::button size="xs" color="primary" tag="a"
+                                                            href="{{ $this->getSelectedElementResourceRoute('view') }}" target="_blank">
+                                            Voir
+                                        </x-filament::button>
+                                    @endif
+                                    @if($this->getSelectedElementResourceRoute('edit'))
+                                        <x-filament::button size="xs" color="gray" tag="a"
+                                                            href="{{ $this->getSelectedElementResourceRoute('edit') }}" target="_blank">
+                                            Éditer
+                                        </x-filament::button>
+                                    @endif
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                                    @if($selectedType === 'fond')
+                                        <x-filament::button size="xs" color="success" wire:click="createCorpus">
+                                            + Corpus
+                                        </x-filament::button>
+                                    @elseif($selectedType === 'corpus')
+                                        <x-filament::button size="xs" color="success" wire:click="createCollection">
+                                            + Collection
+                                        </x-filament::button>
+                                    @endif
+                                    <x-filament::button size="xs" color="success" wire:click="createItem">
+                                        + Item
+                                    </x-filament::button>
+                                </div>
                             </div>
                         </div>
                     @endif
 
-                    {{-- Items secondaires directs --}}
-                    @php $secondaryItems = $this->selectedElementItems->where('is_sub', true); @endphp
-                    @if($secondaryItems->isNotEmpty())
-                        <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
-                            <div class="px-4 py-3 border-b border-gray-200 dark:border-gray-600">
-                                <h4 class="font-medium text-gray-900 dark:text-gray-100">Items secondaires directs</h4>
-                            </div>
-                            <div class="p-4 space-y-2">
-                                @foreach($secondaryItems as $item)
-                                    <div class="flex items-center justify-between p-3 border border-gray-200 dark:border-gray-600 rounded-lg hover:bg-gray-50 dark:hover:bg-gray-700">
-                                        <div class="flex-1 min-w-0">
-                                            <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate cursor-pointer"
-                                                 wire:click="selectElement('item', {{ $item->id }})">
-                                                {{ $item->file_name ?? $item->code }}
-                                            </div>
-                                            <div class="text-xs text-gray-500 mt-1">
-                                                {{ $item->itemType->name ?? 'Type inconnu' }} • {{ $item->file_extension }} • {{ $this->formatFileSize($item->file_size) }}
-                                            </div>
-                                        </div>
-                                        <div class="flex space-x-1 ml-3">
-                                            <x-filament::icon-button
-                                                icon="heroicon-o-eye"
-                                                size="sm"
-                                                color="primary"
-                                                tag="a"
-                                                href="{{ route('filament.mms-admin.resources.items.view', ['record' => $item->id]) }}"
-                                                target="_blank"
-                                            />
-                                        </div>
+                    {{-- Section 2: Informations sélection Colonne 2 --}}
+                    @if($selectedItem)
+                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
+                            <h4 class="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3 border-b border-gray-200 pb-2">
+                                Sélection Colonne 2
+                            </h4>
+
+                            <div class="space-y-3">
+                                <div>
+                                    <div class="font-medium text-gray-900 dark:text-gray-100">
+                                        🎵 {{ $selectedItem['code'] ?? 'Sans nom' }}
                                     </div>
-                                @endforeach
+                                    @if(isset($selectedItem['title']) && $selectedItem['title'])
+                                        <div class="text-sm text-gray-600 dark:text-gray-400">{{ $selectedItem['title'] }}</div>
+                                    @endif
+                                </div>
+
+                                <div class="text-sm space-y-1">
+                                    <div class="text-gray-600 dark:text-gray-400">
+                                        {{ strtoupper($selectedItem['file_extension'] ?? 'N/A') }} • {{ $this->formatFileSize($selectedItem['file_size'] ?? 0) }}
+                                    </div>
+                                    @if(isset($selectedItem['duration']) && $selectedItem['duration'])
+                                        <div class="text-gray-600 dark:text-gray-400">
+                                            Durée: {{ $this->formatDuration($selectedItem['duration']) }}
+                                        </div>
+                                    @endif
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 pt-2">
+                                    @if($this->getSelectedItemResourceRoute('view'))
+                                        <x-filament::button size="xs" color="primary" tag="a"
+                                                            href="{{ $this->getSelectedItemResourceRoute('view') }}" target="_blank">
+                                            Voir
+                                        </x-filament::button>
+                                    @endif
+                                    @if($selectedItem['file_path'] ?? false)
+                                        <x-filament::button size="xs" color="success" tag="a"
+                                                            href="{{ asset('storage/' . $selectedItem['file_path']) }}" target="_blank">
+                                            Télécharger
+                                        </x-filament::button>
+                                    @endif
+                                </div>
+
+                                <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                                    <x-filament::button size="xs" color="success" wire:click="createItemTranslation">
+                                        + Traduction
+                                    </x-filament::button>
+                                </div>
                             </div>
                         </div>
                     @endif
-                @endif
+
+                    {{-- État vide --}}
+                    @if(!$selectedElement && !$selectedItem)
+                        <div class="h-full flex items-center justify-center text-center text-gray-500">
+                            <div>
+                                <svg class="mx-auto h-12 w-12 mb-4 text-gray-300" fill="none" viewBox="0 0 24 24" stroke="currentColor">
+                                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M13 16h-1v-4h-1m1-4h.01M21 12a9 9 0 11-18 0 9 9 0 0118 0z" />
+                                </svg>
+                                <h3 class="text-sm font-medium text-gray-900 dark:text-gray-100 mb-2">Informations & Actions</h3>
+                                <p class="text-sm text-gray-600 dark:text-gray-400">Sélectionnez des éléments dans les colonnes de navigation pour voir les détails et actions disponibles</p>
+                            </div>
+                        </div>
+                    @endif
+                </div>
             </div>
         </div>
     </div>
@@ -324,14 +450,20 @@
         Alpine.data('hierarchyExplorer', () => ({
             selectedType: @js($selectedType),
             selectedId: @js($selectedId),
-            selectedElement: @js($selectedElement),
+            selectedItemId: @js($selectedItemId),
 
             init() {
-                // Écouter les événements Livewire
-                this.$wire.on('element-selected', (event) => {
-                    this.selectedType = event.type;
-                    this.selectedId = event.id;
-                    this.selectedElement = this.$wire.selectedElement;
+                // Écouter les changements de state
+                this.$watch('$wire.selectedType', (value) => {
+                    this.selectedType = value;
+                });
+
+                this.$watch('$wire.selectedId', (value) => {
+                    this.selectedId = value;
+                });
+
+                this.$watch('$wire.selectedItemId', (value) => {
+                    this.selectedItemId = value;
                 });
             }
         }));

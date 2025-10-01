@@ -608,125 +608,175 @@ Voici la section mise à jour pour l'Explorateur Hiérarchique selon vos contrai
 #### 3.1 HierarchyExplorer
 
 **Navigation** : `Explorateur > Vue Hiérarchique`  
-**Objectif** : Navigation interactive dans l'arborescence complète avec exploration hiérarchique à gauche et liste détaillée à droite
+**Objectif** : Navigation interactive dans l'arborescence complète avec système de navigation à double arbre hiérarchique et panneau d'informations
 
 ##### **Contraintes de Design**
 - **Interface épurée** : Éviter l'aspect caricatural d'un explorateur de fichiers
 - **Usage minimal d'icônes** : Privilégier le texte et la typographie pour la navigation
-- **Proportions équilibrées** : Panneau gauche (1/3) et panneau droit (2/3)
-- **Filtres en en-tête** : Remplacer la barre d'actions par les contrôles essentiels
-- **Interface condensée** : Pas de panneau d'informations contextuelles en bas
-- **Hiérarchie claire** : Organisation visuelle par indentation et espacement
+- **3 colonnes égales** : Répartition équilibrée en tiers (33% chacune)
+- **Double arbre hiérarchique** : Navigation imbriquée avec dépendance entre colonnes
+- **Distinction items meta** : Séparation visuelle des items avec propriété `is_sub`
+- **Actions centralisées** : Regroupement des actions par niveau de sélection
+- **Navigation unifiée** : Utilisation de `heroicon-o-chevron-up-down` pour les dépliants
 
-##### **Interface 2 Panneaux (1/3 - 2/3)**
+##### **Interface 3 Colonnes Égales Épurée (33% - 33% - 33%)**
 ```
-┌─ CONTRÔLES & FILTRES ────────────────────────────────────────────────────────┐
-│ Recherche: [_________________________] [Afficher items directs] [Compact]   │
-│ Contrôle densité: ●─────○                                                   │
-└─────────────────────────────────────────────────────────────────────────────┘
-
-┌─ PANNEAU GAUCHE (1/3) ──────────────────┬─ PANNEAU DROITE (2/3) ─────────────┐
-│ ┌─────────────────────────────────────┐ │ ┌─ Informations Sélection ────────┐ │
-│ │ ▼ CNRSMH_Arnaud                     │ │ │ Collection: Cérémonies mariage  │ │
-│ │   ├─ ▼ Rituels                      │ │ │ 15 items • 23 sub • 3.2 GB     │ │
-│ │   │  ├─ ► Mariages ◄                │ │ │ Modifié: 25/09/24 - M. Dupont   │ │
-│ │   │  ├─ ► Funéraires                │ │ └─────────────────────────────────┘ │
-│ │   │  └─ ► Saisonniers               │ │                                     │
-│ │   └─ ► Musique                      │ │ ┌─ Items (non sub) ──────────────┐ │
-│ │                                     │ │ │ ▼ CNRSMH_I_2011_001_001.wav    │ │
-│ │ ▼ CNRSMH_Béart                      │ │ │   └─ TRA_en.pdf                 │ │
-│ │   └─ ► Archives                     │ │ │   └─ TRS_fr.txt                 │ │
-│ │                                     │ │ │                                 │ │
-│ │ Items directs fonds:                │ │ │ ► CNRSMH_I_2011_001_002.wav    │ │
-│ │   presentation.pdf                  │ │ │   (2 items sub)                │ │
-│ │   bibliography.pdf                  │ │ │                                 │ │
-│ │                                     │ │ │ ► CNRSMH_I_2011_001_003.mp4    │ │
-│ │ Items directs corpus:               │ │ │   (aucun item sub)              │ │
-│ │   corpus_notes.pdf                  │ │ └─────────────────────────────────┘ │
-│ │                                     │ │                                     │
-│ │ Items directs collection:           │ │ ┌─ Items Sub Directs ─────────────┐ │
-│ │   pochette.jpg                      │ │ │ ▼ CNRSMH_I_2011_001_livret.pdf │ │
-│ │   livret.pdf                        │ │ │   └─ TRA_en.pdf                 │ │
-│ │                                     │ │ │                                 │ │
-│ │ Nouveau Fonds                       │ │ │ ► CNRSMH_I_2011_001_notes.txt  │ │
-│ │ Nouveau Corpus                      │ │ │   (aucun item sub)              │ │
-│ │ Nouvelle Collection                 │ │ └─────────────────────────────────┘ │
-│ │ Nouvel Item                         │ │                                     │
-│ └─────────────────────────────────────┘ │ Actions: [Voir] [Éditer] [Export]  │
-└─────────────────────────────────────────┴─────────────────────────────────────┘
+┌─ COLONNE 1 (33%) ───────────┬─ COLONNE 2 (33%) ───────────┬─ COLONNE 3 (33%) ──────────┐
+│                             │                             │                           │
+│ Recherche: [____________]   │                             │                           │
+│                             │                             │                           │
+│ CNRSMH_Arnaud               │ Collection: Mariages ◄      │ ┌─ SÉLECTION COLONNE 1 ──┐ │
+│   ⌄ Rituels                 │                             │ │ 📦 Collection Mariages  │ │
+│     > Mariages ◄            │ ┌─ Meta Items ─────────────┐ │ │ 15 items • 3.2 GB      │ │
+│     > Funéraires            │ │ ⌄ CNRSMH_I_2011_001.wav  │ │ │ Modifié: 25/09/24      │ │
+│     > Saisonniers           │ │     TRA_en.pdf            │ │ │ [Voir] [Éditer]        │ │
+│   > Musique                 │ │     TRS_fr.txt            │ │ │ [+ Corpus] [+ Item]     │ │
+│                             │ │                           │ │ └─────────────────────── │ │
+│ CNRSMH_Béart                │ │ > CNRSMH_I_2011_002.wav   │ │                           │
+│   > Archives                │ │   (2 items enfants)       │ │ ┌─ SÉLECTION COLONNE 2 ──┐ │
+│                             │ │                           │ │ │ 🎵 Item Principal       │ │
+│                             │ │ ⌄ Item_livret.pdf         │ │ │ WAV 48kHz • 45.2MB     │ │
+│                             │ │     TRA_en.pdf ◄          │ │ │ Durée: 12:30           │ │
+│                             │ │     notes.txt             │ │ │ [Voir] [Télécharger]   │ │
+│                             │ └───────────────────────── │ │ │ [+ Traduction]         │ │
+│                             │                             │ │ └─────────────────────── │ │
+│                             │ ┌─ Items Standards ────────┐ │                           │
+│                             │ │ > CNRSMH_I_001_003.mp4   │ │                           │
+│                             │ │   (aucun enfant)         │ │                           │
+│                             │ │                          │ │                           │
+│                             │ │ > Item_documentation     │ │                           │
+│                             │ │   (aucun enfant)         │ │                           │
+│                             │ └───────────────────────── │ │                           │
+└─────────────────────────────┴─────────────────────────────┴────────────────────────────┘
 ```
 
 
-##### **Fonctionnalités Clés du Panneau Gauche**
+##### **Fonctionnalités Clés par Colonne**
 
-###### **Arbre Hiérarchique Épuré**
-- **Navigation textuelle** : Utilisation de caractères `▼` `►` `◄` pour l'état des nœuds
-- **Indentation progressive** : Structure claire par espacement sans surutilisation d'icônes
-- **État persistant** : Conservation des éléments dépliés pendant la navigation
-- **Sélection active** : Indication visuelle `◄` pour l'élément actuellement sélectionné
-- **Hauteur adaptative** : Contrôle de densité via curseur pour optimiser l'affichage
+#### **Colonne 1 : Arbre Principal Épuré**
 
-###### **Affichage Contextuel des Items**
-- **Items directs visibles** : Listage textuel simple selon le niveau sélectionné
-- **Toggle contrôlé** : Possibilité de masquer/afficher les items directs via le filtre
-- **Actions de création** : Liens textuels simples en bas de colonne
-- **Mise à jour dynamique** : Affichage adapté selon la sélection active
+###### **Navigation Hiérarchique Simplifiée**
+- **Champ recherche intégré** : En haut de la colonne, filtrage temps réel
+- **Affichage sélectif** : Seuls les Fonds, Corpus et Collections
+- **Icône unifiée** : `heroicon-o-chevron-up-down` pour tous les éléments dépliables
+- **Indication de sélection** : Marqueur `◄` pour l'élément actif
+- **Pas d'items directs** : Interface allégée sans affichage des items associés
+- **Pas d'actions rapides** : Suppression des boutons de création en bas
 
-##### **Fonctionnalités Clés du Panneau Droite**
+###### **États de Navigation**
+- `⌄` : Élément déplié (avec `heroicon-o-chevron-up-down` orienté)
+- `>` : Élément replié (avec `heroicon-o-chevron-up-down` orienté)
+- `•` : Élément sans enfants (point simple, pas d'icône de dépliant)
+- `◄` : Élément sélectionné
 
-###### **Informations de Contexte (En-tête)**
-- **Résumé synthétique** : Type d'élément, nom, et statistiques essentielles
-- **Métadonnées clés** : Nombre d'items, taille totale, dernière modification
-- **Pas de redondance** : Remplace le panneau d'informations contextuelles du bas
+#### **Colonne 2 : Arbre Items Universel**
 
-###### **Organisation en 3 Niveaux**
-1. **Section "Items (non sub)"**
-    - Items principaux avec mécanisme de dépliant (`▼` déplié, `►` plié)
-    - Indication textuelle du nombre d'items sub disponibles
-    - Affichage des items sub indentés sous leur parent
+###### **Fonctionnement Uniforme**
+- **Indépendant du type parent** : Même logique que ce soit Fonds, Corpus ou Collection
+- **Organisation cohérente** : Toujours les mêmes sections Meta Items / Items Standards
+- **Icône unifiée** : `heroicon-o-chevron-up-down` pour tous les dépliants
 
-2. **Section "Items Sub Directs"**
-    - Items secondaires associés directement au niveau sélectionné
-    - Même mécanisme de dépliant récursif
-    - Organisation distincte pour clarifier la hiérarchie
 
-3. **Dépliant Récursif**
-    - Support jusqu'à 3+ niveaux avec indentations croissantes
-    - Indicateurs textuels pour les éléments expandables
-    - Navigation fluide sans surcharge visuelle
+###### **États de Navigation**
+- `⌄` : Item déplié avec enfants (avec `heroicon-o-chevron-up-down` orienté vers le bas)
+- `>` : Item replié avec enfants (avec `heroicon-o-chevron-up-down` orienté vers la droite)
+- `•` : Item sans enfants (point simple, pas d'icône de dépliant)
+- `◄` : Item sélectionné (combinable avec les états ci-dessus)
 
-###### **Interface Adaptive**
-- **Dépliant intelligent** : Indication textuelle du nombre d'éléments disponibles
-- **Actions contextuelles** : Boutons d'action adaptés au type d'item sélectionné
-- **Navigation rapide** : Liens directs vers les ressources Filament
 
-##### **Contrôles & Filtres (En-tête)**
+###### **Organisation par Sections**
 
-###### **Recherche Unifiée**
-- **Champ de recherche principal** : Recherche textuelle sur codes et titres
-- **Filtrage temps réel** : Mise à jour immédiate de l'affichage
+1. **Section "Meta Items"** (Premier niveau uniquement)
+    - Items avec propriété `is_sub = true`
+    - Parent hiérarchique nommé "Meta Items"
+    - Dépliant récursif pour items enfants
+    - Distinction visuelle claire
 
-###### **Options d'Affichage**
-- **Toggle "Afficher items directs"** : Contrôle de la visibilité dans l'arbre gauche
-- **Toggle "Compact"** : Mode d'affichage dense ou aéré
-- **Curseur de densité** : Contrôle fin de l'espacement et de la taille des éléments
+2. **Section "Items Standards"**
+    - Items avec propriété `is_sub = false` ou `null`
+    - Affichage direct sans regroupement spécial
+    - Dépliant récursif pour items enfants
 
-##### **Avantages de cette Approche Épurée**
+###### **Navigation Récursive Universelle**
+- **Dépliant multi-niveau** : Support de hiérarchies profondes
+- **Indicateurs cohérents** : `⌄` déplié, `>` replié, `◄` sélectionné
+- **Contexte préservé** : État des dépliants maintenu
+- **Items enfants indentés** : Niveaux inférieurs sans distinction meta/standard
 
-1. **Interface Professionnelle** : Évite l'aspect "explorateur de fichiers" par un design textuel épuré
-2. **Proportions Équilibrées** : Répartition 1/3 - 2/3 pour un affichage optimal du contenu
-3. **Navigation Efficace** : Conservation de l'état d'exploration avec contrôles minimalistes
-4. **Contexte Toujours Visible** : Informations synthétiques en en-tête du panneau droit
-5. **Flexibilité d'Affichage** : Contrôles de densité pour s'adapter aux préférences utilisateur
-6. **Actions Contextuelles** : Boutons d'action situés logiquement sans encombrement
+#### **Colonne 3 : Informations Duales Épurées**
 
-##### **Actions Contextuelles Dynamiques**
-- **Sélection dans l'arbre** : Met à jour automatiquement le panneau droit et les informations de contexte
-- **Dépliant textuel** : Indicateurs visuels minimalistes pour les éléments contenant des sous-éléments
-- **Actions de création** : Liens textuels simples adaptés au contexte de sélection
-- **Filtrage intelligent** : Mise à jour temps réel selon la recherche et les options d'affichage
+###### **Section 1 : Informations Colonne 1**
+- **Résumé de sélection** : Type, nom, statistiques essentielles
+- **Métadonnées clés** : Taille, nombre d'items, dernière modification
+- **Actions contextuelles** : Voir, Éditer selon le type sélectionné
+- **Actions de création** : Ajout d'éléments enfants appropriés
 
-Cette approche respecte vos contraintes de design en privilégiant une interface épurée, textuelle et équilibrée, tout en conservant la fonctionnalité complète de navigation hiérarchique et de gestion des items à plusieurs niveaux.
+###### **Section 2 : Informations Colonne 2**
+- **Détails item sélectionné** : Métadonnées techniques si item sélectionné
+- **Informations fichier** : Format, taille, durée
+- **Actions spécifiques** : Téléchargement, visualisation
+- **Actions d'ajout** : Création d'items associés (traductions, etc.)
+
+##### **Logique de Distinction des Items Meta (Inchangée)**
+
+###### **Premier Niveau Hiérarchique Uniquement**
+```
+Collection/Corpus/Fonds Sélectionné:
+├─ Meta Items (Groupe)
+│  ├─ ⌄ Item_A (is_sub = true)
+│  │  ├─ Enfant_1 (tous considérés meta du parent)
+│  │  └─ Enfant_2 (tous considérés meta du parent)
+│  └─ > Item_B (is_sub = true)
+└─ Items Standards
+   ├─ > Item_C (is_sub = false)
+   └─ > Item_D (is_sub = null)
+```
+
+
+###### **Niveaux Inférieurs Sans Distinction**
+- **Items enfants d'items** : Pas de séparation meta/standard
+- **Logique simplifiée** : Tous les enfants sont considérés comme meta de leur parent item
+- **Hiérarchie naturelle** : Organisation par indentation uniquement
+
+##### **Interactions Entre Colonnes (Inchangées)**
+
+###### **Colonne 1 → Colonne 2**
+- **Sélection Fonds** : Affiche tous les items du fonds selon la logique meta/standard
+- **Sélection Corpus** : Affiche items du corpus selon la logique meta/standard
+- **Sélection Collection** : Affiche items de la collection selon la logique meta/standard
+- **Logique universelle** : Même organisation quelle que soit la nature du modèle parent
+
+###### **Colonne 2 → Colonne 3**
+- **Sélection item** : Met à jour la section 2 de la colonne 3
+- **Conservation contexte** : Section 1 maintient info de la colonne 1
+- **Actions adaptées** : Boutons spécifiques au type d'item sélectionné
+
+###### **Logique d'Affichage**
+- **Éléments avec enfants** : Affichage de l'icône `heroicon-o-chevron-up-down` cliquable
+- **Éléments sans enfants** : Affichage d'un point simple `•` non cliquable
+- **Indication visuelle claire** : Distinction immédiate entre éléments expandables et terminaux
+- **Comportement intuitif** : Seuls les éléments avec icône de dépliant sont interactifs pour l'expansion
+
+##### **Simplifications Appliquées**
+
+1. **Suppression contrôles en-tête** : Plus de barre de filtres globale
+2. **Recherche intégrée colonne 1** : Champ de recherche en haut de la première colonne uniquement
+3. **Suppression items directs** : Interface allégée dans la colonne 1
+4. **Suppression actions rapides** : Plus de boutons de création en bas de colonne 1
+5. **Suppression actions globales** : Plus de section d'actions globales en bas de colonne 3
+6. **Icône unifiée** : `heroicon-o-chevron-up-down` pour tous les dépliants
+7. **Pas d'en-têtes colonnes** : Interface plus épurée sans titres
+
+##### **Avantages de cette Architecture Simplifiée**
+
+1. **Interface Plus Épurée** : Suppression des éléments non essentiels
+2. **Navigation Cohérente** : Icône unique pour tous les dépliants
+3. **Recherche Contextuelle** : Filtrage intégré dans la colonne principale
+4. **Logique Universelle** : Colonne 2 fonctionne identiquement quel que soit le parent
+5. **Focus sur l'Essentiel** : Concentration sur la navigation et les informations clés
+6. **Interface Professionnelle** : Design textuel épuré sans surcharge visuelle
+
+Cette version respecte parfaitement vos modifications demandées tout en préservant les contraintes de design originales et la fonctionnalité de navigation à double arbre hiérarchique.
 ---
 
 #### 3.2 UploadItems
