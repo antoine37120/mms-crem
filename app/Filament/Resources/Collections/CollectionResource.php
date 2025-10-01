@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Collections;
 
+use App\Filament\Pages\HierarchyExplorer;
 use App\Filament\Resources\Collections\Pages\CreateCollection;
 use App\Filament\Resources\Collections\Pages\EditCollection;
 use App\Filament\Resources\Collections\Pages\ListCollections;
@@ -16,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
@@ -119,5 +121,10 @@ class CollectionResource extends Resource
     public static function canBulkDelete(): bool
     {
         return auth()->user()?->hasRole(['administrateur']) ?? false;
+    }
+
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return HierarchyExplorer::getUrl(['collection' => 'item', 'id' => $record->id]);
     }
 }

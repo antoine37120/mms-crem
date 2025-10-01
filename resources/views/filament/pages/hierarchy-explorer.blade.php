@@ -313,20 +313,16 @@
             </div>
 
             {{-- COLONNE 3 (33%) - Informations et Actions --}}
-            <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="overflow-y-auto h-full space-y-4 p-4">
+            <div class="overflow-hidden">
+                <div class="overflow-y-auto h-full space-y-4">
 
                     {{-- Section 1: Informations sélection Colonne 1 --}}
                     @if($selectedElement)
-                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                            <h4 class="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3 border-b border-gray-200 pb-2">
-                                Sélection Colonne 1
-                            </h4>
-
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
                             <div class="space-y-3">
                                 <div>
-                                    <div class="font-medium text-gray-900 dark:text-gray-100">
-                                        {{ $this->getSelectedElementTypeIcon() }} {{ $selectedElement['code'] ?? 'Sans nom' }}
+                                    <div class="flex items-center font-medium text-gray-900 dark:text-gray-100">
+                                        <span class="flex-shrink-0 w-4 mr-2">{{ \Filament\Support\generate_icon_html($this->getSelectedElementTypeIcon()) }}</span> {{ $selectedElement['code'] ?? 'Sans nom' }}
                                     </div>
                                     @if(isset($selectedElement['title']) && $selectedElement['title'])
                                         <div class="text-sm text-gray-600 dark:text-gray-400">{{ $selectedElement['title'] }}</div>
@@ -343,7 +339,7 @@
                                     @endif
                                 </div>
 
-                                <div class="flex flex-wrap gap-2 pt-2">
+                                <div class="flex flex-wrap gap-2 pt-2 justify-end">
                                     @if($this->getSelectedElementResourceRoute('view'))
                                         <x-filament::button size="xs" color="primary" tag="a"
                                                             href="{{ $this->getSelectedElementResourceRoute('view') }}" target="_blank">
@@ -358,7 +354,7 @@
                                     @endif
                                 </div>
 
-                                <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                                <div class="flex flex-wrap justify-end gap-2 pt-2 border-t border-gray-200">
                                     @if($selectedType === 'fond')
                                         <x-filament::button size="xs" color="success" wire:click="createCorpus">
                                             + Corpus
@@ -378,15 +374,12 @@
 
                     {{-- Section 2: Informations sélection Colonne 2 --}}
                     @if($selectedItem)
-                        <div class="border border-gray-200 dark:border-gray-600 rounded-lg p-4">
-                            <h4 class="font-semibold text-sm text-gray-900 dark:text-gray-100 mb-3 border-b border-gray-200 pb-2">
-                                Sélection Colonne 2
-                            </h4>
+                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
 
                             <div class="space-y-3">
                                 <div>
-                                    <div class="font-medium text-gray-900 dark:text-gray-100">
-                                        🎵 {{ $selectedItem['code'] ?? 'Sans nom' }}
+                                    <div class="flex items-center font-medium text-gray-900 dark:text-gray-100">
+                                        <span class="flex-shrink-0 w-4 mr-2"><x-heroicon-o-document /></span> {{ $selectedItem['code'] ?? 'Sans nom' }}
                                     </div>
                                     @if(isset($selectedItem['title']) && $selectedItem['title'])
                                         <div class="text-sm text-gray-600 dark:text-gray-400">{{ $selectedItem['title'] }}</div>
@@ -404,7 +397,7 @@
                                     @endif
                                 </div>
 
-                                <div class="flex flex-wrap gap-2 pt-2">
+                                <div class="flex flex-wrap gap-2 pt-2 justify-end">
                                     @if($this->getSelectedItemResourceRoute('view'))
                                         <x-filament::button size="xs" color="primary" tag="a"
                                                             href="{{ $this->getSelectedItemResourceRoute('view') }}" target="_blank">
@@ -419,7 +412,7 @@
                                     @endif
                                 </div>
 
-                                <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200">
+                                <div class="flex flex-wrap gap-2 pt-2 border-t border-gray-200 justify-end">
                                     <x-filament::button size="xs" color="success" wire:click="createItemTranslation">
                                         + Traduction
                                     </x-filament::button>

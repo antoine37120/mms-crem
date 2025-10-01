@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Corpuses;
 
+use App\Filament\Pages\HierarchyExplorer;
 use App\Filament\Resources\Corpuses\Pages\CreateCorpus;
 use App\Filament\Resources\Corpuses\Pages\EditCorpus;
 use App\Filament\Resources\Corpuses\Pages\ListCorpuses;
@@ -16,6 +17,7 @@ use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 
@@ -122,6 +124,11 @@ class CorpusResource extends Resource
     public static function canBulkDelete(): bool
     {
         return auth()->user()?->hasRole(['administrateur']) ?? false;
+    }
+
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return HierarchyExplorer::getUrl(['focus' => 'corpus', 'id' => $record->id]);
     }
 
 }

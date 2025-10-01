@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Fonds;
 
+use App\Filament\Pages\HierarchyExplorer;
 use App\Filament\Resources\Fonds\Pages\CreateFond;
 use App\Filament\Resources\Fonds\Pages\EditFond;
 use App\Filament\Resources\Fonds\Pages\ListFonds;
@@ -15,6 +16,7 @@ use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
+use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class FondResource extends Resource
@@ -22,7 +24,7 @@ class FondResource extends Resource
     protected static ?string $model = Fond::class;
 
     // Icône spécifique pour les fonds d'archives
-    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-building-library';
+    protected static string|null|\BackedEnum $navigationIcon = Heroicon::OutlinedBuildingLibrary;
 
     // Navigation groupée et triée selon la documentation
     protected static string|null|\UnitEnum $navigationGroup = 'Gestion des Archives';
@@ -128,5 +130,11 @@ class FondResource extends Resource
     public static function canBulkDelete(): bool
     {
         return auth()->user()->hasRole(['administrateur']);
+    }
+
+
+    public static function getGlobalSearchResultUrl(Model $record): string
+    {
+        return HierarchyExplorer::getUrl(['focus' => 'fond', 'id' => $record->id]);
     }
 }
