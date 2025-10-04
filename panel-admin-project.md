@@ -779,75 +779,301 @@ Collection/Corpus/Fonds Sélectionné:
 Cette version respecte parfaitement vos modifications demandées tout en préservant les contraintes de design originales et la fonctionnalité de navigation à double arbre hiérarchique.
 ---
 
-#### 3.2 UploadItems
+Voici la section **3.2 UploadItems** mise à jour selon vos nouvelles spécifications :
 
-**Navigation** : `Médias & Items > Upload Items`  
-**Objectif** : Interface d'upload simple et en lot
+---
 
-##### **Mode Upload Individuel**
-```
-┌─ SÉLECTION DESTINATION ──────────────────────────────────────┐
-│ 🎯 Associer à:                                              │
-│ Mode: ○ Collection  ○ Corpus  ○ Fonds  ○ Item Parent      │
-│                                                             │
-│ Navigation hiérarchique:                                    │
-│ 🏛️ [Dropdown Fonds] > 📚 [Dropdown Corpus] > 📦 [Coll.]   │
-│                                                             │
-│ Sélection actuelle:                                         │
-│ 📦 CNRSMH_I_2011_001 - Cérémonies de mariage              │
-└─────────────────────────────────────────────────────────────┘
+## 3.2 UploadManager - Système d'Upload Global
 
-┌─ UPLOAD FICHIER ─────────────────────────────────────────────┐
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │     Glissez votre fichier ici ou cliquez pour choisir  │ │
-│ │                                                         │ │
-│ │         📁 Formats acceptés: WAV, MP4, PDF, TXT        │ │
-│ │           Taille max: 500MB par fichier                │ │
-│ └─────────────────────────────────────────────────────────┘ │
-│                                                             │
-│ Type d'item: [Dropdown: Principal/Traduction/Livret...]    │
-│ Langue: [__] (si nécessaire)                              │
-│ Code suggéré: CNRSMH_I_2011_001_026_001 [Modifier]        │
-└─────────────────────────────────────────────────────────────┘
+**Navigation** : `Administration > Upload Manager`  
+**Objectif** : Interface complète d'upload en lot avec gestion avancée des fichiers en attente de rangement
 
-┌─ APERÇU PRE-UPLOAD ──────────────────────────────────────────┐
-│ Nom original: ceremonie_mariage_village.wav                │
-│ Taille: 45.2 MB | Durée: 12:30 | Format: WAV 48kHz        │
-│ Nom final: CNRSMH_I_2011_001_026_001.wav                  │
-│                                                             │
-│ [🚀 Uploader] [❌ Annuler]                                 │
-└─────────────────────────────────────────────────────────────┘
+### Architecture Technique
+
+Le système s'appuie sur un **composant Livewire global UploadManager** accessible depuis le menu Administration, composé de sous-composants spécialisés :
+
+- **UploadFiles** : Upload multiple avec chunks
+- **UploadedFilesTable** : Tableau des fichiers en attente
+- **UploadedFilesImport** : Import CSV pour automatisation
+- **FileStore** : Formulaires de rangement multi-étapes
+
+### Nouveau Modèle : PendingFile
+
+**Table** : `pending_files`
+```php
+- id (bigint, PK, auto-increment)
+- user_id (bigint, FK users) // Utilisateur ayant uploadé
+- original_name (string) // Nom original du fichier
+- stored_name (string) // Nom de stockage temporaire
+- file_path (string) // Chemin de stockage temporaire
+- file_size (bigint) // Taille en octets
+- file_type (string) // MIME type
+- file_extension (string) // Extension extraite
+- upload_status (enum) // 'uploading', 'completed', 'failed'
+- suggested_code (string, nullable) // Cote suggérée si détectée
+- created_at (timestamp)
+- updated_at (timestamp)
 ```
 
 
-##### **Mode Upload en Lot**
+---
+
+### Interface Principale UploadManager
+
+#### **Vue d'Ensemble Multi-Onglets**
 ```
-┌─ FICHIER CSV MAPPING ────────────────────────────────────────┐
-│ 1. Téléchargez le modèle CSV: [📥 Télécharger modèle]      │
-│ 2. Remplissez: nom_fichier | collection_code | type        │
-│ 3. Uploadez CSV: [Choisir fichier CSV]                     │
+┌─ ONGLETS PRINCIPAUX ─────────────────────────────────────────┐
+│ [📤 Upload] [📋 Fichiers en Attente] [📥 Import CSV] [⚙️ Config] │
 └─────────────────────────────────────────────────────────────┘
 
-┌─ UPLOAD FICHIERS ────────────────────────────────────────────┐
-│ ┌─────────────────────────────────────────────────────────┐ │
-│ │        Glissez TOUS vos fichiers ici (ZIP possible)    │ │
-│ │                   Fichiers multiples                    │ │
-│ └─────────────────────────────────────────────────────────┘ │
-└─────────────────────────────────────────────────────────────┘
-
-┌─ APERÇU TRAITEMENT ──────────────────────────────────────────┐
-│ ✅ ceremonie1.wav → CNRSMH_I_2011_001 (Principal)          │
-│ ✅ livret.pdf → CNRSMH_I_2011_001 (Livret)                 │
-│ ⚠️  fichier3.mp3 → Format non supporté                     │
-│ ❌ fichier4.wav → Collection inexistante                   │
-│                                                             │
-│ Résumé: 12 OK | 3 Avertissements | 1 Erreur               │
-│ [🔧 Corriger Erreurs] [🚀 Lancer Traitement]              │
+┌─ STATUT GLOBAL ──────────────────────────────────────────────┐
+│ 📊 45 fichiers en attente • 2.3 GB • 12 prêts au rangement │
+│ 🟢 Navigation libre activée • Uploads non-bloquants        │
 └─────────────────────────────────────────────────────────────┘
 ```
 
 
 ---
+
+### 📤 Onglet 1 : Upload Files (Composant UploadFiles)
+
+#### **Zone d'Upload Non-Bloquante avec Chunks**
+```
+┌─ UPLOAD EN LOT AVANCÉ ───────────────────────────────────────┐
+│ ┌─────────────────────────────────────────────────────────┐ │
+│ │    Glissez VOS FICHIERS ici ou cliquez pour choisir    │ │
+│ │         📁 Tous formats • Fichiers volumineux OK       │ │
+│ │          🔄 Upload par chunks • Reprise automatique     │ │
+│ │               ⚡ Navigation libre pendant upload        │ │
+│ └─────────────────────────────────────────────────────────┘ │
+│                                                             │
+│ Options avancées :                                          │
+│ ☑ Détection automatique des cotes dans les noms           │
+│ ☑ Upload par chunks (fichiers > 50MB)                     │
+│ ☐ Compresser automatiquement (audio/vidéo)                │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ FILES D'UPLOAD ACTIVES ─────────────────────────────────────┐
+│ 📁 ceremonie_mariage_2024.wav                              │
+│ ├─ Chunk 3/8 ████████████░░░░ 75% • 450MB/600MB          │
+│ └─ Cote détectée: CNRSMH_I_2024_015                       │
+│                                                             │
+│ 📁 interview_elder_village.mp4                             │
+│ ├─ Chunk 1/12 ██░░░░░░░░░░░░ 15% • 180MB/1.2GB           │
+│ └─ Aucune cote détectée                                    │
+│                                                             │
+│ [⏸️ Pause Tous] [▶️ Reprendre] [❌ Annuler Sélection]     │
+└─────────────────────────────────────────────────────────────┘
+```
+
+
+#### **Logique d'Upload par Chunks (Inspiration)**
+- **Référence** : https://fly.io/laravel-bytes/chunked-file-upload-livewire/
+- **Chunks dynamiques** : 5MB-50MB selon la taille totale
+- **Reprise automatique** : En cas d'échec réseau
+- **Métadonnées précoces** : Extraction dès la réception complète
+- **Navigation libre** : Interface non-bloquante
+
+---
+
+### 📋 Onglet 2 : Fichiers en Attente (Composant UploadedFilesTable)
+
+#### **Tableau Intelligent avec Suggestions**
+```
+┌─ FILTRES ET ACTIONS ─────────────────────────────────────────┐
+│ Statut: [Tous] [À ranger] [Prêts] [Problèmes] • Utilisateur: [Tous] │
+│ [🔄 Actualiser] [📥 Import CSV] [🗑️ Nettoyer] [📊 Stats]   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ TABLEAU PRINCIPAL ──────────────────────────────────────────┐
+│ Fichier                  │ Taille │ Suggestion Rangement      │ Actions   │
+├─────────────────────────┼────────┼───────────────────────────┼───────────┤
+│ 🎵 ceremonie_marriage.wav│  45MB  │ 🟢 CNRSMH_I_2024_015     │ [▶️ Ranger]│
+│   └ Cote détectée auto  │        │   → Collection existante  │ [👁 Voir] │
+├─────────────────────────┼────────┼───────────────────────────┼───────────┤
+│ 📄 livret_pochette.pdf  │  12MB  │ 🟡 Créer Collection      │ [▶️ Ranger]│
+│   └ Aucune cote trouvée │        │   CNRSMH_I_2024_016_L    │ [🔧 Config]│
+├─────────────────────────┼────────┼───────────────────────────┼───────────┤
+│ 🎬 interview_2024.mp4   │ 1.2GB  │ 🔴 Conflit de nommage     │ [🔧 Réparer]│
+│   └ Marie Dupont        │        │   Cote déjà utilisée     │ [❌ Ignorer]│
+└─────────────────────────┴────────┴───────────────────────────┴───────────┘
+
+Légende : 🟢 Prêt • 🟡 Action requise • 🔴 Erreur/Conflit
+```
+
+
+#### **Logique de Suggestions Automatiques**
+1. **Analyse du nom de fichier** : Regex pour détecter les patterns CNRSMH
+2. **Vérification existence** : Collections, Corpus, Fonds correspondants
+3. **Suggestions créations** : Collections manquantes avec nommage cohérent
+4. **Priorité Import CSV** : Les données CSV priment sur la détection automatique
+5. **Accès par rôle** : Chercheurs voient leurs fichiers, Documentalistes/Admins voient tout
+
+---
+
+### 📥 Onglet 3 : Import CSV (Composant UploadedFilesImport)
+
+#### **Automatisation pour Documentalistes/Administrateurs**
+```
+┌─ WORKFLOW IMPORT CSV ────────────────────────────────────────┐
+│ Étape 1: Télécharger le modèle                             │
+│ [📥 Télécharger modèle.csv] (colonnes prédéfinies)         │
+│                                                             │
+│ Étape 2: Remplir et uploader                               │
+│ Colonnes requises: nom_fichier | collection_code | type    │
+│ Colonnes optionnelles: item_type | language | titre        │
+│                                                             │
+│ [📂 Choisir fichier CSV] mon_import.csv (125 lignes)       │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ APERÇU VALIDATION CSV ──────────────────────────────────────┐
+│ ✅ 120 associations valides                                 │
+│ ⚠️  3 collections à créer automatiquement                  │
+│ ❌ 2 fichiers introuvables dans les uploads                │
+│                                                             │
+│ Détail des créations prévues:                              │
+│ • CNRSMH_I_2024_017 - Collection Nouveaux Chants          │
+│ • CNRSMH_I_2024_018 - Collection Interviews Anciens       │
+│ • CNRSMH_I_2024_019 - Collection Musique Instrumentale    │
+│                                                             │
+│ [🔧 Corriger Erreurs] [✅ Valider Import]                  │
+└─────────────────────────────────────────────────────────────┘
+```
+
+
+#### **Structure CSV Modèle**
+```
+nom_fichier,collection_code,item_type,language,titre,notes
+ceremonie_marriage.wav,CNRSMH_I_2024_015,principal,,Chant de mariage,
+interview_elder.mp4,CNRSMH_I_2024_016,principal,,Interview ancien,
+traduction_fr.pdf,CNRSMH_I_2024_015,traduction,fr,Traduction française,Associé au chant
+```
+
+
+---
+
+### 🔧 Onglet 4 : Rangement Individuel (Composant FileStore)
+
+#### **Formulaire Multi-Étapes par Fichier**
+```
+┌─ ÉTAPE 1/4 : SÉLECTION DESTINATION ─────────────────────────┐
+│ Fichier: 🎵 ceremonie_marriage.wav (45.2 MB • 12:30)      │
+│                                                             │
+│ Destination suggérée (modifiable):                          │
+│ 🏛️ Fonds: [CNRSMH_Arnaud      ▼]                         │  
+│ 📚 Corpus: [CNRSMH_Arnaud_001  ▼] (Rituels)               │
+│ 📦 Collection: [Créer nouvelle ✨] CNRSMH_I_2024_015      │
+│                                                             │
+│ ☑ Créer la collection "Cérémonies 2024"                   │
+│ [◀️ Annuler] [▶️ Suivant : Configuration Item]              │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ ÉTAPE 2/4 : CONFIGURATION ITEM ────────────────────────────┐
+│ Type d'item:                                                │
+│ ○ Item principal (enregistrement audio/vidéo)              │
+│ ○ Item secondaire: [Dropdown Types disponibles]            │
+│                                                             │
+│ Code/Cote (auto-généré, modifiable):                       │
+│ [CNRSMH_I_2024_015_001] [🔄 Régénérer]                    │
+│                                                             │
+│ Titre de l'item:                                            │
+│ [Chant rituel de mariage - Village XYZ]                   │
+│                                                             │
+│ Langue (si type secondaire nécessite):                     │
+│ [fr] (Français)                                            │
+│                                                             │
+│ [◀️ Précédent] [▶️ Suivant : Validation]                   │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ ÉTAPE 3/4 : VALIDATION FINALE ─────────────────────────────┐
+│ ✅ Récapitulatif à vérifier:                               │
+│                                                             │
+│ Fichier source: ceremonie_marriage.wav                     │
+│ Destination: 📦 CNRSMH_I_2024_015 (Collection à créer)    │
+│ Type: Item principal                                        │
+│ Code final: CNRSMH_I_2024_015_001                         │
+│ Titre: Chant rituel de mariage - Village XYZ              │
+│ Métadonnées: WAV 48kHz/24bit • 45.2MB • 12:30            │
+│                                                             │
+│ Actions après rangement:                                    │
+│ ☑ Traitement streaming (si audio/vidéo)                   │
+│ ☑ Extraction métadonnées avancées                         │
+│ ☑ Suppression du fichier temporaire                       │
+│                                                             │
+│ [◀️ Modifier] [✅ Confirmer Rangement]                     │
+└─────────────────────────────────────────────────────────────┘
+
+┌─ ÉTAPE 4/4 : TRAITEMENT EN COURS ───────────────────────────┐
+│ 🟢 Rangement terminé avec succès !                         │
+│                                                             │
+│ ✅ Collection CNRSMH_I_2024_015 créée                     │
+│ ✅ Item CNRSMH_I_2024_015_001 enregistré                  │
+│ ✅ Fichier déplacé vers stockage définitif                │
+│ 🔄 Traitement streaming en cours... (sera fait plus tard)  │
+│                                                             │
+│ [🌳 Voir dans Explorateur] [📋 Retour Liste] [▶️ Suivant] │
+└─────────────────────────────────────────────────────────────┘
+```
+
+
+---
+
+### Processus Complet d'Upload et Rangement
+
+#### **1. Phase Upload (Non-bloquante)**
+- Upload par chunks avec reprise automatique
+- Stockage temporaire sécurisé
+- Extraction métadonnées de base
+- Détection automatique des cotes
+- Navigation libre dans l'administration
+
+#### **2. Phase Suggestion (Intelligente)**
+- Analyse des noms de fichiers uploadés
+- Recherche correspondances dans la base existante
+- Suggestions de créations de collections nécessaires
+- Priorité aux données CSV d'import si disponibles
+
+#### **3. Phase Rangement (Guidée)**
+- Formulaire multi-étapes par fichier
+- Création automatique collections/corpus/fonds si nécessaire
+- Validation finale avant traitement
+- Déplacement vers stockage définitif
+- Suppression automatique des fichiers temporaires
+
+#### **4. Phase Traitement (Différée)**
+- Traitement streaming audio/vidéo (implémentation ultérieure)
+- Extraction métadonnées avancées
+- Indexation pour recherche
+- Notifications de fin de traitement
+
+---
+
+### Gestion des Permissions par Rôle
+
+#### **Chercheur**
+- Voir uniquement ses propres fichiers uploadés
+- Upload individuel et en lot
+- Rangement guidé de ses fichiers
+- Pas d'accès à l'import CSV
+
+#### **Documentaliste/Administrateur**
+- Vue globale de tous les fichiers uploadés
+- Accès à l'import CSV pour automatisation
+- Intervention sur le processus de rangement de tous les utilisateurs
+- Création/modification des Fonds/Corpus si nécessaire
+- Validation et correction des erreurs de rangement
+
+#### **Question Ouverte : Création Manuelle des Fonds/Corpus**
+À préciser selon les règles métier si les Fonds et Corpus doivent être créés manuellement par les Documentalistes avant l'upload, ou si le système peut les créer automatiquement lors du processus de rangement.
+
+---
+
+Cette refonte du système d'upload répond aux nouvelles exigences en offrant :
+- **Flexibilité** : Upload non-bloquant avec gestion des gros fichiers
+- **Intelligence** : Suggestions automatiques de rangement
+- **Automation** : Import CSV pour les Documentalistes
+- **Guidage** : Processus de rangement étape par étape
+- **Scalabilité** : Architecture technique robuste avec composants modulaires
 
 #### 3.3 AdvancedSearch
 

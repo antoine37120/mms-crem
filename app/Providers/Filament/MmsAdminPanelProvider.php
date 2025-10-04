@@ -20,6 +20,11 @@ use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
 use Filament\Navigation\NavigationGroup;
 use Filament\Support\Enums\Width;
+use Filament\Support\Assets\AlpineComponent;
+use Filament\Support\Facades\FilamentAsset;
+use Filament\Navigation\NavigationItem;
+
+use Livewire\Livewire;
 
 class MmsAdminPanelProvider extends PanelProvider
 {
@@ -72,12 +77,26 @@ class MmsAdminPanelProvider extends PanelProvider
                     //->icon('heroicon-o-cog-6-tooth')
                     ->collapsible(),
             ])
+            /*->navigationItems([
+                NavigationItem::make('Upload Rapide')
+                    ->icon('heroicon-o-arrow-up-tray')
+                    ->group('Médias & Items')
+                    ->sort(1) // Placer en premier dans le groupe
+                    ->url('#') // URL vide ou '#' pour éviter la navigation
+                    ->openUrlInNewTab(false)
+            ])*/
+
             ->brandName('MMS CREM')
             ->spa()
             ->viteTheme('resources/css/filament/mms-admin/theme.css')
             ->sidebarCollapsibleOnDesktop()
             ->topbar(false)
             ->brandLogo(asset('images/icone_archives-logo.svg'))
-            ;
+            ->renderHook(
+                'panels::body.end',
+                fn (): string => view('filament.hooks.upload-manager-button')->render()
+
+            );
+
     }
 }

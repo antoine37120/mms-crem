@@ -2,6 +2,7 @@
 
 @source '../../../../app/Filament/**/*';
 @source '../../../../resources/views/filament/**/*';
+@source '../../../../resources/views/livewire/**/*';
 
 /* Couleurs spécifiques MMS */
 :root {
@@ -59,4 +60,48 @@
 .loading-spinner {
     @apply animate-spin rounded-full h-4 w-4 border-b-2 border-primary-600;
 }
+
+/* Styles pour le bouton flottant de l'upload manager */
+.upload-manager-fab {
+    width: 50px;
+    height: 50px;
+    position: fixed;
+    bottom: 24px;
+    right: 24px;
+    z-index: 9999;
+}
+
+/* Animation de pulsation pour attirer l'attention */
+.upload-manager-fab:hover {
+    animation: pulse 2s infinite;
+}
+
+@keyframes pulse {
+    0% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0.7); }
+    70% { box-shadow: 0 0 0 10px rgba(59, 130, 246, 0); }
+    100% { box-shadow: 0 0 0 0 rgba(59, 130, 246, 0); }
+}
+
+
+/* S'assurer que les composants d'upload respectent le z-index de Filament
+#upload-indicator {
+    z-index: 9999 !important;
+} */
+
+/* Styles pour le modal global d'upload
+.global-upload-modal {
+    z-index: 10000 !important;
+} */
+
+/* Animation du spinner compatible avec les couleurs Filament
+.upload-spinner {
+    border-color: transparent;
+    border-top-color: currentColor;
+    animation: spin 1s linear infinite;
+}
+
+@keyframes spin {
+    0% { transform: rotate(0deg); }
+    100% { transform: rotate(360deg); }
+} */
 
