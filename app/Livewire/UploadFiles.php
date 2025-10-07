@@ -174,6 +174,8 @@ class UploadFiles extends Component
             $this->createPendingFile($fileId);
         }
 
+        $this->dispatch('pending-files-created');
+
     }
 
     private function createPendingFile(string $fileId): void

@@ -180,12 +180,17 @@ class Item extends Model
         Storage::disk('original_medias')->putFileAs($datePath, new File($fullPath), $fileName);
 
         $old_file = $this->getOriginal('file_path');
-        $old_file_path = Storage::disk('original_medias')->path($old_file);
-        if (file_exists($old_file_path)) {
-            Storage::disk('original_medias')->delete($old_file);
+        if($old_file !== null) {
+            $old_file_path = Storage::disk('original_medias')->path($old_file);
+            if (file_exists($old_file_path)) {
+                Storage::disk('original_medias')->delete($old_file);
+            }
         }
 
-        Storage::disk('original_medias')->delete($this->file_path);
+        //Possible que le fichier soit déjà au bon endroit mais qu'il ai été réécrit
+        if($this->file_path != $newFilePath) {
+            Storage::disk('original_medias')->delete($this->file_path);
+        }
         // Mettre à jour le chemin du fichier dans les données
         $this->file_path = $newFilePath;
 

@@ -136,9 +136,11 @@ class ItemForm
                                 //->unique(ignoreRecord: true)
                                 ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
                                     if($get('code_suffix') != '') {
-                                        return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'));
+                                        return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'))
+                                            ->where('file_extension',$get('file_extension'));
                                     }
-                                    return $rule->where('code', $get('code_prefix'));
+                                    return $rule->where('code', $get('code_prefix'))
+                                        ->where('file_extension',$get('file_extension'));
                                 })
                                 ->placeholder('Ex: CNRSMH_Arnaud_001')
                                 ->columnSpan(1),
@@ -186,8 +188,19 @@ class ItemForm
                     ->disk('original_medias')
                     ->required()
                     ->acceptedFileTypes(['audio/*', 'video/*', 'image/*', 'application/pdf'])
-                    ->storeFileNamesIn('file_name'),
+                    ->storeFileNamesIn('file_name')
+                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                        //connaite l'extention du fichier uploadé si $state n'est pas un string
+                        if (is_string($state) || $state === null) {
+                            return ;
+                        }
+                        $file = $state;
+                        $extension = $file->getClientOriginalExtension();
+                        $set('file_extension', $extension);
+                    }),
 
+                TextInput::make('file_extension')
+                    ->required(),
                 Hidden::make('is_sub')
                     ->default(false),
                 /*TextInput::make('file_name')
@@ -196,8 +209,6 @@ class ItemForm
                     ->required()
                     ->numeric(),
                 TextInput::make('file_type')
-                    ->required(),
-                TextInput::make('file_extension')
                     ->required(),
                 TextInput::make('duration')
                     ->numeric()

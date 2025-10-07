@@ -188,6 +188,15 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                                     }
                                     return true;
                                 })
+                                //->unique(ignoreRecord: true)
+                                ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
+                                    if($get('code_suffix') != '') {
+                                        return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'))
+                                            ->where('file_extension',$get('file_extension'));
+                                    }
+                                    return $rule->where('code', $get('code_prefix'))
+                                        ->where('file_extension',$get('file_extension'));
+                                })
                                 ->placeholder('Ex: TRA_en ou 02')
                                 ->columnSpan(1),
                         ])
@@ -262,11 +271,13 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
 
             // Créer le chemin basé sur la date de création du pending file
             $createdAt = Carbon::parse($this->pending_file_to_item->created_at);
-            $datePath = 'items/' . $createdAt->format('Y/m/d') . '';
+            //$datePath = 'items/' . $createdAt->format('Y/m/d') . '';
+            // Pas de rangement spécifique à ce stade, le modèle s'en chargera au hook de sauvegarde
+            $datePath = '';
 
             // Générer un nom de fichier unique pour éviter les conflits
             $fileName = $data['code']  . '.' . $data['file_extension'] ;
-            $newFilePath = $datePath .'/'. $fileName;
+            $newFilePath = $fileName;
 
             // Déplacer le fichier depuis le storage temporaire vers original_medias
             $currentFilePath = $this->pending_file_to_item->file_path;
@@ -278,14 +289,14 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
 
             // Créer le répertoire de destination s'il n'existe pas
             Storage::disk('original_medias')->makeDirectory($datePath);
-            $new_path = Storage::disk('original_medias')->path($datePath);
+            //$new_path = Storage::disk('original_medias')->path($datePath);
 
             $old_file_path = Storage::disk('local')->path($currentFilePath) ;
 
             // Log avant l'opération
             Log::info('Tentative de création du nouveau fichier', [
                 'old_file_path' => $old_file_path,
-                'new_path' => $new_path,
+                //'new_path' => $new_path,
                 'file_name' => $fileName,
                 '$newFilePath' => $newFilePath,
             ]);
@@ -293,8 +304,8 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
             // Copier le fichier vers le nouveau storage
             //$fileContent = Storage::disk('local')->get($currentFilePath);
             //Storage::disk('original_medias')->put($newFilePath, $fileContent);
-            // Manually specify a filename...
-            $path = Storage::disk('original_medias')->putFileAs($datePath, new File($old_file_path), $fileName);
+            // Ici, on met à la racine du dossier et on laisse le modèle ranger au hook d'enregistrement
+             Storage::disk('original_medias')->putFileAs($datePath, new File($old_file_path), $fileName);
 
             // Mettre à jour le chemin du fichier dans les données
             $data['file_path'] = $newFilePath;

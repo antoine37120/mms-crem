@@ -55,6 +55,14 @@ class UploadManager extends Component
 
         //$this->dispatch('open-modal', id: 'pending-files-modal');
     }
+
+
+    #[On('pending-files-created')]
+    public function actionPendingFileCreated() {
+        $this->countCompletedPendingFiles() ;
+        $this->dispatch('item-created');
+    }
+
     #[On('pending-file-to-item-end')]
     public function actionPendingFileToItemEnd() {
         // Delete $this->pending_file_to_item

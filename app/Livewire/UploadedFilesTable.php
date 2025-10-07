@@ -81,12 +81,14 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
             ]);
     }
 
+    #[On('item-created')]
     #[On('pending-file-deleted')]
     public function refreshTable()
     {
         // Cette méthode sera appelée quand l'événement 'pending-file-deleted' est émis
         // Le tableau se rafraîchira automatiquement
     }
+
 
     public function render()
     {
