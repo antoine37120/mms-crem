@@ -3,12 +3,14 @@
 namespace App\Models;
 
 use App\Traits\HasHierarchicalItems;
+use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Process;
@@ -97,6 +99,17 @@ class Item extends Model
             // Si le fichier a changé, retraiter les métadonnées
             if ($item->isDirty('file_path')) {
                 $item->processFileUpload();
+            } else {
+                if($item->isDirty('code_suffix')) {
+                    $old_code =  $item->getOriginal('code') ;
+                    $actual_file_path = $item->file_path ;
+                    $item->file_path = str_replace($old_code, $item->code, $item->file_path);
+
+                    \Log::info("Search file path: " . $old_code);
+                    \Log::info("New file code: " . $item->code);
+                    \Log::info("New file path: " . $item->file_path);
+                    Storage::disk('original_medias')->move($actual_file_path, $item->file_path);
+                }
             }
 
         });
@@ -138,8 +151,10 @@ class Item extends Model
             return;
         }
 
+
+
         // Déterminer le chemin complet du fichier
-        $fullPath = Storage::disk('local')->path($this->file_path);
+        $fullPath = Storage::disk('original_medias')->path($this->file_path);
 
         if (!file_exists($fullPath)) {
             return;
@@ -154,6 +169,25 @@ class Item extends Model
         /*$this->file_name = $pathInfo['basename'];
         $this->file_name = "nnnnnn";*/
         $this->file_extension = strtolower($pathInfo['extension'] ?? '');
+
+
+        $createdAt = now();
+        $datePath = 'items/' . $createdAt->format('Y/m/d') . '';
+        $fileName = $this->code  . '.' . $this->file_extension ;
+        $newFilePath = $datePath .'/'. $fileName;
+        // Créer le répertoire de destination s'il n'existe pas
+        Storage::disk('original_medias')->makeDirectory($datePath);
+        Storage::disk('original_medias')->putFileAs($datePath, new File($fullPath), $fileName);
+
+        $old_file = $this->getOriginal('file_path');
+        $old_file_path = Storage::disk('original_medias')->path($old_file);
+        if (file_exists($old_file_path)) {
+            Storage::disk('original_medias')->delete($old_file);
+        }
+
+        Storage::disk('original_medias')->delete($this->file_path);
+        // Mettre à jour le chemin du fichier dans les données
+        $this->file_path = $newFilePath;
 
         // Traitement spécifique selon le type de fichier
         $this->processByFileType($fullPath);

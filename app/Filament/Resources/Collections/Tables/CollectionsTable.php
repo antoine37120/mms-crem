@@ -19,24 +19,36 @@ class CollectionsTable
         return $table
             ->columns([
                 TextColumn::make('corpus.code')
-                    ->numeric()
+                    ->copyable()
+                    ->copyMessage('Copié!')
+                    ->copyMessageDuration(1500)
                     ->sortable(),
                 TextColumn::make('code')
                     ->searchable(),
                 TextColumn::make('title')
+                    ->label('Titre')
                     ->searchable(),
+                TextColumn::make('main_items_count')
+                    ->counts('mainItems')
+                    ->label('Nombre d\'items'),
+                TextColumn::make('secondary_items_count')
+                    ->counts('secondaryItems')
+                    ->label('Nombre de meta items'),
                 TextColumn::make('creator.name')
-                    ->numeric()
+                    ->label('Créé par')
                     ->sortable(),
                 TextColumn::make('created_at')
+                    ->label('Créé le')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('updated_at')
+                    ->label('Modifié le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
+                    ->label('Supprimé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

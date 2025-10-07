@@ -15,6 +15,9 @@ use Filament\Tables\Contracts\HasTable;
 use Illuminate\Contracts\View\View;
 use Filament\Tables\Table;
 use App\Models\PendingFile;
+use Filament\Actions\Action;
+use Filament\Actions\DeleteAction;
+use Livewire\Attributes\On;
 class UploadedFilesTable extends Component implements HasActions, HasSchemas, HasTable
 {
     use InteractsWithActions;
@@ -30,8 +33,8 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
                     ->searchable(),*/
                 TextColumn::make('original_name')
                     ->searchable(),
-                TextColumn::make('stored_name')
-                    ->searchable(),
+                /*TextColumn::make('stored_name')
+                    ->searchable(),*/
                 /*TextColumn::make('file_path')
                     ->searchable(),*/
                 TextColumn::make('file_size')
@@ -61,7 +64,15 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
                 //
             ])
             ->recordActions([
-                //
+
+                Action::make('convertToItem')
+                    ->label('Convertir en Item')
+                    ->icon('heroicon-o-arrow-path')
+                    ->action(function (PendingFile $record) {
+                        $this->dispatch('actionPendingFileToItem', pendingFileId: $record->id);
+                    })
+                    ->color('primary'),
+                DeleteAction::make(),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
@@ -69,6 +80,14 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
                 ]),
             ]);
     }
+
+    #[On('pending-file-deleted')]
+    public function refreshTable()
+    {
+        // Cette méthode sera appelée quand l'événement 'pending-file-deleted' est émis
+        // Le tableau se rafraîchira automatiquement
+    }
+
     public function render()
     {
         return view('livewire.uploaded-files-table');

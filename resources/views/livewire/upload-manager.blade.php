@@ -11,9 +11,11 @@
             <x-heroicon-o-queue-list class="h-6 w-6 group-hover:scale-110 transition-transform duration-200" />
 
             {{-- Badge de notification (factice) --}}
-            <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
-                4
-            </span>
+            @if($pending_files_count > 0)
+                <span class="absolute -top-2 -right-2 bg-red-500 text-white text-xs rounded-full h-5 w-5 flex items-center justify-center font-bold">
+                    {{ $pending_files_count }}
+                </span>
+            @endif
         </button>
 
         <button
@@ -60,6 +62,43 @@
         </div>
     </x-filament::modal>
 
+    {{-- Modal Item creation --}}
+    <x-filament::modal
+        width="6xl"
+        :close-by-clicking-away="true"
+        id="pending-files-to-item-modal"
+    >
+        <x-slot name="header">
+            <div class="flex items-center justify-between">
+                <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
+
+                    @if($pending_file_to_item)
+                    Créer un item pour {{ $pending_file_to_item->original_name }}
+                    @endif
+                </h2>
+            </div>
+        </x-slot>
+
+        <div class="space-y-6">
+            <div>
+                @if($pending_file_to_item != null)
+                    @livewire('uploaded-file-to-item', ['pending_file_to_item' => $pending_file_to_item], key('create_'.$pending_file_to_item->id))
+                @endif
+            </div>
+
+            {{-- Actions globales --}}
+            <div class="flex justify-between">
+                <div class="flex gap-3">
+                    <x-filament::button
+                        color="gray"
+                        wire:click="closeModalPendingFilesToItem"
+                    >
+                        Fermer
+                    </x-filament::button>
+                </div>
+            </div>
+        </div>
+    </x-filament::modal>
     {{-- Modal Fichiers en Attente --}}
     <x-filament::modal
         width="6xl"
@@ -76,17 +115,17 @@
 
         <div class="space-y-6">
             <div>
-                @livewire('uploaded-files-table')
+                @livewire('uploaded-files-table', [], key('table-pending-file'))
             </div>
 
             {{-- Actions globales --}}
             <div class="flex justify-between">
                 <div class="flex gap-3">
                     <x-filament::button
-                        color="success"
-                        disabled
+                        color="gray"
+                        wire:click="closeModalPendingFiles"
                     >
-                        Ranger Tous
+                        Fermer
                     </x-filament::button>
                 </div>
             </div>

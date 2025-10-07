@@ -152,10 +152,11 @@ class PendingFile extends Model
      */
     public function deleteTemporaryFile(): bool
     {
+        /*
         if ($this->fileExists()) {
             return Storage::delete($this->file_path);
         }
-
+*/
         return true;
     }
 

@@ -19,6 +19,7 @@ class CollectionForm
                 TextInput::make('code')
                     ->required(),
                 TextInput::make('title')
+                    ->label('Titre')
                     ->default(null),
                 // Auto-remplir l'utilisateur connecté
                 Hidden::make('created_by')

@@ -40,6 +40,7 @@ class CorpusForm
                     ->unique(ignoreRecord: true)
                     ->placeholder('Ex: CNRSMH_Arnaud_001'),
                 TextInput::make('title')
+                    ->label('Titre')
                     ->default(null),
                 // Auto-remplir l'utilisateur connecté
                 Hidden::make('created_by')

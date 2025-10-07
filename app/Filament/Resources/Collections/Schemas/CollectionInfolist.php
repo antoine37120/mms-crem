@@ -14,7 +14,8 @@ class CollectionInfolist
                 TextEntry::make('corpus.code')
                     ->numeric(),
                 TextEntry::make('code'),
-                TextEntry::make('title'),
+                TextEntry::make('title')
+                    ->label('Titre'),
                 TextEntry::make('created_by')
                     ->numeric(),
                 TextEntry::make('created_at')

@@ -19,27 +19,34 @@ class FondsTable
         return $table
             ->columns([
                 TextColumn::make('code')
+                    ->copyable()
+                    ->copyMessage('Copié!')
+                    ->copyMessageDuration(1500)
                     ->searchable(),
                 TextColumn::make('title')
+                    ->label('Titre')
                     ->searchable(),
                 TextColumn::make('corpuses_count')
                     ->counts('corpuses')
-                    ->label('Corpus'),
+                    ->label('Nombre de corpus'),
                 TextColumn::make('items_count')
                     ->counts('items')
-                    ->label('Items'),
+                    ->label('Nombre de meta items'),
                 TextColumn::make('creator.name')
-                    ->numeric()
+                    ->label('Créé par')
                     ->sortable(),
                 TextColumn::make('created_at')
+                    ->label('Créé le')
                     ->dateTime()
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('updated_at')
+                    ->label('Modifié le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('deleted_at')
+                    ->label('Supprimé le')
                     ->dateTime()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),

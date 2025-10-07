@@ -46,6 +46,22 @@ return [
             'throw' => false,
             'report' => false,
         ],
+        'original_medias' => [
+            'driver' => 'local',
+            'root' => env('MMS_MEDIAS_PATH', app_path().'medias'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+        'public_medias' => [
+            'driver' => 'local',
+            'root' => env('MMS_PUBLICS_MEDIAS_PATH', storage_path().'medias'),
+            'url' => env('APP_URL').'/storage',
+            'visibility' => 'public',
+            'throw' => false,
+            'report' => false,
+        ],
 
         's3' => [
             'driver' => 's3',
