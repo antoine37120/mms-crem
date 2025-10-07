@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ItemResource extends Resource
 {
@@ -49,6 +50,7 @@ class ItemResource extends Resource
     {
         return [
             //
+            'view' => AuditsRelationManager::class,
         ];
     }
 

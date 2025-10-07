@@ -19,11 +19,21 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Support\Enums\IconPosition;
 use App\Filament\Infolists\Components\FondsStatsAndLogs;
 use Filament\Support\Enums\TextSize;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ViewFond extends ViewRecord
 {
     protected static string $resource = FondResource::class;
 
+
+    public function getRelationManagers(): array
+    {
+        return [
+            \App\Filament\Resources\Fonds\RelationManagers\CorpusesRelationManager::class,
+            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            AuditsRelationManager::class,
+        ];
+    }
     protected function getHeaderActions(): array
     {
         return [

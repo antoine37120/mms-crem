@@ -19,9 +19,18 @@ use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\HtmlString;
 
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 class ViewCollection extends ViewRecord
 {
     protected static string $resource = CollectionResource::class;
+
+    public function getRelationManagers(): array
+    {
+        return [
+            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            AuditsRelationManager::class,
+        ];
+    }
 
 
     protected function getHeaderActions(): array

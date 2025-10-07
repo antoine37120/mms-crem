@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class CollectionResource extends Resource
 {
@@ -54,7 +55,8 @@ class CollectionResource extends Resource
     {
         return [
             //
-            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            /* \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            AuditsRelationManager::class,*/
         ];
     }
 

@@ -60,8 +60,8 @@ class Item extends Model implements Auditable
      * @var array
      */
     protected $auditExclude = [
-        'code_prefix',
-        'code_suffix',
+       /* 'code_prefix',
+        'code_suffix',*/
     ];
 
 

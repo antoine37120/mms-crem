@@ -20,6 +20,7 @@ use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class CorpusResource extends Resource
 {
@@ -55,8 +56,9 @@ class CorpusResource extends Resource
     {
         return [
             // Relations qui seront affichées dans des onglets
-            RelationManagers\CollectionsRelationManager::class,
+            /*RelationManagers\CollectionsRelationManager::class,
             \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            AuditsRelationManager::class,*/
 
         ];
     }

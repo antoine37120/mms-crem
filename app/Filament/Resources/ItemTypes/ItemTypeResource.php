@@ -18,6 +18,7 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ItemTypeResource extends Resource
 {
@@ -48,6 +49,7 @@ class ItemTypeResource extends Resource
     {
         return [
             //
+            //AuditsRelationManager::class,
         ];
     }
 

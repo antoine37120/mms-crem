@@ -18,6 +18,7 @@ use Filament\Support\Icons\Heroicon;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class FondResource extends Resource
 {
@@ -58,11 +59,13 @@ class FondResource extends Resource
         return [
 
             // Relations qui seront affichées dans des onglets
-            RelationManagers\CorpusesRelationManager::class,
+            /*RelationManagers\CorpusesRelationManager::class,
             \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            AuditsRelationManager::class,*/
 
         ];
     }
+
 
     public static function getPages(): array
     {

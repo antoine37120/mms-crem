@@ -22,11 +22,20 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Support\Enums\IconPosition;
 use App\Filament\Infolists\Components\CorpusStatsAndLogs;
 use Filament\Support\Enums\TextSize;
+use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ViewCorpus extends ViewRecord
 {
     protected static string $resource = CorpusResource::class;
 
+    public function getRelationManagers(): array
+    {
+        return [
+            \App\Filament\Resources\Corpuses\RelationManagers\CollectionsRelationManager::class,
+            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            AuditsRelationManager::class,
+        ];
+    }
     protected function getHeaderActions(): array
     {
         return [
