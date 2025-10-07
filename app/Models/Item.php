@@ -14,9 +14,11 @@ use Illuminate\Http\File;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Process;
+use OwenIt\Auditing\Contracts\Auditable;
 
-class Item extends Model
+class Item extends Model implements Auditable
 {
+    use \OwenIt\Auditing\Auditable;
     use HasFactory, SoftDeletes, HasHierarchicalItems;
 
 
@@ -52,6 +54,15 @@ class Item extends Model
 
     protected $appends = ['full_code', 'stats'];
 
+    /**
+     * Attributes to exclude from the Audit.
+     *
+     * @var array
+     */
+    protected $auditExclude = [
+        'code_prefix',
+        'code_suffix',
+    ];
 
 
 
