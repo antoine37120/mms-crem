@@ -22,7 +22,7 @@ class ImportCNRSMHCommand extends Command
     /**
      * The console command description.
      */
-    protected $description = 'Importe les fonds, corpus, collections et items depuis le fichier CSV pour les codes CNRSMH_E avec 2 séries de 3 chiffres';
+    protected $description = 'Importe les fonds, corpus, collections et items depuis le fichier CSV pour les codes CNRSMH_I avec 1 série de 3 chiffres';
 
     /**
      * Extensions trouvées pour statistiques
@@ -132,14 +132,14 @@ class ImportCNRSMHCommand extends Command
             $pattern = $row['pattern_trouve'];
             $filePath = $row['ligne_complete'];
 
-            // Extraire les parties du pattern pour CNRSMH_E
-            // Exemple: CNRSMH_E_1963_008_123_ ->
-            // Fond: CNRSMH_E
-            // Corpus: CNRSMH_E_1963
-            // Collection: CNRSMH_E_1963_008_123
+            // Extraire les parties du pattern pour CNRSMH_I
+            // Exemple: CNRSMH_I_1963_008_123_ ->
+            // Fond: CNRSMH_I
+            // Corpus: CNRSMH_I_1963
+            // Collection: CNRSMH_I_1963_008_123
 
             if (!preg_match('/CNRSMH_I_(\d{4})_(\d{3})/', $pattern, $matches)) {
-                $this->warn("Ligne {$lineNumber}: Pattern invalide '{$pattern}' (attendu: CNRSMH_E_YYYY_XXX_XXX)");
+                $this->warn("Ligne {$lineNumber}: Pattern invalide '{$pattern}' (attendu: CNRSMH_I_YYYY_XXX_XXX)");
                 $stats['errors']++;
                 return;
             }
@@ -148,9 +148,9 @@ class ImportCNRSMHCommand extends Command
             $firstThreeDigits = $matches[2];
 
             // Codes à créer
-            $fondCode = 'CNRSMH_E';
-            $corpusCode = "CNRSMH_E_{$year}";
-            $collectionCode = "CNRSMH_E_{$year}_{$firstThreeDigits}";
+            $fondCode = 'CNRSMH_I';
+            $corpusCode = "CNRSMH_I_{$year}";
+            $collectionCode = "CNRSMH_I_{$year}_{$firstThreeDigits}";
 
             // Extraire les informations du fichier
             $fileInfo = $this->extractFileInfo($filePath);
@@ -260,7 +260,7 @@ class ImportCNRSMHCommand extends Command
 
         $fond = Fond::create([
             'code' => $code,
-            'title' => "Fonds CNRSMH E",
+            'title' => "Fonds CNRSMH I",
             'created_by' => $userId
         ]);
 
@@ -291,7 +291,7 @@ class ImportCNRSMHCommand extends Command
         $corpus = Corpus::create([
             'fond_id' => $fond->id,
             'code' => $code,
-            'title' => "Corpus E {$year}",
+            'title' => "Corpus I {$year}",
             'created_by' => $userId
         ]);
 
@@ -322,7 +322,7 @@ class ImportCNRSMHCommand extends Command
         $collection = Collection::create([
             'corpus_id' => $corpus->id,
             'code' => $code,
-            'title' => "Collection E {$year}_{$firstDigits}",
+            'title' => "Collection I {$year}_{$firstDigits}",
             'created_by' => $userId
         ]);
 
@@ -477,7 +477,7 @@ class ImportCNRSMHCommand extends Command
      */
     private function displayStats(array $stats, bool $isDryRun): void
     {
-        $this->info("\n=== STATISTIQUES E " . ($isDryRun ? "(DRY-RUN)" : "") . " ===");
+        $this->info("\n=== STATISTIQUES I " . ($isDryRun ? "(DRY-RUN)" : "") . " ===");
         $this->info("Fonds créés: {$stats['fonds_created']}");
         $this->info("Fonds existants: {$stats['fonds_existing']}");
         $this->info("Corpus créés: {$stats['corpus_created']}");
