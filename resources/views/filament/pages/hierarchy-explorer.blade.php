@@ -10,7 +10,7 @@
                     {{ $this->form }}
                 </div>
 
-                <div class="overflow-y-auto h-full p-4">
+                <div class="overflow-y-auto p-4" style="height: calc(100% - 80px);">
                     @if($fonds->isNotEmpty())
                         @foreach($fonds as $fond)
                             <div class="mb-1" wire:key="fond-{{ $fond->id }}">
