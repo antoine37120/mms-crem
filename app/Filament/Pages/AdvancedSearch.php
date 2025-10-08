@@ -63,46 +63,37 @@ class AdvancedSearch extends Page implements HasTable
                     ->copyable()
                     ->copyMessage('Code copié!')
                     ->formatStateUsing(function ($record) {
-                        $icon = match(true) {
-                            $record->item_type_id === null => '🎵',
-                            $record->itemType?->name === 'Traduction' => '📄',
-                            $record->itemType?->name === 'Livret' => '📖',
-                            $record->itemType?->name === 'Pochette' => '🖼️',
-                            default => '📎'
-                        };
-                        return $icon . ' ' . $record->code;
-                    })
-                    ->description(fn ($record) => $record->title),
+                        return $record->code;
+                    }),
+                    //->description(fn ($record) => $record->title),
 
                 // Parent hiérarchique
                 TextColumn::make('itemable_type')
                     ->label('Parent')
                     ->formatStateUsing(function ($record) {
                         $type = match($record->itemable_type) {
-                            'App\Models\Fond' => '🏛️ Fonds',
-                            'App\Models\Corpus' => '📚 Corpus',
-                            'App\Models\Collection' => '📦 Collection',
-                            'App\Models\Item' => '🎵 Item',
-                            default => '❓'
+                            'App\Models\Fond' => 'Fonds',
+                            'App\Models\Corpus' => 'Corpus',
+                            'App\Models\Collection' => 'Collection',
+                            'App\Models\Item' => 'Item',
+                            default => ''
                         };
 
                         return $type . ': ' . ($record->itemable->code ?? 'N/A');
                     })
-                    ->color(fn ($record) => match($record->itemable_type) {
+                    /*->color(fn ($record) => match($record->itemable_type) {
                         'App\Models\Fond' => 'primary',
                         'App\Models\Corpus' => 'success',
                         'App\Models\Collection' => 'info',
                         'App\Models\Item' => 'warning',
                         default => 'gray'
-                    })
+                    })*/
                     ->size('sm'),
 
                 // Type d'item
-                TextColumn::make('itemType.name')
-                    ->label('Type')
-                    ->badge()
-                    ->placeholder('Principal')
-                    ->color(fn ($state) => $state ? 'secondary' : 'primary'),
+                IconColumn::make('is_sub')
+                    ->label('Meta item')
+                    ->boolean(),
 
                 // Format et taille
                 TextColumn::make('file_extension')
@@ -230,7 +221,7 @@ class AdvancedSearch extends Page implements HasTable
                 SelectFilter::make('corpus')
                     ->label('Corpus')
                     ->placeholder('Tous les corpus')
-                    ->options(Corpus::with('fond')->get()->mapWithKeys(fn ($corpus) => [$corpus->id => $corpus->fond->code . ' › ' . $corpus->code]))
+                    ->options(Corpus::with('fond')->get()->mapWithKeys(fn ($corpus) => [$corpus->id => $corpus->code]))
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['value'] ?? null,
@@ -254,7 +245,7 @@ class AdvancedSearch extends Page implements HasTable
                     ->label('Collection')
                     ->placeholder('Toutes les collections')
                     ->options(Collection::with(['corpus.fond'])->get()->mapWithKeys(fn ($collection) => [
-                        $collection->id => $collection->corpus->fond->code . ' › ' . $collection->corpus->code . ' › ' . $collection->code
+                        $collection->id => $collection->code
                     ]))
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
@@ -440,8 +431,8 @@ class AdvancedSearch extends Page implements HasTable
                     ->icon('heroicon-o-folder')
                     ->color('info')
                     ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
-                        'focus' => strtolower(class_basename($record->itemable_type)),
-                        'id' => $record->itemable_id
+                        'focus' => 'item',
+                        'id' => $record->id
                     ]))
                     ->openUrlInNewTab(),
 
