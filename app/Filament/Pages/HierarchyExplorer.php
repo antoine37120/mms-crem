@@ -226,8 +226,8 @@ class HierarchyExplorer extends Page implements HasForms
         $defaultFond = Fond::orderBy('code')->first();
 
         if ($defaultFond) {
-            $this->selectElement('fond', $defaultFond->id);
-            $this->expandedFonds[] = $defaultFond->id;
+            //$this->selectElement('fond', $defaultFond->id);
+            //$this->expandedFonds[] = $defaultFond->id;
         }
     }
 
