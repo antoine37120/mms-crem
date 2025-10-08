@@ -10,15 +10,16 @@
                     {{ $this->form }}
                 </div>
 
-                <div class="overflow-y-auto p-4" style="height: calc(100% - 80px);">
-                    @if($fonds->isNotEmpty())
+                <div class="overflow-y-auto p-4" style="height: calc(100% - 80px);" x-ref="column1Scroll">
+                @if($fonds->isNotEmpty())
                         @foreach($fonds as $fond)
                             <div class="mb-1" wire:key="fond-{{ $fond->id }}">
                                 {{-- Ligne du fonds --}}
                                 <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'fond' && $selectedId == $fond->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
-                                     wire:click="selectElement('fond', {{ $fond->id }})">
+                                     wire:click="selectElement('fond', {{ $fond->id }})"
+                                     @if($selectedType === 'fond' && $selectedId == $fond->id) x-ref="selectedElement" @endif>
 
-                                    {{-- Icône de dépliant ou point --}}
+                                {{-- Icône de dépliant ou point --}}
                                     @if($fond->corpuses_count > 0)
                                         <button
                                             wire:click.stop="toggleFond({{ $fond->id }})"
@@ -54,9 +55,10 @@
                                         @foreach($this->getCorpusesForFond($fond->id) as $corpus)
                                             <div wire:key="corpus-{{ $corpus->id }}">
                                                 <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'corpus' && $selectedId == $corpus->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
-                                                     wire:click="selectElement('corpus', {{ $corpus->id }})">
+                                                     wire:click="selectElement('corpus', {{ $corpus->id }})"
+                                                     @if($selectedType === 'corpus' && $selectedId == $corpus->id) x-ref="selectedElement" @endif>
 
-                                                    {{-- Icône de dépliant ou point --}}
+                                                {{-- Icône de dépliant ou point --}}
                                                     @if($corpus->collections_count > 0)
                                                         <button
                                                             wire:click.stop="toggleCorpus({{ $corpus->id }})"
@@ -92,9 +94,11 @@
                                                         @foreach($this->getCollectionsForCorpus($corpus->id) as $collection)
                                                             <div wire:key="collection-{{ $collection->id }}">
                                                                 <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'collection' && $selectedId == $collection->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
-                                                                     wire:click="selectElement('collection', {{ $collection->id }})">
+                                                                     wire:click="selectElement('collection', {{ $collection->id }})"
+                                                                     @if($selectedType === 'collection' && $selectedId == $collection->id) x-ref="selectedElement" @endif>
 
-                                                                    {{-- Point simple (pas d'enfants hiérarchiques) --}}
+
+                                                                {{-- Point simple (pas d'enfants hiérarchiques) --}}
                                                                     <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
                                                                         <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
                                                                     </span>
@@ -135,8 +139,8 @@
 
             {{-- COLONNE 2 (33%) - Arbre Items hiérarchique --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden">
-                <div class="overflow-y-auto h-full">
-                    @if($selectedType && $selectedId)
+                <div class="overflow-y-auto h-full" x-ref="column2Scroll">
+                @if($selectedType && $selectedId)
                         <div class="p-4">
                             {{-- Titre contextuel --}}
                             <div class="mb-4 text-sm text-gray-600 dark:text-gray-400">
@@ -163,9 +167,10 @@
                                             @php $hasChildren = $item->childItems && $item->childItems->count() > 0; @endphp
                                             <div wire:key="meta-item-{{ $item->id }}" class="ml-2">
                                                 <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $item->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
-                                                     wire:click="selectItem({{ $item->id }})">
+                                                     wire:click="selectItem({{ $item->id }})"
+                                                     @if($selectedItemId == $item->id) x-ref="selectedItem" @endif>
 
-                                                    {{-- Icône de dépliant ou point --}}
+                                                {{-- Icône de dépliant ou point --}}
                                                     @if($hasChildren)
                                                         <button
                                                             wire:click.stop="toggleItem({{ $item->id }})"
@@ -201,8 +206,9 @@
                                                         @foreach($item->childItems as $childItem)
                                                             <div wire:key="child-item-{{ $childItem->id }}"
                                                                  class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $childItem->id ? 'bg-primary-50 dark:bg-primary-900/50' : '' }}"
-                                                                 wire:click="selectItem({{ $childItem->id }})">
-                                                                <div class="text-xs text-gray-600 dark:text-gray-400 truncate">
+                                                                 wire:click="selectItem({{ $childItem->id }})"
+                                                                 @if($selectedItemId == $childItem->id) x-ref="selectedItem" @endif>
+                                                            <div class="text-xs text-gray-600 dark:text-gray-400 truncate">
                                                                     {{ $childItem->code }}
                                                                     @if($childItem->itemType)
                                                                         <span class="text-gray-500">({{ $childItem->itemType->name }})</span>
@@ -232,7 +238,8 @@
                                             @php $hasChildren = $item->childItems && $item->childItems->count() > 0; @endphp
                                             <div wire:key="standard-item-{{ $item->id }}" class="ml-2">
                                                 <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $item->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
-                                                     wire:click="selectItem({{ $item->id }})">
+                                                     wire:click="selectItem({{ $item->id }})"
+                                                     @if($selectedItemId == $item->id) x-ref="selectedItem" @endif>
 
                                                     {{-- Icône de dépliant ou point --}}
                                                     @if($hasChildren)
@@ -270,7 +277,8 @@
                                                         @foreach($item->childItems as $childItem)
                                                             <div wire:key="child-item-{{ $childItem->id }}"
                                                                  class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $childItem->id ? 'bg-primary-50 dark:bg-primary-900/50' : '' }}"
-                                                                 wire:click="selectItem({{ $childItem->id }})">
+                                                                 wire:click="selectItem({{ $childItem->id }})"
+                                                                 @if($selectedItemId == $item->id) x-ref="selectedItem" @endif>
                                                                 <div class="text-xs text-gray-600 dark:text-gray-400 truncate">
                                                                     {{ $childItem->code }}
                                                                     @if($childItem->itemType)
@@ -446,18 +454,46 @@
             selectedItemId: @js($selectedItemId),
 
             init() {
+                // Scroll initial vers les éléments sélectionnés
+                this.$nextTick(() => {
+                    this.scrollToSelectedElements();
+                });
+
                 // Écouter les changements de state
                 this.$watch('$wire.selectedType', (value) => {
                     this.selectedType = value;
+
                 });
 
                 this.$watch('$wire.selectedId', (value) => {
                     this.selectedId = value;
+
                 });
 
                 this.$watch('$wire.selectedItemId', (value) => {
                     this.selectedItemId = value;
+
                 });
+            },
+            scrollToSelectedElements() {
+
+                // Scroll vers l'élément sélectionné dans la colonne 1
+                if (this.$refs.selectedElement && this.$refs.column1Scroll) {
+                    this.$refs.selectedElement.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
+
+                // Scroll vers l'item sélectionné dans la colonne 2
+                if (this.$refs.selectedItem && this.$refs.column2Scroll) {
+                    this.$refs.selectedItem.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'center',
+                        inline: 'nearest'
+                    });
+                }
             }
         }));
     </script>
