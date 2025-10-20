@@ -109,7 +109,7 @@
 
                     // Corpus créés
                     $recentCorpuses = $fond->corpuses()
-                        ->where('created_at', '>=', now()->subDays(30))
+                        ->where('corpuses.created_at', '>=', now()->subDays(30))
                         ->with('creator')
                         ->orderBy('created_at', 'desc')
                         ->get();
