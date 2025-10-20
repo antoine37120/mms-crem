@@ -5,7 +5,7 @@ namespace App\Models;
 use App\Traits\HasHierarchicalItems;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -57,11 +57,11 @@ class Fond extends Model implements Auditable
     }
 
     /**
-     * Un fonds a plusieurs corpus
+     * Un fonds peut avoir plusieurs corpus
      */
-    public function corpuses(): HasMany
+    public function corpuses(): BelongsToMany
     {
-        return $this->hasMany(Corpus::class);
+        return $this->belongsToMany(Corpus::class);
     }
 
     /**

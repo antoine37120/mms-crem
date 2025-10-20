@@ -4,10 +4,12 @@ namespace App\Filament\Resources\Fonds\RelationManagers;
 
 use App\Filament\Resources\Corpuses\CorpusResource;
 use App\Models\ItemType;
+use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
+use Filament\Actions\DetachAction;
 use Filament\Actions\DetachBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
@@ -92,8 +94,11 @@ class CorpusesRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make()
                     ->modalAutofocus(false),
+                AttachAction::make()
+                    ->preloadRecordSelect(),
             ])
             ->recordActions([
+                DetachAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
                 ForceDeleteAction::make(),
@@ -102,11 +107,13 @@ class CorpusesRelationManager extends RelationManager
             ->toolbarActions([
                 BulkActionGroup::make([
                     DetachBulkAction::make(),
+                    DetachBulkAction::make(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),
                 ]),
             ])
+            ->defaultSort('code')
             ->modifyQueryUsing(fn (Builder $query) => $query
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,

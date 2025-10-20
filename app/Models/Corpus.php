@@ -16,7 +16,6 @@ class Corpus extends Model implements Auditable
     use HasFactory, SoftDeletes, HasHierarchicalItems;
 
     protected $fillable = [
-        'fond_id',
         'code',
         'title',
         'created_by',
@@ -51,11 +50,11 @@ class Corpus extends Model implements Auditable
 
 
     /**
-     * Un corpus appartient à un fonds
+     * Un corpus peut appartenir à plusieurs fonds
      */
-    public function fond(): BelongsTo
+    public function fonds(): BelongsToMany
     {
-        return $this->belongsTo(Fond::class);
+        return $this->belongsToMany(Fond::class);
     }
 
     /**
@@ -82,7 +81,7 @@ class Corpus extends Model implements Auditable
     {
         return $query->withItemStats()
             ->withCount(['collections'])
-            ->with(['fond:id,code,title']);
+            ->with(['fonds:id,code,title']);
     }
 
 }

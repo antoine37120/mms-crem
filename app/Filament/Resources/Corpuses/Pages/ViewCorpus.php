@@ -64,10 +64,14 @@ class ViewCorpus extends ViewRecord
                     ->schema([
                         TextEntry::make('id')
                             ->hiddenLabel()
-                            ->formatStateUsing(fn ($record) => new HtmlString(
-                                '< <a href="' . FondResource::getUrl('view', ['record' => $record->fond->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
-                                $record->fond->code . '</a>'
-                            ))
+                            ->formatStateUsing(function ($record) { if ($record->fonds->isEmpty()) { return 'Aucun fonds associé'; }
+                                $fondsLinks = $record->fonds->map(function ($fond) {
+                                    return '<a href="' . FondResource::getUrl('view', ['record' => $fond->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
+                                        $fond->code . '</a>';
+                                })->implode(' | ');
+
+                                return new HtmlString($fondsLinks);
+                            })
                             ->size(TextSize::Medium)
                             ->columnSpanFull(),
                     ])
@@ -104,10 +108,21 @@ class ViewCorpus extends ViewRecord
                                         ->icon('heroicon-o-building-library')
                                         ->badge()
                                         ->color('primary')
-                                        ->formatStateUsing(fn ($record) =>
-                                            $record->fond->code . ($record->fond->title ? ' - ' . $record->fond->title : '')
-                                        )
-                                        ->url(fn ($record) => FondResource::getUrl('view', ['record' => $record->fond->id]))
+                                        ->formatStateUsing(function ($record) {
+                                            if ($record->fonds->isEmpty()) {
+                                                return 'Aucun fond associé';
+                                            }
+
+                                            $fonds = $record->fonds->map(function ($fond) {
+                                                return '
+                                                <a href="' . FondResource::getUrl('view', ['record' => $fond->id]) . '" class="text-primary-600 hover:text-primary-800 underline">
+                                                <div class="fi-in-text-item  fi-in-text-has-badges fi-wrapped  fi-in-text">
+                                                <span class="fi-color fi-color-primary fi-text-color-600 dark:fi-text-color-200 fi-badge fi-size-sm">' .
+                                                    $fond->code . '</span></div></a>';
+                                            })->implode('');
+
+                                            return new HtmlString($fonds);
+                                        })
                                         ->openUrlInNewTab(false),
 
                                     TextEntry::make('creator.name')

@@ -15,7 +15,7 @@ trait HasHierarchicalItems
     public function getParentModel()
     {
         return match (get_class($this)) {
-            \App\Models\Corpus::class => $this->fond,
+            \App\Models\Corpus::class => $this->fonds->first(),
             \App\Models\Collection::class => $this->corpuses->first(),
             \App\Models\Item::class => $this->itemable->first(),
             default => null,

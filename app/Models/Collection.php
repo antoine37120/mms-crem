@@ -19,7 +19,6 @@ class Collection extends Model implements Auditable
 
 
     protected $fillable = [
-        'corpus_id',
         'code',
         'title',
         'created_by',

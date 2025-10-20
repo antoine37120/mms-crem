@@ -15,19 +15,22 @@ class CorpusForm
     {
         return $schema
             ->components([
-                Select::make('fond_id')
+                Select::make('fonds')
                     ->label('Fonds')
-                    ->relationship('fond', 'code')
+                    ->relationship('fonds', 'code')
+                    ->multiple()
                     ->searchable()
                     ->preload()
                     ->required()
                     ->live() // Pour la réactivité
-                    ->afterStateUpdated(function ($state, callable $set) {
-                        // Auto-suggestion du code basé sur le fonds parent
-                        if ($state) {
-                            $fond = Fond::find($state);
-                            if ($fond) {
-                                // Compter les corpus existants pour suggérer le prochain numéro
+                    ->afterStateUpdated(function ($state, callable $get, callable $set) { // Auto-suggestion du code basé sur le premier fonds sélectionné
+                        if($get('code') != '') {
+                            return ;
+                        }
+                        if (!empty($state)) { // Prendre le premier fonds sélectionné
+                            $fondId = $state[0];
+                            $fond = Fond::find($fondId);
+                            if ($fond) { // Compter les corpus existants pour suggérer le prochain numéro
                                 $existingCount = $fond->corpuses()->count();
                                 $nextNumber = str_pad($existingCount + 1, 3, '0', STR_PAD_LEFT);
                                 $set('code', $fond->code . '_' . $nextNumber);

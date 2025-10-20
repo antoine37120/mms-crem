@@ -51,6 +51,7 @@ class FondsTable
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
+            ->defaultSort('code')
             ->filters([
                 TrashedFilter::make(),
             ])

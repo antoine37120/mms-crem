@@ -96,7 +96,7 @@ class CorpusResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['fond', 'creator']);
+            ->with(['fonds', 'creator']);
     }
 
     // Configuration des permissions basées sur les rôles (similaire aux fonds)
