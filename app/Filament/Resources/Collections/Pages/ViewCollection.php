@@ -56,21 +56,21 @@ class ViewCollection extends ViewRecord
         return $schema
             ->schema([
                 // Breadcrumb hiérarchique
-                Section::make()
+                /*Section::make()
                     ->schema([
                         TextEntry::make('id')
                             ->hiddenLabel()
                             ->formatStateUsing(fn ($record) => new HtmlString(
-                                '< <a href="' . FondResource::getUrl('view', ['record' => $record->corpus->fond->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
-                                $record->corpus->fond->code . '</a>'.
-                                ' < <a href="' . CorpusResource::getUrl('view', ['record' => $record->corpus->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
-                                $record->corpus->code . '</a>'
+                                '< <a href="' . FondResource::getUrl('view', ['record' => $record->corpuses->fond->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
+                                $record->corpuses->fond->code . '</a>'.
+                                ' < <a href="' . CorpusResource::getUrl('view', ['record' => $record->corpuses->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
+                                $record->corpuses->code . '</a>'
                             ))
                             ->size(TextSize::Medium)
                             ->columnSpanFull(),
                     ])
                     ->compact()
-                    ->columnSpanFull(),
+                    ->columnSpanFull(),*/
 
                 // En-tête avec icône et informations principales
                 Section::make()
@@ -97,15 +97,26 @@ class ViewCollection extends ViewRecord
 
                             Grid::make(3)
                                 ->schema([
-                                    TextEntry::make('corpus.code')
-                                        ->label('Corpus parent')
-                                        ->icon('heroicon-o-book-open')
-                                        ->badge()
-                                        ->color('primary')
-                                        ->formatStateUsing(fn ($record) =>
-                                            $record->corpus->code . ($record->corpus->title ? ' - ' . $record->corpus->title : '')
-                                        )
-                                        ->url(fn ($record) => CorpusResource::getUrl('view', ['record' => $record->corpus->id]))
+                                    TextEntry::make('id')
+                                        ->label('Corpus associés')
+                                        ///->icon('heroicon-o-book-open')
+                                        //->badge()
+                                        //->iconColor('primary')
+                                        ->formatStateUsing(function ($record) {
+                                            if ($record->corpuses->isEmpty()) {
+                                                return 'Aucun corpus associé';
+                                            }
+
+                                            $corpuses = $record->corpuses->map(function ($corpus) {
+                                                return '
+                                                <a href="' . CorpusResource::getUrl('view', ['record' => $corpus->id]) . '" class="text-primary-600 hover:text-primary-800 underline">
+                                                <div class="fi-in-text-item  fi-in-text-has-badges fi-wrapped  fi-in-text">
+                                                <span class="fi-color fi-color-primary fi-text-color-600 dark:fi-text-color-200 fi-badge fi-size-sm">' .
+                                                    $corpus->code . '</span></div></a>';
+                                            })->implode('');
+
+                                            return new HtmlString($corpuses);
+                                        })
                                         ->openUrlInNewTab(false),
 
                                     TextEntry::make('creator.name')

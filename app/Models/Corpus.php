@@ -5,9 +5,8 @@ namespace App\Models;
 use App\Traits\HasHierarchicalItems;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
@@ -70,9 +69,9 @@ class Corpus extends Model implements Auditable
     /**
      * Un corpus a plusieurs collections
      */
-    public function collections(): HasMany
+    public function collections(): BelongsToMany
     {
-        return $this->hasMany(Collection::class);
+        return $this->belongsToMany(Collection::class);
     }
 
 

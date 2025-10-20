@@ -16,8 +16,8 @@ trait HasHierarchicalItems
     {
         return match (get_class($this)) {
             \App\Models\Corpus::class => $this->fond,
-            \App\Models\Collection::class => $this->corpus,
-            \App\Models\Item::class => $this->itemable,
+            \App\Models\Collection::class => $this->corpuses->first(),
+            \App\Models\Item::class => $this->itemable->first(),
             default => null,
         };
     }

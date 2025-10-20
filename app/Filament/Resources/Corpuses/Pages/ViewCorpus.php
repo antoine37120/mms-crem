@@ -4,6 +4,7 @@ namespace App\Filament\Resources\Corpuses\Pages;
 
 
 use App\Filament\Resources\Corpuses\CorpusResource;
+use App\Filament\Resources\Collections\CollectionResource;
 use App\Filament\Resources\Fonds\FondResource;
 
 use Filament\Actions\EditAction;
@@ -139,6 +140,7 @@ class ViewCorpus extends ViewRecord
                     ])
                     ->collapsible()
                     ->columnSpanFull(),
+
             ]);
     }
 

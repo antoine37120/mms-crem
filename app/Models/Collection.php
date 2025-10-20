@@ -7,6 +7,7 @@ use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
@@ -49,11 +50,11 @@ class Collection extends Model implements Auditable
     }
 
     /**
-     * Une collection appartient à un corpus
+     * Une collection peut appartenir à plusieurs corpus
      */
-    public function corpus(): BelongsTo
+    public function corpuses(): BelongsToMany
     {
-        return $this->belongsTo(Corpus::class);
+        return $this->belongsToMany(Corpus::class);
     }
 
     /**
@@ -67,9 +68,9 @@ class Collection extends Model implements Auditable
     /**
      * Obtenir le fonds parent via le corpus
      */
-    public function fond(): BelongsTo
+    public function fonds(): BelongsToMany
     {
-        return $this->corpus()->with('fond');
+        return $this->corpuses()->with('fond');
     }
 
     /**

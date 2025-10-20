@@ -46,9 +46,9 @@ class CollectionStatsAndLogs extends Entry
         foreach ($recentitems as $recentitem) {
             $recentActivity[] = [
                 'date' => $recentitem->created_at->format('d/m/Y à H:i'),
-                'action' => "Nouvelle collection : {$recentitem->code}",
+                'action' => "Nouveau Item : {$recentitem->code}",
                 'user' => $recentitem->creator->name ?? 'Utilisateur inconnu',
-                'type' => 'collection',
+                'type' => 'item',
                 'url' => ItemResource::getUrl('view', ['record' => $recentitem->id])
             ];
         }

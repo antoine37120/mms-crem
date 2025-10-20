@@ -93,7 +93,7 @@ class CollectionResource extends Resource
     public static function getEloquentQuery(): Builder
     {
         return parent::getEloquentQuery()
-            ->with(['corpus', 'creator']);
+            ->with(['corpuses', 'creator']);
     }
 
     // Configuration des permissions basées sur les rôles (similaire aux fonds)

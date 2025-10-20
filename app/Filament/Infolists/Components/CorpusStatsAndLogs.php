@@ -49,7 +49,7 @@ class CorpusStatsAndLogs extends Entry
 
         // Collections récentes avec liens
         $recentCollections = $corpus->collections()
-            ->where('created_at', '>=', now()->subDays(30))
+            ->where('collections.created_at', '>=', now()->subDays(30))
             ->with('creator')
             ->latest()
             ->limit(5)

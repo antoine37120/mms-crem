@@ -108,8 +108,12 @@ class CollectionsRelationManager extends RelationManager
                 CreateAction::make()
                     ->modalAutofocus(false)
                     ->successNotificationTitle("Collection créée avec succès"),
+
+                AttachAction::make()
+                    ->preloadRecordSelect(),
             ])
             ->recordActions([
+                DetachAction::make(),
                 EditAction::make(),
                 DeleteAction::make(),
                 ForceDeleteAction::make(),
@@ -117,6 +121,7 @@ class CollectionsRelationManager extends RelationManager
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
+                    DetachBulkAction::make(),
                     DeleteBulkAction::make(),
                     ForceDeleteBulkAction::make(),
                     RestoreBulkAction::make(),

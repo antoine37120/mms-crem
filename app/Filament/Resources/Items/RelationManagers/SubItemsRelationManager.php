@@ -172,6 +172,7 @@ class SubItemsRelationManager extends RelationManager
                     ->columnSpan(2),
 
                 FileUpload::make('file_path')
+                    ->disk('original_medias')
                     ->label('Fichier')
                     ->required()
                     ->acceptedFileTypes(['audio/*', 'video/*', 'application/pdf', 'text/plain', 'application/msword', 'image/*'])

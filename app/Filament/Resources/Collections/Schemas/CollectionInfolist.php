@@ -11,8 +11,8 @@ class CollectionInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('corpus.code')
-                    ->numeric(),
+                TextEntry::make('corpuses.code')
+                    ->listWithLineBreaks(),
                 TextEntry::make('code'),
                 TextEntry::make('title')
                     ->label('Titre'),
