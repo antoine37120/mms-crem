@@ -233,7 +233,25 @@ class ImportCNRSMHCommand extends Command
             'aac' => 'audio/aac',
             'wma' => 'audio/x-ms-wma',
             'avi' => 'video/x-msvideo',
-            'wmv' => 'video/x-ms-wmv'
+            'wmv' => 'video/x-ms-wmv',
+            'pdf' => 'application/pdf',
+            'doc' => 'application/msword',
+            'docx' => 'application/vnd.ms-word',
+            'jpg' => 'image/jpeg',
+            'jpeg' => 'image/jpeg',
+            'png' => 'image/png',
+            'odt' => 'application/vnd.oasis.opendocument.text',
+            'gif' => 'image/gif',
+            'tif' => 'image/tiff',
+            'tiff' => 'image/tiff',
+            'flv' => 'video/x-flv',
+            'mid' => 'audio/midi',
+            'vod' => 'video/x-msvideo',
+            'aiff' => 'audio/x-aiff',
+            'aif' => 'audio/aiff',
+            'm4v' => 'video/x-m4v',
+            'ajame' => 'audio/ajame',
+            'a' => 'audio/basic',
         ];
 
         return $mimeTypes[$extension] ?? 'application/octet-stream';

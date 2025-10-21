@@ -22,8 +22,8 @@ class CollectionStatsAndLogs extends Entry
         }
 
         // Calcul des statistiques
-        $itemsCount = $collection->allSecondaryItems()->count();
-        $totalItemsCount = $collection->allItems()->count();
+        $itemsCount = $collection->mainItems()->count();
+        $totalItemsCount = $collection->items()->count();
 
         // Calcul de la taille totale
         $totalSize = $collection->allItems()->sum('file_size') ?? 0;

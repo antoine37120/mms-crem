@@ -221,7 +221,7 @@ class AdvancedSearch extends Page implements HasTable
                 SelectFilter::make('corpus')
                     ->label('Corpus')
                     ->placeholder('Tous les corpus')
-                    ->options(Corpus::with('fond')->get()->mapWithKeys(fn ($corpus) => [$corpus->id => $corpus->code]))
+                    ->options(Corpus::with('fonds')->get()->mapWithKeys(fn ($corpus) => [$corpus->id => $corpus->code]))
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
                             $data['value'] ?? null,
@@ -244,7 +244,7 @@ class AdvancedSearch extends Page implements HasTable
                 SelectFilter::make('collection')
                     ->label('Collection')
                     ->placeholder('Toutes les collections')
-                    ->options(Collection::with(['corpus.fond'])->get()->mapWithKeys(fn ($collection) => [
+                    ->options(Collection::with(['corpuses.fonds'])->get()->mapWithKeys(fn ($collection) => [
                         $collection->id => $collection->code
                     ]))
                     ->query(function (Builder $query, array $data): Builder {
