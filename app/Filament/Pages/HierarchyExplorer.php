@@ -49,6 +49,12 @@ class HierarchyExplorer extends Page implements HasForms
     public array $expandedCollections = []; // Pour le mode Collections (expand mainItems)
     public array $expandedItems = [];
 
+    // Pagination pour le mode Collections
+    public int $collectionsPerPage = 30;
+    public int $collectionsPage = 1;
+    public bool $loadingMoreCollections = false;
+    public bool $hasMoreCollections = true;
+
     // Propriétés pour les paramètres URL
     public ?string $focus = null;
     public ?int $id = null;
@@ -100,6 +106,10 @@ class HierarchyExplorer extends Page implements HasForms
             $this->selectedElement = null;
             $this->selectedItemId = null;
             $this->selectedItem = null;
+
+            // Réinitialiser la pagination des collections
+            $this->collectionsPage = 1;
+            $this->hasMoreCollections = true;
 
             // Réinitialiser l'URL
             $this->focus = null;
@@ -312,6 +322,9 @@ class HierarchyExplorer extends Page implements HasForms
             default:
                 $element = null;
         }
+        if ($this->mode === 'collections' && $element) {
+            $this->searchTerm = $element->code ;
+        }
 
         $this->selectedElement = $element ? $element->toArray() : null;
     }
@@ -434,9 +447,42 @@ class HierarchyExplorer extends Page implements HasForms
                         $subQuery->whereRaw("? LIKE CONCAT(code, '%')", [$this->searchTerm]);
                     });
             });
+
+            $this->collectionsPage = 1;
+            $this->hasMoreCollections = true;
+        }
+        $totalCount = $query->count();
+        $limit = $this->collectionsPage * $this->collectionsPerPage;
+
+        $this->hasMoreCollections = $totalCount > $limit;
+
+        return $query
+            ->orderBy('code')
+            ->take($limit)
+            ->get();
+    }
+
+    /**
+     * Charge plus de collections (infinite scroll)
+     */
+    public function loadMoreCollections(): void
+    {
+        if (!$this->hasMoreCollections || $this->loadingMoreCollections) {
+            return;
         }
 
-        return $query->orderBy('code')->get();
+        $this->loadingMoreCollections = true;
+        $this->collectionsPage++;
+        $this->loadingMoreCollections = false;
+    }
+
+    /**
+     * Réinitialise la pagination des collections
+     */
+    public function resetCollectionsPagination(): void
+    {
+        $this->collectionsPage = 1;
+        $this->hasMoreCollections = true;
     }
 
     public function getMainItemsForCollection(?int $collectionId)

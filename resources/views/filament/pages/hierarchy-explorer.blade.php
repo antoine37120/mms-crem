@@ -37,7 +37,10 @@
                 </div>
 
                 {{-- Contenu Arbre --}}
-                <div class="overflow-y-auto flex-1 p-2" x-ref="column1Scroll">
+                <div class="overflow-y-auto flex-1 p-2"
+                     x-ref="column1Scroll"
+                     x-data="infiniteScrollCollections()"
+                     x-on:scroll.throttle.150ms="checkScroll()">
 
                     {{-- MODE COLLECTIONS --}}
                     @if($this->mode === 'collections')
@@ -98,6 +101,36 @@
                                     @endif
                                 </div>
                             @endforeach
+
+                            {{-- Indicateur de chargement
+                            @if($this->hasMoreCollections)
+                                <div wire:loading.flex wire:target="loadMoreCollections"
+                                     class="flex items-center justify-center py-4">
+                                    <svg class="animate-spin h-5 w-5 text-primary-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                    </svg>
+                                    <span class="text-sm text-gray-500">Chargement...</span>
+                                </div>
+                            @endif --}}
+
+                            {{-- Indicateur statique quand il y a plus à charger (visible quand pas en chargement) --}}
+                            @if($this->hasMoreCollections)
+                                    <div wire:loading.flex wire:target="loadMoreCollections"
+                                         class="flex items-center justify-center py-4 gap-2">
+                                        <svg class="animate-spin h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                            <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                            <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                        </svg>
+                                        <span class="text-sm text-gray-500 dark:text-gray-400">Chargement de 30 collections...</span>
+                                    </div>
+
+                                    {{-- Indicateur quand pas en chargement --}}
+                                    <div wire:loading.remove wire:target="loadMoreCollections"
+                                         class="flex items-center justify-center py-2 text-xs text-gray-400">
+                                        <span>Défiler pour charger plus...</span>
+                                    </div>
+                            @endif
                         @else
                             <div class="text-center text-gray-500 py-8">
                                 <p class="text-sm">Aucune collection trouvée</p>
@@ -469,6 +502,27 @@
                         block: 'center',
                         inline: 'nearest'
                     });
+                }
+            }
+        }));
+
+
+        Alpine.data('infiniteScrollCollections', () => ({
+            checkScroll() {
+                // Ne rien faire si on n'est pas en mode collections
+                if (@js($this->mode) !== 'collections') return;
+
+                const el = this.$el;
+                const threshold = 100;
+                const scrollPosition = el.scrollHeight - el.scrollTop - el.clientHeight;
+
+                if (scrollPosition < threshold) {
+                    const hasMore = @js($this->hasMoreCollections);
+                    const isLoading = @js($this->loadingMoreCollections);
+
+                    if (hasMore && !isLoading) {
+                        this.$wire.loadMoreCollections();
+                    }
                 }
             }
         }));
