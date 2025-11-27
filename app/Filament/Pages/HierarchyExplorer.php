@@ -100,7 +100,7 @@ class HierarchyExplorer extends Page implements HasForms
             $this->selectedElement = null;
             $this->selectedItemId = null;
             $this->selectedItem = null;
-            
+
             // Réinitialiser l'URL
             $this->focus = null;
             $this->id = null;
@@ -165,7 +165,7 @@ class HierarchyExplorer extends Page implements HasForms
             if ($this->mode === 'fonds' && $corpus->fonds->isNotEmpty()) {
                 $this->expandedFonds[] = $corpus->fonds->first()->id;
             }
-            
+
             $this->expandedCorpuses[] = $corpus->id;
             $this->selectElement('corpus', $corpus->id);
         }
@@ -183,7 +183,7 @@ class HierarchyExplorer extends Page implements HasForms
                 if ($collection->corpuses->isNotEmpty()) {
                     $corpus = $collection->corpuses->first();
                     $this->expandedCorpuses[] = $corpus->id;
-                    
+
                     if ($corpus->fonds->isNotEmpty()) {
                         $this->expandedFonds[] = $corpus->fonds->first()->id;
                     }
@@ -210,7 +210,7 @@ class HierarchyExplorer extends Page implements HasForms
 
         // Logique différente selon le mode et le type de parent
         // Pour simplifier, on se concentre sur l'affichage de l'item
-        
+
         // Si c'est un item principal (parent = Collection), on peut le sélectionner en Col 1 (Mode Collections)
         if ($item->itemable_type === 'App\Models\Collection' && !$item->is_sub) {
             if ($this->mode === 'collections') {
@@ -223,7 +223,7 @@ class HierarchyExplorer extends Page implements HasForms
 
         // Sinon, on essaie de remonter au parent affichable en Col 1
         $parent = $this->findVisibleParent($item);
-        
+
         if ($parent) {
             if ($parent instanceof Collection) {
                 $this->initializeFocusOnCollection($parent->id);
@@ -238,7 +238,7 @@ class HierarchyExplorer extends Page implements HasForms
                     $this->selectElement('item', $parent->id);
                 }
             }
-            
+
             // Sélectionner l'item en Col 2
             $this->selectItem($item->id);
         }
@@ -250,16 +250,16 @@ class HierarchyExplorer extends Page implements HasForms
     protected function findVisibleParent($item)
     {
         if (!$item->itemable) return null;
-        
+
         // Si le parent est une Collection/Corpus/Fond, c'est bon
         if (in_array($item->itemable_type, [
-            'App\Models\Collection', 
-            'App\Models\Corpus', 
+            'App\Models\Collection',
+            'App\Models\Corpus',
             'App\Models\Fond'
         ])) {
             return $item->itemable;
         }
-        
+
         // Si le parent est un Item
         if ($item->itemable_type === 'App\Models\Item') {
             // Si Mode Collections et parent est Item Principal, c'est bon
@@ -269,7 +269,7 @@ class HierarchyExplorer extends Page implements HasForms
             // Sinon récursion
             return $this->findVisibleParent($item->itemable);
         }
-        
+
         return null;
     }
 
@@ -280,7 +280,7 @@ class HierarchyExplorer extends Page implements HasForms
         $this->selectedId = $id;
         $this->selectedItemId = null; // Reset sélection item
         $this->selectedItem = null;
-        
+
         // Mise à jour URL
         $this->focus = $type;
         $this->id = $id;
@@ -386,7 +386,7 @@ class HierarchyExplorer extends Page implements HasForms
         // Many-to-Many: passer par la relation
         $fond = Fond::find($fondId);
         if (!$fond) return collect();
-        
+
         $query = $fond->corpuses()->withCount(['collections', 'items']);
 
         if ($this->searchTerm) {
@@ -407,7 +407,8 @@ class HierarchyExplorer extends Page implements HasForms
         $corpus = Corpus::find($corpusId);
         if (!$corpus) return collect();
 
-        $query = $corpus->collections()->withCount('items');
+        //$query = $corpus->collections()->withCount('items');
+        $query = $corpus->collections();
 
         if ($this->searchTerm) {
             $query->where(function ($q) {
@@ -422,7 +423,8 @@ class HierarchyExplorer extends Page implements HasForms
     // Propriétés computed pour la colonne 1 - Mode Collections
     public function getCollectionsProperty()
     {
-        $query = Collection::withCount(['items']);
+        //$query = Collection::withCount(['items']);
+        $query = Collection::query();
 
         if ($this->searchTerm) {
             $query->where(function ($q) {
@@ -440,12 +442,12 @@ class HierarchyExplorer extends Page implements HasForms
     public function getMainItemsForCollection(?int $collectionId)
     {
         if (!$collectionId) return collect();
-        
+
         $collection = Collection::find($collectionId);
         if (!$collection) return collect();
-        
+
         $query = $collection->mainItems()->withCount('childItems');
-        
+
         if ($this->searchTerm) {
             $query->where(function ($q) {
                 $q->where('code', 'like', "%{$this->searchTerm}%")
@@ -453,7 +455,7 @@ class HierarchyExplorer extends Page implements HasForms
                     ->orWhere('file_name', 'like', "%{$this->searchTerm}%");
             });
         }
-        
+
         return $query->orderBy('code')->get();
     }
 
@@ -468,7 +470,7 @@ class HierarchyExplorer extends Page implements HasForms
         if ($this->selectedType === 'item') {
             $item = Item::find($this->selectedId);
             if (!$item) return collect();
-            
+
             // On retourne ses enfants
             return $item->childItems()->with(['childItems', 'itemType'])->orderBy('code')->get();
         }
@@ -483,7 +485,7 @@ class HierarchyExplorer extends Page implements HasForms
         if (!$modelClass) {
             return collect();
         }
-        
+
         // Récupérer l'instance pour utiliser les relations
         $instance = $modelClass::find($this->selectedId);
         if (!$instance) return collect();
@@ -491,21 +493,10 @@ class HierarchyExplorer extends Page implements HasForms
         // Mode Collections : Si Collection sélectionnée, on montre ses secondaryItems
         if ($this->mode === 'collections' && $this->selectedType === 'collection') {
             $query = $instance->secondaryItems()->with(['childItems', 'itemType']);
-        } 
-        // Mode Fonds : Comportement standard (tous les items directs)
-        // OU Mode Collections mais autre type (ex: Fond/Corpus si on supportait le mix)
+        }
+        // Mode Fonds (ou autre): On prend tout (items) pour pouvoir séparer Main/Secondary
         else {
-            // Pour Fond/Corpus, items() retourne les items directs (polymorphique)
-            // Pour Collection en Mode Fonds, on montre tout ou juste secondaire ?
-            // La spec dit : "Sélection Collection : Affiche les items de la Collection dans la Colonne 2"
-            // Mais la spec dit aussi "Colonne 2 : Items Secondaires de l'élément sélectionné"
-            // On va suivre la spec "Items Secondaires" pour Collection
-            
-            if ($this->selectedType === 'collection') {
-                $query = $instance->secondaryItems()->with(['childItems', 'itemType']);
-            } else {
-                $query = $instance->items()->with(['childItems', 'itemType']);
-            }
+            $query = $instance->items()->with(['childItems', 'itemType']);
         }
 
         if ($this->searchTerm) {
@@ -524,24 +515,16 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function getMetaItemsProperty()
     {
-        // En mode Collections (Collection sélectionnée) ou Item Principal sélectionné, 
-        // tous les items affichés en Col 2 sont considérés comme "contenu"
-        // La distinction Meta/Standard n'est pertinente que si on affiche TOUS les items (Mode Fonds ?)
-        // La spec dit pour Mode 2 (Fonds) : "Pas de sections Meta/Standard (tous sont secondaires par définition)"
-        // La spec dit pour Mode 1 (Collections) : "Fonctionnement identique au mode précédent" (Meta/Standard)
-        // MAIS la spec révisée dit : "Colonne 2 : Items Secondaires... Liste plate... Pas de sections Meta/Standard"
-        
-        // On va suivre la spec révisée : Liste plate pour tout le monde en Col 2
-        // Donc cette propriété peut retourner vide ou être utilisée différemment
-        return collect();
+        return $this->selectedElementItems->filter(function ($item) {
+            return $item->is_sub === true;
+        });
     }
 
     public function getStandardItemsProperty()
     {
-        // Voir commentaire ci-dessus. On retourne tout dans une seule liste pour l'instant
-        // ou on garde la séparation si nécessaire.
-        // La spec révisée est claire : "Pas de sections Meta/Standard" pour la nouvelle Col 2
-        return $this->selectedElementItems;
+        return $this->selectedElementItems->filter(function ($item) {
+            return $item->is_sub !== true;
+        });
     }
 
     // Méthodes utilitaires

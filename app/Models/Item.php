@@ -15,7 +15,10 @@ use Illuminate\Support\Facades\Storage;
 use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Process;
 use OwenIt\Auditing\Contracts\Auditable;
+use App\Observers\ItemObserver;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
+#[ObservedBy([ItemObserver::class])]
 class Item extends Model implements Auditable
 {
     use \OwenIt\Auditing\Auditable;
@@ -41,6 +44,8 @@ class Item extends Model implements Auditable
         'upload_date',
         'uploaded_by',
         'created_by',
+        'main_items_count',
+        'secondary_items_count',
     ];
 
     protected $casts = [

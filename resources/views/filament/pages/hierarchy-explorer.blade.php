@@ -7,24 +7,24 @@
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
                 {{-- En-tête avec Sélecteur de Mode et Recherche --}}
                 <div class="p-4 border-b border-gray-200 dark:border-gray-600 space-y-3 bg-gray-50 dark:bg-gray-900/50">
-                    
+
                     {{-- Sélecteur de Mode --}}
                     <div class="flex rounded-md shadow-sm" role="group">
-                        <button type="button" 
+                        <button type="button"
                             wire:click="setMode('collections')"
                             class="flex-1 px-4 py-2 text-sm font-medium border rounded-l-lg focus:z-10 focus:ring-2 focus:ring-primary-500 focus:text-primary-700 dark:focus:ring-primary-500 dark:focus:text-white
-                            {{ $this->mode === 'collections' 
-                                ? 'bg-primary-600 text-white border-primary-600 hover:bg-primary-700' 
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600' 
+                            {{ $this->mode === 'collections'
+                                ? 'bg-primary-600 text-white border-primary-600 hover:bg-primary-700'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600'
                             }}">
                             Collections
                         </button>
-                        <button type="button" 
+                        <button type="button"
                             wire:click="setMode('fonds')"
                             class="flex-1 px-4 py-2 text-sm font-medium border rounded-r-lg focus:z-10 focus:ring-2 focus:ring-primary-500 focus:text-primary-700 dark:focus:ring-primary-500 dark:focus:text-white
-                            {{ $this->mode === 'fonds' 
-                                ? 'bg-primary-600 text-white border-primary-600 hover:bg-primary-700' 
-                                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600' 
+                            {{ $this->mode === 'fonds'
+                                ? 'bg-primary-600 text-white border-primary-600 hover:bg-primary-700'
+                                : 'bg-white text-gray-700 border-gray-200 hover:bg-gray-50 dark:bg-gray-700 dark:border-gray-600 dark:text-white dark:hover:bg-gray-600'
                             }}">
                             Fonds
                         </button>
@@ -38,7 +38,7 @@
 
                 {{-- Contenu Arbre --}}
                 <div class="overflow-y-auto flex-1 p-2" x-ref="column1Scroll">
-                    
+
                     {{-- MODE COLLECTIONS --}}
                     @if($this->mode === 'collections')
                         @if($collections->isNotEmpty())
@@ -77,7 +77,7 @@
                                                     <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'item' && $selectedId == $mainItem->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
                                                          wire:click="selectElement('item', {{ $mainItem->id }})"
                                                          @if($selectedType === 'item' && $selectedId == $mainItem->id) x-ref="selectedElement" @endif>
-                                                        
+
                                                         <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
                                                             <x-heroicon-o-document class="w-3 h-3 text-gray-400" />
                                                         </span>
@@ -87,7 +87,7 @@
                                                                 {{ $mainItem->code }}
                                                             </div>
                                                         </div>
-                                                        
+
                                                         @if($selectedType === 'item' && $selectedId == $mainItem->id)
                                                             <span class="text-sm text-primary-600 ml-2">◄</span>
                                                         @endif
@@ -211,7 +211,7 @@
 
             {{-- COLONNE 2 (33%) - Liste des Items (Secondaires ou Enfants) --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-                <div class="p-3 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">
+                {{-- <div class="p-3 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">
                     <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
                         @if($selectedType === 'collection' && $this->mode === 'collections')
                             Items Secondaires
@@ -221,75 +221,68 @@
                             Items
                         @endif
                     </h3>
-                </div>
-                
-                <div class="overflow-y-auto flex-1 p-2" x-ref="column2Scroll">
+                </div> --}}
+
+                <div class="overflow-y-auto flex-1 " x-ref="column2Scroll">
                     @if($selectedType && $selectedId)
                         @php
                             $items = $this->selectedElementItems;
+                            $isCollectionInFondsMode = $this->mode === 'fonds' && $selectedType === 'collection';
+                            $metaItems = $this->metaItems;
+                            $standardItems = $this->standardItems;
                         @endphp
 
-                        @if($items->isNotEmpty())
-                            <div class="space-y-1">
-                                @foreach($items as $item)
-                                    @php $hasChildren = $item->childItems && $item->childItems->count() > 0; @endphp
-                                    <div wire:key="item-{{ $item->id }}">
-                                        <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $item->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
-                                             wire:click="selectItem({{ $item->id }})"
-                                             @if($selectedItemId == $item->id) x-ref="selectedItem" @endif>
+                        @if($metaItems->isNotEmpty() || $standardItems->isNotEmpty())
 
-                                            {{-- Icône de dépliant si enfants --}}
-                                            @if($hasChildren)
-                                                <button
-                                                    wire:click.stop="toggleItem({{ $item->id }})"
-                                                    class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($item->id, $expandedItems) ? 'rotate-180' : '' }}">
-                                                    <x-heroicon-o-chevron-up-down class="w-4 h-4" />
-                                                </button>
-                                            @else
-                                                <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
-                                                    <x-heroicon-o-document class="w-3 h-3 text-gray-400" />
-                                                </span>
-                                            @endif
+                            {{-- Cas Spécial: Mode Fonds + Collection (Séparation Secondary / Main) --}}
 
-                                            <div class="flex-1 min-w-0">
-                                                <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
-                                                    {{ $item->code }}
-                                                </div>
-                                                <div class="text-xs text-gray-500">
-                                                    {{ $item->file_extension }} • {{ $this->formatFileSize($item->file_size) }}
-                                                </div>
-                                            </div>
 
-                                            @if($selectedItemId == $item->id)
-                                                <span class="text-sm text-primary-600 ml-2">◄</span>
-                                            @endif
+                                {{-- Items Secondaires --}}
+                                @if($metaItems->isNotEmpty())
+                                    <div class="mb-4">
+                                        <div class="p-2 mb-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 rounded">
+                                            <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
+                                                Items Secondaires
+                                            </h3>
                                         </div>
-
-                                        {{-- Enfants (si expanded) --}}
-                                        @if($hasChildren && in_array($item->id, $expandedItems))
-                                            <div class="ml-6 border-l-2 border-gray-100 dark:border-gray-700 pl-1 mt-1">
-                                                @foreach($item->childItems as $childItem)
-                                                    <div wire:key="child-item-{{ $childItem->id }}"
-                                                         class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $childItem->id ? 'bg-primary-50 dark:bg-primary-900/50' : '' }}"
-                                                         wire:click="selectItem({{ $childItem->id }})"
-                                                         @if($selectedItemId == $childItem->id) x-ref="selectedItem" @endif>
-                                                        
-                                                        <span class="flex-shrink-0 w-4 h-4 mr-2"></span>
-                                                        
-                                                        <div class="text-xs text-gray-600 dark:text-gray-400 truncate flex-1">
-                                                            {{ $childItem->code }}
-                                                        </div>
-                                                        
-                                                        @if($selectedItemId == $childItem->id)
-                                                            <span class="text-primary-600 ml-2">◄</span>
-                                                        @endif
-                                                    </div>
-                                                @endforeach
-                                            </div>
-                                        @endif
+                                        <div class="space-y-1">
+                                            @foreach($metaItems as $item)
+                                                @include('filament.pages.partials.hierarchy-item-row', ['item' => $item])
+                                            @endforeach
+                                        </div>
                                     </div>
-                                @endforeach
-                            </div>
+                                @endif
+
+                                {{-- Items Principaux --}}
+                                @if($standardItems->isNotEmpty())
+                                    <div>
+                                        <div class="p-2 mb-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 rounded">
+                                            <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
+                                                Items
+                                            </h3>
+                                        </div>
+                                        <div class="space-y-1">
+                                            @foreach($standardItems as $item)
+                                                @include('filament.pages.partials.hierarchy-item-row', ['item' => $item])
+                                            @endforeach
+                                        </div>
+                                    </div>
+                                @endif
+
+
+                                {{-- Cas Standard (Liste plate)
+                                <div class="p-3 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">
+                                    <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
+                                        Items Secondaires
+                                    </h3>
+                                </div>
+                                <div class="space-y-1">
+                                    @foreach($items as $item)
+                                        @include('filament.pages.partials.hierarchy-item-row', ['item' => $item])
+                                    @endforeach
+                                </div> --}}
+
+
                         @else
                             <div class="text-center text-gray-500 py-8">
                                 <p class="text-sm">Aucun item disponible</p>
@@ -316,7 +309,7 @@
                             <div class="space-y-3">
                                 <div>
                                     <div class="flex items-center font-medium text-gray-900 dark:text-gray-100">
-                                        <span class="flex-shrink-0 w-4 mr-2">{{ \Filament\Support\generate_icon_html($this->getSelectedElementTypeIcon()) }}</span> 
+                                        <span class="flex-shrink-0 w-4 mr-2">{{ \Filament\Support\generate_icon_html($this->getSelectedElementTypeIcon()) }}</span>
                                         <span class="truncate">{{ $selectedElement['code'] ?? 'Sans nom' }}</span>
                                     </div>
                                     @if(isset($selectedElement['title']) && $selectedElement['title'])
@@ -330,7 +323,7 @@
                                     @elseif($selectedType === 'corpus')
                                         {{ $selectedElement['collections_count'] ?? 0 }} collections • {{ $selectedElement['items_count'] ?? 0 }} items
                                     @else
-                                        {{ $selectedElement['items_count'] ?? 0 }} items
+                                        {{ $selectedElement['main_items_count'] ?? 0 }} items, {{ $selectedElement['secondary_items_count'] ?? 0 }} items associés
                                     @endif
                                 </div>
 
@@ -348,7 +341,7 @@
                                         </x-filament::button>
                                     @endif
                                 </div>
-                                
+
                                 {{-- Actions de création --}}
                                 <div class="flex flex-wrap justify-end gap-2 pt-2">
                                     @if($selectedType === 'fond')
@@ -375,7 +368,7 @@
                             <div class="space-y-3">
                                 <div>
                                     <div class="flex items-center font-medium text-gray-900 dark:text-gray-100">
-                                        <span class="flex-shrink-0 w-4 mr-2"><x-heroicon-o-document /></span> 
+                                        <span class="flex-shrink-0 w-4 mr-2"><x-heroicon-o-document /></span>
                                         <span class="truncate">{{ $selectedItem['code'] ?? 'Sans nom' }}</span>
                                     </div>
                                     @if(isset($selectedItem['title']) && $selectedItem['title'])
