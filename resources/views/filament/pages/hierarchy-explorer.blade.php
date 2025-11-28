@@ -280,7 +280,7 @@
                                     <div class="mb-4">
                                         <div class="p-2 mb-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 rounded">
                                             <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
-                                                Items Secondaires
+                                                Medias associés
                                             </h3>
                                         </div>
                                         <div class="space-y-1">
@@ -361,7 +361,7 @@
                                     @elseif($selectedType === 'corpus')
                                         {{ $selectedElement['collections_count'] ?? 0 }} collections • {{ $selectedElement['items_count'] ?? 0 }} items
                                     @else
-                                        {{ $selectedElement['main_items_count'] ?? 0 }} items, {{ $selectedElement['secondary_items_count'] ?? 0 }} items associés
+                                        {{ $selectedElement['main_items_count'] ?? 0 }} items, {{ $selectedElement['secondary_items_count'] ?? 0 }} medias associés
                                     @endif
                                 </div>
 
