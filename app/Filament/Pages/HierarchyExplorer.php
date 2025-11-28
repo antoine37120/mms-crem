@@ -50,7 +50,7 @@ class HierarchyExplorer extends Page implements HasForms
     public array $expandedItems = [];
 
     // Pagination pour le mode Collections
-    public int $collectionsPerPage = 30;
+    public int $collectionsPerPage = 100;
     public int $collectionsPage = 1;
     public bool $loadingMoreCollections = false;
     public bool $hasMoreCollections = true;
@@ -519,7 +519,7 @@ class HierarchyExplorer extends Page implements HasForms
 
         // Calculer l'index de départ : on veut la collection au milieu de la fenêtre
         // Mais minimum à l'index 0
-        $startIndex = max(0, $rank - 3); // 10 collections avant pour contexte
+        $startIndex = max(0, $rank - 30); // 10 collections avant pour contexte
 
         // S'assurer qu'on ne dépasse pas la fin
         if ($startIndex + $this->collectionsPerPage > $totalCount && $totalCount > $this->collectionsPerPage) {

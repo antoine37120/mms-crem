@@ -39,8 +39,7 @@
                 {{-- Contenu Arbre --}}
                 <div class="overflow-y-auto flex-1 p-2"
                      x-ref="column1Scroll"
-                     x-data="infiniteScrollCollections()"
-                     x-on:scroll.throttle.150ms="checkScroll()">
+                     x-on:scroll.throttle.150ms="checkScrollCollections($event.target)">
 
                     {{-- MODE COLLECTIONS --}}
                     @if($this->mode === 'collections')
@@ -62,9 +61,11 @@
                         @if($collections->isNotEmpty())
                             @foreach($collections as $collection)
                                 <div class="mb-1" wire:key="col-mode-{{ $collection->id }}">
+
+                                    {{-- Pour les collections en mode Collections --}}
                                     <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'collection' && $selectedId == $collection->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
                                          wire:click="selectElement('collection', {{ $collection->id }})"
-                                         @if($selectedType === 'collection' && $selectedId == $collection->id) x-ref="selectedElement" @endif>
+                                         @if($selectedType === 'collection' && $selectedId == $collection->id) data-selected-element="true" @endif>
 
                                         {{-- Toggle pour mainItems --}}
                                         <button
@@ -92,9 +93,10 @@
                                         <div class="ml-6 border-l-2 border-gray-100 dark:border-gray-700 pl-1 mt-1">
                                             @foreach($this->getMainItemsForCollection($collection->id) as $mainItem)
                                                 <div wire:key="main-item-{{ $mainItem->id }}">
+                                                    {{-- Pour les main items --}}
                                                     <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'item' && $selectedId == $mainItem->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
                                                          wire:click="selectElement('item', {{ $mainItem->id }})"
-                                                         @if($selectedType === 'item' && $selectedId == $mainItem->id) x-ref="selectedElement" @endif>
+                                                         @if($selectedType === 'item' && $selectedId == $mainItem->id) data-selected-element="true" @endif>
 
                                                         <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
                                                             <x-heroicon-o-document class="w-3 h-3 text-gray-400" />
@@ -148,7 +150,7 @@
                                     {{-- Ligne du fonds --}}
                                     <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'fond' && $selectedId == $fond->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
                                          wire:click="selectElement('fond', {{ $fond->id }})"
-                                         @if($selectedType === 'fond' && $selectedId == $fond->id) x-ref="selectedElement" @endif>
+                                         @if($selectedType === 'fond' && $selectedId == $fond->id) data-selected-element="true" @endif>
 
                                         {{-- Icône de dépliant --}}
                                         <button
@@ -178,7 +180,7 @@
                                                 <div wire:key="corpus-{{ $corpus->id }}">
                                                     <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'corpus' && $selectedId == $corpus->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
                                                          wire:click="selectElement('corpus', {{ $corpus->id }})"
-                                                         @if($selectedType === 'corpus' && $selectedId == $corpus->id) x-ref="selectedElement" @endif>
+                                                         @if($selectedType === 'corpus' && $selectedId == $corpus->id) data-selected-element="true" @endif>
 
                                                         <button
                                                             wire:click.stop="toggleCorpus({{ $corpus->id }})"
@@ -207,7 +209,7 @@
                                                                 <div wire:key="collection-{{ $collection->id }}">
                                                                     <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedType === 'collection' && $selectedId == $collection->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
                                                                          wire:click="selectElement('collection', {{ $collection->id }})"
-                                                                         @if($selectedType === 'collection' && $selectedId == $collection->id) x-ref="selectedElement" @endif>
+                                                                         @if($selectedType === 'collection' && $selectedId == $collection->id) data-selected-element="true" @endif>
 
                                                                         <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
                                                                             <span class="w-1 h-1 bg-gray-400 rounded-full"></span>
@@ -468,83 +470,144 @@
             selectedType: @js($selectedType),
             selectedId: @js($selectedId),
             selectedItemId: @js($selectedItemId),
+            mode: @js($this->mode),
+            hasMoreCollections: @js($this->hasMoreCollections),
+            hasMoreCollectionsBefore: @js($this->hasMoreCollectionsBefore),
+            loadingMoreCollections: false,
+            loadingMoreCollectionsBefore: false,
+            lastScrollTop: 0,
+            scrollCheckEnabled: false,
 
             init() {
-                // Scroll initial vers les éléments sélectionnés
+                // Attendre que Livewire ait fini de rendre le DOM
                 this.$nextTick(() => {
-                    this.scrollToSelectedElements();
+                    setTimeout(() => {
+                        this.scrollToSelectedElements();
+                        // Activer la détection du scroll après le scroll initial
+                        setTimeout(() => {
+                            this.scrollCheckEnabled = true;
+                            // Mémoriser la position initiale du scroll
+                            if (this.$refs.column1Scroll) {
+                                this.lastScrollTop = this.$refs.column1Scroll.scrollTop;
+                            }
+                        }, 300);
+                    }, 150);
                 });
 
                 // Écouter les changements de state
                 this.$watch('$wire.selectedType', (value) => {
                     this.selectedType = value;
+                    this.$nextTick(() => this.scrollToSelectedElements());
                 });
 
                 this.$watch('$wire.selectedId', (value) => {
+                    console.log('hohoohohoh');
                     this.selectedId = value;
+                    this.$nextTick(() => this.scrollToSelectedElements());
                 });
 
                 this.$watch('$wire.selectedItemId', (value) => {
                     this.selectedItemId = value;
+                    this.$nextTick(() => this.scrollToSelectedElements());
+                });
+
+                this.$watch('$wire.mode', (value) => {
+                    this.mode = value;
+                    // Réinitialiser l'état du scroll lors du changement de mode
+                    this.scrollCheckEnabled = false;
+                    this.lastScrollTop = 0;
+                    this.$nextTick(() => {
+                        setTimeout(() => {
+                            this.scrollCheckEnabled = true;
+                            if (this.$refs.column1Scroll) {
+                                this.lastScrollTop = this.$refs.column1Scroll.scrollTop;
+                            }
+                        }, 300);
+                    });
+                });
+
+                this.$watch('$wire.hasMoreCollections', (value) => {
+                    this.hasMoreCollections = value;
+                });
+
+                this.$watch('$wire.hasMoreCollectionsBefore', (value) => {
+                    this.hasMoreCollectionsBefore = value;
                 });
             },
+
             scrollToSelectedElements() {
                 // Scroll vers l'élément sélectionné dans la colonne 1
-                if (this.$refs.selectedElement && this.$refs.column1Scroll) {
-                    this.$refs.selectedElement.scrollIntoView({
-                        behavior: 'smooth',
-                        block: 'center',
-                        inline: 'nearest'
-                    });
+                const selectedElement = document.querySelector('[data-selected-element="true"]');
+                console.log(selectedElement);
+                const column1Scroll = this.$refs.column1Scroll;
+
+                if (selectedElement && column1Scroll) {
+                    const elementRect = selectedElement.getBoundingClientRect();
+                    const containerRect = column1Scroll.getBoundingClientRect();
+
+                    const isVisible = (
+                        elementRect.top >= containerRect.top &&
+                        elementRect.bottom <= containerRect.bottom
+                    );
+
+                    if (!isVisible) {
+                        selectedElement.scrollIntoView({
+                            behavior: 'smooth',
+                            block: 'center',
+                            inline: 'nearest'
+                        });
+                    }
                 }
 
                 // Scroll vers l'item sélectionné dans la colonne 2
-                if (this.$refs.selectedItem && this.$refs.column2Scroll) {
-                    this.$refs.selectedItem.scrollIntoView({
+                const selectedItem = document.querySelector('[data-selected-item="true"]');
+                const column2Scroll = this.$refs.column2Scroll;
+
+                if (selectedItem && column2Scroll) {
+                    selectedItem.scrollIntoView({
                         behavior: 'smooth',
                         block: 'center',
                         inline: 'nearest'
                     });
                 }
-            }
-        }));
+            },
 
+            checkScrollCollections(el) {
+                // L'infinite scroll ne fonctionne qu'en mode collections
+                if (this.mode !== 'collections') return;
 
-        Alpine.data('infiniteScrollCollections', () => ({
-            checkScroll() {
-                if (@js($this->mode) !== 'collections') return;
+                // Ne pas vérifier tant que l'initialisation n'est pas terminée
+                if (!this.scrollCheckEnabled) return;
 
-                const el = this.$el;
-                const threshold = 100;
+                const threshold = 50;
+                const currentScrollTop = el.scrollTop;
+                const scrollDirection = currentScrollTop > this.lastScrollTop ? 'down' : 'up';
 
-                // Scroll vers le bas
+                // Mémoriser la position pour la prochaine comparaison
+                this.lastScrollTop = currentScrollTop;
+
+                // Scroll vers le bas - charger les suivants
                 const bottomDistance = el.scrollHeight - el.scrollTop - el.clientHeight;
-                if (bottomDistance < threshold) {
-                    const hasMore = @js($this->hasMoreCollections);
-                    const isLoading = @js($this->loadingMoreCollections);
-
-                    if (hasMore && !isLoading) {
-                        this.$wire.loadMoreCollections();
-                    }
+                if (scrollDirection === 'down' && bottomDistance < threshold && this.hasMoreCollections && !this.loadingMoreCollections) {
+                    this.loadingMoreCollections = true;
+                    this.$wire.loadMoreCollections().then(() => {
+                        this.loadingMoreCollections = false;
+                    });
                 }
 
-                // Scroll vers le haut
-                if (el.scrollTop < threshold) {
-                    const hasMoreBefore = @js($this->hasMoreCollectionsBefore);
-                    const isLoadingBefore = @js($this->loadingMoreCollectionsBefore);
+                // Scroll vers le haut - charger les précédents
+                // Seulement si on scrolle vers le haut ET qu'on est proche du sommet
+                if (scrollDirection === 'up' && currentScrollTop < threshold && this.hasMoreCollectionsBefore && !this.loadingMoreCollectionsBefore) {
+                    this.loadingMoreCollectionsBefore = true;
+                    const previousScrollHeight = el.scrollHeight;
 
-                    if (hasMoreBefore && !isLoadingBefore) {
-                        // Sauvegarder la hauteur avant chargement pour maintenir la position
-                        const previousScrollHeight = el.scrollHeight;
-
-                        this.$wire.loadMoreCollectionsBefore().then(() => {
-                            this.$nextTick(() => {
-                                // Restaurer la position de scroll après ajout d'éléments en haut
-                                const newScrollHeight = el.scrollHeight;
-                                el.scrollTop = newScrollHeight - previousScrollHeight + el.scrollTop;
-                            });
+                    this.$wire.loadMoreCollectionsBefore().then(() => {
+                        this.$nextTick(() => {
+                            const newScrollHeight = el.scrollHeight;
+                            el.scrollTop = newScrollHeight - previousScrollHeight + currentScrollTop;
+                            this.loadingMoreCollectionsBefore = false;
                         });
-                    }
+                    });
                 }
             }
         }));
