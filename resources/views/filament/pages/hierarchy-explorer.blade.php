@@ -44,6 +44,21 @@
 
                     {{-- MODE COLLECTIONS --}}
                     @if($this->mode === 'collections')
+                        {{-- Indicateur de chargement en HAUT --}}
+                        @if($hasMoreCollectionsBefore)
+                            <div wire:loading.flex wire:target="loadMoreCollectionsBefore"
+                                 class="flex items-center justify-center py-4 gap-2">
+                                <svg class="animate-spin h-5 w-5 text-primary-500" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
+                                    <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
+                                    <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
+                                </svg>
+                                <span class="text-sm text-gray-500 dark:text-gray-400">Chargement des collections précédentes...</span>
+                            </div>
+                            <div wire:loading.remove wire:target="loadMoreCollectionsBefore"
+                                 class="text-center text-xs text-gray-400 py-2">
+                                ↑ Défiler vers le haut pour charger plus
+                            </div>
+                        @endif
                         @if($collections->isNotEmpty())
                             @foreach($collections as $collection)
                                 <div class="mb-1" wire:key="col-mode-{{ $collection->id }}">
@@ -101,18 +116,6 @@
                                     @endif
                                 </div>
                             @endforeach
-
-                            {{-- Indicateur de chargement
-                            @if($this->hasMoreCollections)
-                                <div wire:loading.flex wire:target="loadMoreCollections"
-                                     class="flex items-center justify-center py-4">
-                                    <svg class="animate-spin h-5 w-5 text-primary-500 mr-2" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                                        <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4"></circle>
-                                        <path class="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-                                    </svg>
-                                    <span class="text-sm text-gray-500">Chargement...</span>
-                                </div>
-                            @endif --}}
 
                             {{-- Indicateur statique quand il y a plus à charger (visible quand pas en chargement) --}}
                             @if($this->hasMoreCollections)
@@ -509,19 +512,38 @@
 
         Alpine.data('infiniteScrollCollections', () => ({
             checkScroll() {
-                // Ne rien faire si on n'est pas en mode collections
                 if (@js($this->mode) !== 'collections') return;
 
                 const el = this.$el;
                 const threshold = 100;
-                const scrollPosition = el.scrollHeight - el.scrollTop - el.clientHeight;
 
-                if (scrollPosition < threshold) {
+                // Scroll vers le bas
+                const bottomDistance = el.scrollHeight - el.scrollTop - el.clientHeight;
+                if (bottomDistance < threshold) {
                     const hasMore = @js($this->hasMoreCollections);
                     const isLoading = @js($this->loadingMoreCollections);
 
                     if (hasMore && !isLoading) {
                         this.$wire.loadMoreCollections();
+                    }
+                }
+
+                // Scroll vers le haut
+                if (el.scrollTop < threshold) {
+                    const hasMoreBefore = @js($this->hasMoreCollectionsBefore);
+                    const isLoadingBefore = @js($this->loadingMoreCollectionsBefore);
+
+                    if (hasMoreBefore && !isLoadingBefore) {
+                        // Sauvegarder la hauteur avant chargement pour maintenir la position
+                        const previousScrollHeight = el.scrollHeight;
+
+                        this.$wire.loadMoreCollectionsBefore().then(() => {
+                            this.$nextTick(() => {
+                                // Restaurer la position de scroll après ajout d'éléments en haut
+                                const newScrollHeight = el.scrollHeight;
+                                el.scrollTop = newScrollHeight - previousScrollHeight + el.scrollTop;
+                            });
+                        });
                     }
                 }
             }

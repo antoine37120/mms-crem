@@ -55,6 +55,11 @@ class HierarchyExplorer extends Page implements HasForms
     public bool $loadingMoreCollections = false;
     public bool $hasMoreCollections = true;
 
+    // Scroll bidirectionnel
+    public int $collectionsStartIndex = 0;
+    public bool $hasMoreCollectionsBefore = false;
+    public bool $loadingMoreCollectionsBefore = false;
+
     // Propriétés pour les paramètres URL
     public ?string $focus = null;
     public ?int $id = null;
@@ -109,7 +114,9 @@ class HierarchyExplorer extends Page implements HasForms
 
             // Réinitialiser la pagination des collections
             $this->collectionsPage = 1;
+            $this->collectionsStartIndex = 0;
             $this->hasMoreCollections = true;
+            $this->hasMoreCollectionsBefore = false;
 
             // Réinitialiser l'URL
             $this->focus = null;
@@ -199,8 +206,10 @@ class HierarchyExplorer extends Page implements HasForms
                     }
                 }
             } else {
-                // Mode Collections : rien à expandre par défaut (liste plate)
-                // Sauf si on veut voir les mainItems
+                // Mode Collections : initialiser la fenêtre de pagination centrée
+                $this->initializeCollectionWindow($collectionId);
+
+                // Expandre pour voir les mainItems
                 $this->expandedCollections[] = $collection->id;
             }
 
@@ -322,9 +331,6 @@ class HierarchyExplorer extends Page implements HasForms
             default:
                 $element = null;
         }
-        if ($this->mode === 'collections' && $element) {
-            $this->searchTerm = $element->code ;
-        }
 
         $this->selectedElement = $element ? $element->toArray() : null;
     }
@@ -436,7 +442,6 @@ class HierarchyExplorer extends Page implements HasForms
     // Propriétés computed pour la colonne 1 - Mode Collections
     public function getCollectionsProperty()
     {
-        //$query = Collection::withCount(['items']);
         $query = Collection::query();
 
         if ($this->searchTerm) {
@@ -448,22 +453,89 @@ class HierarchyExplorer extends Page implements HasForms
                     });
             });
 
+            // Réinitialiser la pagination lors d'une recherche
+            $this->collectionsStartIndex = 0;
             $this->collectionsPage = 1;
-            $this->hasMoreCollections = true;
+            $this->hasMoreCollectionsBefore = false;
         }
-        $totalCount = $query->count();
-        $limit = $this->collectionsPage * $this->collectionsPerPage;
 
-        $this->hasMoreCollections = $totalCount > $limit;
+        $totalCount = $query->count();
+
+        // Calculer le nombre total d'éléments à charger
+        $itemsToLoad = $this->collectionsPage * $this->collectionsPerPage;
+        $endIndex = $this->collectionsStartIndex + $itemsToLoad;
+
+        $this->hasMoreCollections = $endIndex < $totalCount;
+        $this->hasMoreCollectionsBefore = $this->collectionsStartIndex > 0;
 
         return $query
             ->orderBy('code')
-            ->take($limit)
+            ->skip($this->collectionsStartIndex)
+            ->take($itemsToLoad)
             ->get();
     }
 
     /**
-     * Charge plus de collections (infinite scroll)
+     * Réinitialise la pagination des collections
+     */
+    public function resetCollectionsPagination(): void
+    {
+        $this->collectionsPage = 1;
+        $this->collectionsStartIndex = 0;
+        $this->hasMoreCollections = true;
+        $this->hasMoreCollectionsBefore = false;
+    }
+
+    /**
+     * Calcule le rang (position) d'une collection dans la liste triée par code
+     */
+    protected function calculateCollectionRank(int $collectionId): int
+    {
+        $collection = Collection::find($collectionId);
+        if (!$collection) {
+            return 0;
+        }
+
+        // Compter combien de collections ont un code inférieur (tri alphabétique)
+        return Collection::where('code', '<', $collection->code)
+            ->orderBy('code')
+            ->count();
+    }
+
+    /**
+     * Initialise la fenêtre de pagination centrée sur une collection
+     */
+    protected function initializeCollectionWindow(int $collectionId): void
+    {
+        $collection = Collection::find($collectionId);
+        if (!$collection) {
+            return;
+        }
+
+        $totalCount = Collection::count();
+
+        // Compter combien de collections sont AVANT celle-ci (tri par code)
+        $rank = Collection::where('code', '<', $collection->code)->count();
+
+        // Calculer l'index de départ : on veut la collection au milieu de la fenêtre
+        // Mais minimum à l'index 0
+        $startIndex = max(0, $rank - 3); // 10 collections avant pour contexte
+
+        // S'assurer qu'on ne dépasse pas la fin
+        if ($startIndex + $this->collectionsPerPage > $totalCount && $totalCount > $this->collectionsPerPage) {
+            $startIndex = $totalCount - $this->collectionsPerPage;
+        }
+
+        $this->collectionsStartIndex = $startIndex;
+        $this->collectionsPage = 1;
+        $this->hasMoreCollectionsBefore = $startIndex > 0;
+        $this->hasMoreCollections = ($startIndex + $this->collectionsPerPage) < $totalCount;
+
+    }
+
+
+    /**
+     * Charge plus de collections vers le bas (infinite scroll)
      */
     public function loadMoreCollections(): void
     {
@@ -477,13 +549,25 @@ class HierarchyExplorer extends Page implements HasForms
     }
 
     /**
-     * Réinitialise la pagination des collections
+     * Charge plus de collections vers le haut (scroll inverse)
      */
-    public function resetCollectionsPagination(): void
+    public function loadMoreCollectionsBefore(): void
     {
-        $this->collectionsPage = 1;
-        $this->hasMoreCollections = true;
+        if (!$this->hasMoreCollectionsBefore || $this->loadingMoreCollectionsBefore) {
+            return;
+        }
+
+        $this->loadingMoreCollectionsBefore = true;
+
+        // Décaler l'index de départ de 30 positions vers le début
+        $this->collectionsStartIndex = max(0, $this->collectionsStartIndex - $this->collectionsPerPage);
+
+        // Mettre à jour le flag
+        $this->hasMoreCollectionsBefore = $this->collectionsStartIndex > 0;
+
+        $this->loadingMoreCollectionsBefore = false;
     }
+
 
     public function getMainItemsForCollection(?int $collectionId)
     {
