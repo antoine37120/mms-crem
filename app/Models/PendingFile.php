@@ -24,6 +24,7 @@ class PendingFile extends Model
         'file_extension',
         'upload_status',
         'suggested_code',
+        'client_signature',
     ];
 
     protected $casts = [

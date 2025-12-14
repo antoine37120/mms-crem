@@ -10,20 +10,17 @@ use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
 use Carbon\Carbon;
 
-
 class UploadFiles extends Component
 {
     use WithFileUploads;
+
     public int $maxConcurrentUploads = 2;
 
     // Configuration
     public int $CHUNK_SIZE = 10 * 1024 * 1024; // 10MB
 
-    // État des fichiers
-    public array $queuedFiles = [];
-    public array $uploadingFiles = [];
-    public array $completedFiles = [];
-    public array $failedFiles = [];
+    // Unified file list
+    public array $files = [];
 
     // Contrôle d'upload
     public bool $isUploading = false;
@@ -35,6 +32,7 @@ class UploadFiles extends Component
         'cancelUpload' => 'cancelUpload',
         'retryUpload' => 'retryUpload',
     ];
+
     /**
      * Méthode appelée au montage du composant
      * Nettoie automatiquement les anciens fichiers orphelins
@@ -66,13 +64,8 @@ class UploadFiles extends Component
                 ]);
 
                 foreach ($oldPendingFiles as $pendingFile) {
-                    // Supprimer les chunks temporaires s'ils existent
                     $this->cleanupChunks($pendingFile);
-
-                    // Supprimer le fichier principal s'il existe
                     $pendingFile->deleteTemporaryFile();
-
-                    // Supprimer l'enregistrement
                     $pendingFile->delete();
                 }
 
@@ -96,21 +89,15 @@ class UploadFiles extends Component
     private function cleanupChunks(PendingFile $pendingFile): void
     {
         try {
-            // Pattern pour trouver tous les chunks
             $chunkPattern = $pendingFile->file_path . '.chunk.*';
-
-            // Récupérer le répertoire parent
             $directory = dirname($pendingFile->file_path);
 
             if (Storage::exists($directory)) {
                 $allFiles = Storage::files($directory);
-
-                // Filtrer les fichiers qui correspondent au pattern de chunks
                 $chunkFiles = array_filter($allFiles, function($file) use ($pendingFile) {
                     return str_starts_with($file, $pendingFile->file_path . '.chunk.');
                 });
 
-                // Supprimer tous les chunks trouvés
                 if (!empty($chunkFiles)) {
                     Storage::delete($chunkFiles);
                     Log::debug('Chunks supprimés', [
@@ -133,13 +120,12 @@ class UploadFiles extends Component
         foreach ($files as $fileData) {
             $fileId = (string) Str::uuid();
 
-            //$fileId = Str::uuid();
-
-            $this->queuedFiles[$fileId] = [
+            $this->files[$fileId] = [
                 'id' => $fileId,
                 'name' => $fileData['name'],
                 'size' => $fileData['size'],
                 'type' => $fileData['type'],
+                'signature' => $fileData['signature'] ?? null, // Capture client signature
                 'chunks_total' => ceil($fileData['size'] / $this->CHUNK_SIZE),
                 'chunks_uploaded' => 0,
                 'progress' => 0,
@@ -147,47 +133,53 @@ class UploadFiles extends Component
                 'pending_file_id' => null,
                 'error' => null,
                 'suggested_code' => null,
+                'added_at' => now()->timestamp, // For sorting if needed
             ];
         }
 
-        // Rafraîchir la vue
-        $this->dispatch('queue-updated', count($this->queuedFiles));
+        $this->dispatch('queue-updated', count($this->files));
     }
+
     public function removeFromQueue(string $fileId): void
     {
-        unset($this->queuedFiles[$fileId]);
+        unset($this->files[$fileId]);
     }
 
     public function startAllUploads(): void
     {
-        if (empty($this->queuedFiles)) {
+        $queuedCount = collect($this->files)->where('status', 'queued')->count();
+        if ($queuedCount === 0) {
             return;
         }
 
         $this->isUploading = true;
 
-        // Créer les PendingFile pour tous les fichiers en queue
-        // Limiter le nombre d'uploads simultanés
-        $filesToStart = array_slice($this->queuedFiles, 0, $this->maxConcurrentUploads, true);
+        $uploadingCount = collect($this->files)->where('status', 'uploading')->count();
+        $slotsAvailable = $this->maxConcurrentUploads - $uploadingCount;
 
-        foreach ($filesToStart as $fileId => $fileData) {
-            $this->createPendingFile($fileId);
+        if ($slotsAvailable > 0) {
+            $filesToStart = collect($this->files)
+                ->where('status', 'queued')
+                ->take($slotsAvailable);
+
+            foreach ($filesToStart as $fileId => $fileData) {
+                $this->createPendingFile($fileId);
+            }
         }
-
-        $this->dispatch('pending-files-created');
-
     }
 
     private function createPendingFile(string $fileId): void
     {
-        $fileData = $this->queuedFiles[$fileId];
+        if (!isset($this->files[$fileId])) {
+            return;
+        }
+
+        $fileData = $this->files[$fileId];
 
         try {
-            // Générer un nom de stockage unique
             $storedName = Str::uuid() . '.' . pathinfo($fileData['name'], PATHINFO_EXTENSION);
             $filePath = 'pending-uploads/' . date('Y/m/d') . '/' . $storedName;
 
-            // Créer le PendingFile
             $pendingFile = PendingFile::create([
                 'user_id' => auth()->id(),
                 'original_name' => $fileData['name'],
@@ -197,28 +189,25 @@ class UploadFiles extends Component
                 'file_type' => $fileData['type'],
                 'file_extension' => strtolower(pathinfo($fileData['name'], PATHINFO_EXTENSION)),
                 'upload_status' => PendingFile::STATUS_UPLOADING,
+                'client_signature' => $fileData['signature'], // Store signature
             ]);
 
-            // Mettre à jour les données du fichier
-            $this->queuedFiles[$fileId]['pending_file_id'] = $pendingFile->id;
-            $this->queuedFiles[$fileId]['suggested_code'] = $pendingFile->suggested_code;
-            $this->queuedFiles[$fileId]['status'] = 'uploading';
-
-            // Déplacer vers uploadingFiles
-            $this->uploadingFiles[$fileId] = $this->queuedFiles[$fileId];
-            unset($this->queuedFiles[$fileId]);
+            $this->files[$fileId]['pending_file_id'] = $pendingFile->id;
+            $this->files[$fileId]['suggested_code'] = $pendingFile->suggested_code;
+            $this->files[$fileId]['status'] = 'uploading';
 
             Log::warning('Launch start-file-upload', [
                 'pending_file_id' => $fileId,
             ]);
 
-            // Déclencher l'upload côté JavaScript
             $this->dispatch('start-file-upload', [
                 'fileId' => $fileId,
                 'pendingFileId' => $pendingFile->id,
                 'chunkSize' => $this->CHUNK_SIZE,
                 'totalChunks' => $fileData['chunks_total'],
             ]);
+
+            $this->dispatch('pending-files-created');
 
         } catch (\Exception $e) {
             Log::error('Erreur création PendingFile', [
@@ -232,30 +221,17 @@ class UploadFiles extends Component
 
     public function uploadChunk($fileId, $chunkIndex, $chunk, $pendingFileId): void
     {
-        // Ajouter au tout début de la méthode
         Log::info('=== CHUNK REQUEST START ===', [
             'fileId' => $fileId,
             'chunkIndex' => $chunkIndex,
             'session_id' => session()->getId(),
-            'request_time' => now()->format('H:i:s.u'),
-            'memory_before' => memory_get_usage(true),
-            'concurrent_uploads' => count($this->uploadingFiles),
-            'php_session_status' => session_status(),
         ]);
 
         try {
-            // Libérer la session le plus tôt possible
             if (session_status() === PHP_SESSION_ACTIVE) {
                 session_write_close();
-
-                Log::info('Session libérée pour chunk', [
-                    'fileId' => $fileId,
-                    'chunkIndex' => $chunkIndex,
-                ]);
-
             }
 
-            // Forcer un garbage collect avant traitement
             if (function_exists('gc_collect_cycles')) {
                 gc_collect_cycles();
             }
@@ -265,50 +241,37 @@ class UploadFiles extends Component
             if (!$pendingFile) {
                 throw new \Exception('Fichier en attente non trouvé');
             }
-            // Décoder le base64 et libérer immédiatement la variable originale
-            $chunkData = base64_decode($chunk);
-            unset($chunk); // Libérer immédiatement la mémoire du base64
 
-            // Créer le dossier de destination si nécessaire
+            $chunkData = base64_decode($chunk);
+            unset($chunk);
+
             $directory = dirname($pendingFile->file_path);
             if (!Storage::exists($directory)) {
                 Storage::makeDirectory($directory);
             }
 
-            // Nom du chunk temporaire
             $chunkPath = $pendingFile->file_path . '.chunk.' . $chunkIndex;
-
-            // Utiliser un stream pour économiser la mémoire
             $stream = fopen('php://memory', 'r+');
             fwrite($stream, $chunkData);
             rewind($stream);
-
-            // Libérer la variable chunkData
             unset($chunkData);
 
-            // Sauvegarder via stream
             Storage::put($chunkPath, $stream);
             fclose($stream);
 
+            if (isset($this->files[$fileId])) {
+                $this->files[$fileId]['chunks_uploaded']++;
+                $totalChunks = $this->files[$fileId]['chunks_total'];
+                $this->files[$fileId]['progress'] = ($this->files[$fileId]['chunks_uploaded'] / $totalChunks) * 100;
 
-            // Mettre à jour le progrès
-            if (isset($this->uploadingFiles[$fileId])) {
-                $this->uploadingFiles[$fileId]['chunks_uploaded']++;
-                $totalChunks = $this->uploadingFiles[$fileId]['chunks_total'];
-                $this->uploadingFiles[$fileId]['progress'] =
-                    ($this->uploadingFiles[$fileId]['chunks_uploaded'] / $totalChunks) * 100;
-
-                // Vérifier si tous les chunks sont uploadés
-                if ($this->uploadingFiles[$fileId]['chunks_uploaded'] >= $totalChunks) {
+                if ($this->files[$fileId]['chunks_uploaded'] >= $totalChunks) {
                     $this->assembleFile($fileId, $pendingFileId);
                 }
             }
 
-            // Forcer un nouveau garbage collect
             if (function_exists('gc_collect_cycles')) {
                 gc_collect_cycles();
             }
-
 
         } catch (\Exception $e) {
             Log::error('Erreur upload chunk', [
@@ -325,41 +288,77 @@ class UploadFiles extends Component
     {
         try {
             $pendingFile = PendingFile::find($pendingFileId);
-            $fileData = $this->uploadingFiles[$fileId];
+            $fileData = $this->files[$fileId];
+            $finalPath = $pendingFile->full_path; // Use full path for file operations
+            $tempDir = dirname($finalPath);
 
-            // Assembler tous les chunks
-            $finalPath = $pendingFile->file_path;
-            $chunks = [];
+            // Initialize hash context for streaming MD5 calculation
+            $hashContext = hash_init('md5');
 
-            // Récupérer tous les chunks
+            // Open destination file for writing
+            $outputStream = fopen($finalPath, 'w+');
+            if ($outputStream === false) {
+                throw new \Exception("Impossible de créer le fichier final.");
+            }
+
+            // Iterate through chunks
             for ($i = 0; $i < $fileData['chunks_total']; $i++) {
                 $chunkPath = $pendingFile->file_path . '.chunk.' . $i;
-                if (Storage::exists($chunkPath)) {
-                    $chunks[] = Storage::get($chunkPath);
+
+                if (!Storage::exists($chunkPath)) {
+                    fclose($outputStream);
+                    throw new \Exception("Chunk manquant: index $i");
+                }
+
+                // Read chunk using stream to save memory
+                $chunkStream = Storage::readStream($chunkPath);
+
+                while (!feof($chunkStream)) {
+                    $buffer = fread($chunkStream, 8192); // Read 8KB buffer
+                    if ($buffer !== false) {
+                        // Update hash
+                        hash_update($hashContext, $buffer);
+                        // Write to final file
+                        fwrite($outputStream, $buffer);
+                    }
+                }
+
+                fclose($chunkStream);
+            }
+
+            fclose($outputStream);
+
+            // Finalize hash
+            $serverSignature = hash_final($hashContext);
+
+            // Verify Signature
+            if (!empty($pendingFile->client_signature)) {
+                if ($serverSignature !== $pendingFile->client_signature) {
+                     // Delete file and chunks
+                     for ($i = 0; $i < $fileData['chunks_total']; $i++) {
+                        $chunkPath = $pendingFile->file_path . '.chunk.' . $i;
+                        Storage::delete($chunkPath);
+                    }
+                    Storage::delete($pendingFile->file_path); // Use relative path for Storage::delete
+
+                    throw new \Exception("Vérification de la signature a échoué. Le fichier est corrompu.");
                 }
             }
 
-            // Assembler le fichier final
-            $finalContent = implode('', $chunks);
-            Storage::put($finalPath, $finalContent);
-
-            // Nettoyer les chunks temporaires
-            for ($i = 0; $i < $fileData['chunks_total']; $i++) {
+            // Clean chunks
+             for ($i = 0; $i < $fileData['chunks_total']; $i++) {
                 $chunkPath = $pendingFile->file_path . '.chunk.' . $i;
                 Storage::delete($chunkPath);
             }
 
-            // Mettre à jour le PendingFile
             $pendingFile->markAsCompleted();
 
-            // Extraire les métadonnées si possible
             try {
                 $pendingFile->extractMetadata();
             } catch (\Exception $e) {
                 Log::warning('Erreur extraction métadonnées', ['error' => $e->getMessage()]);
             }
 
-            // Marquer comme terminé
             $this->markFileAsCompleted($fileId);
 
         } catch (\Exception $e) {
@@ -368,133 +367,134 @@ class UploadFiles extends Component
                 'error' => $e->getMessage()
             ]);
 
-            $this->markFileAsFailed($fileId, 'Erreur assemblage: ' . $e->getMessage());
+            $this->markFileAsFailed($fileId, $e->getMessage());
         }
     }
 
     private function markFileAsCompleted(string $fileId): void
     {
-        if (isset($this->uploadingFiles[$fileId])) {
-            $this->uploadingFiles[$fileId]['status'] = 'completed';
-            $this->uploadingFiles[$fileId]['progress'] = 100;
-
-            $this->completedFiles[$fileId] = $this->uploadingFiles[$fileId];
-            unset($this->uploadingFiles[$fileId]);
-
+        if (isset($this->files[$fileId])) {
+            $this->files[$fileId]['status'] = 'completed';
+            $this->files[$fileId]['progress'] = 100;
             $this->dispatch('file-completed', $fileId);
         }
 
-        // Démarrer le prochain upload s'il y en a un en attente
         $this->startNextQueuedUpload();
-
-        // Vérifier si tous les uploads sont terminés
         $this->checkAllUploadsCompleted();
     }
+
     private function startNextQueuedUpload(): void
     {
-        if (!empty($this->queuedFiles) && count($this->uploadingFiles) < $this->maxConcurrentUploads) {
-            $nextFileId = array_key_first($this->queuedFiles);
-            $this->createPendingFile($nextFileId);
+        $uploadingCount = collect($this->files)->where('status', 'uploading')->count();
+        if ($uploadingCount < $this->maxConcurrentUploads) {
+             $nextFile = collect($this->files)
+                ->where('status', 'queued')
+                ->first();
+
+            if ($nextFile) {
+                $this->createPendingFile($nextFile['id']);
+            }
         }
     }
 
     private function markFileAsFailed(string $fileId, string $error): void
     {
-        // Chercher dans queuedFiles ou uploadingFiles
-        $fileData = $this->queuedFiles[$fileId] ?? $this->uploadingFiles[$fileId] ?? null;
+        if (isset($this->files[$fileId])) {
+            $this->files[$fileId]['status'] = 'failed';
+            $this->files[$fileId]['error'] = $error;
 
-        if ($fileData) {
-            $fileData['status'] = 'failed';
-            $fileData['error'] = $error;
-
-            // Mettre à jour le PendingFile si il existe
-            if ($fileData['pending_file_id']) {
-                $pendingFile = PendingFile::find($fileData['pending_file_id']);
+            if ($this->files[$fileId]['pending_file_id']) {
+                $pendingFile = PendingFile::find($this->files[$fileId]['pending_file_id']);
                 if ($pendingFile) {
                     $pendingFile->markAsFailed();
                 }
             }
 
-            $this->failedFiles[$fileId] = $fileData;
-            unset($this->queuedFiles[$fileId]);
-            unset($this->uploadingFiles[$fileId]);
-
             $this->dispatch('file-failed', ['fileId' => $fileId, 'error' => $error]);
         }
 
+        $this->startNextQueuedUpload(); // Try to start next one even if this one failed
         $this->checkAllUploadsCompleted();
     }
 
     public function cancelUpload(string $fileId): void
     {
-        if (isset($this->uploadingFiles[$fileId])) {
-            $fileData = $this->uploadingFiles[$fileId];
+        if (isset($this->files[$fileId])) {
+            $fileData = $this->files[$fileId];
 
-            // Supprimer le PendingFile et ses chunks
-            if ($fileData['pending_file_id']) {
+            // Only can cancel queued or uploading
+            if (!in_array($fileData['status'], ['queued', 'uploading'])) {
+                return;
+            }
+
+             if ($fileData['status'] === 'uploading' && $fileData['pending_file_id']) {
                 $pendingFile = PendingFile::find($fileData['pending_file_id']);
                 if ($pendingFile) {
-                    // Nettoyer les chunks temporaires
                     for ($i = 0; $i < $fileData['chunks_total']; $i++) {
                         $chunkPath = $pendingFile->file_path . '.chunk.' . $i;
                         Storage::delete($chunkPath);
                     }
-
                     $pendingFile->delete();
                 }
             }
 
-            unset($this->uploadingFiles[$fileId]);
+            unset($this->files[$fileId]);
             $this->dispatch('file-cancelled', $fileId);
+            $this->startNextQueuedUpload(); // A slot might have opened up
         }
     }
 
     public function retryUpload(string $fileId): void
     {
-        if (isset($this->failedFiles[$fileId])) {
-            // Remettre en queue
-            $fileData = $this->failedFiles[$fileId];
-            $fileData['status'] = 'queued';
-            $fileData['error'] = null;
-            $fileData['chunks_uploaded'] = 0;
-            $fileData['progress'] = 0;
-            $fileData['pending_file_id'] = null;
+        if (isset($this->files[$fileId]) && $this->files[$fileId]['status'] === 'failed') {
+            $this->files[$fileId]['status'] = 'queued';
+            $this->files[$fileId]['error'] = null;
+            $this->files[$fileId]['chunks_uploaded'] = 0;
+            $this->files[$fileId]['progress'] = 0;
+            $this->files[$fileId]['pending_file_id'] = null;
 
-            $this->queuedFiles[$fileId] = $fileData;
-            unset($this->failedFiles[$fileId]);
+            // Trigger start if we have slots
+            $this->startNextQueuedUpload();
         }
     }
 
     private function checkAllUploadsCompleted(): void
     {
-        if (empty($this->queuedFiles) && empty($this->uploadingFiles)) {
+        $queued = collect($this->files)->where('status', 'queued')->count();
+        $uploading = collect($this->files)->where('status', 'uploading')->count();
+
+        if ($queued === 0 && $uploading === 0) {
             $this->isUploading = false;
             $this->dispatch('all-uploads-completed', [
-                'completed' => count($this->completedFiles),
-                'failed' => count($this->failedFiles),
+                'completed' => collect($this->files)->where('status', 'completed')->count(),
+                'failed' => collect($this->files)->where('status', 'failed')->count(),
             ]);
         }
     }
 
     public function clearCompleted(): void
     {
-        $this->completedFiles = [];
+        $this->files = collect($this->files)->reject(function ($file) {
+            return $file['status'] === 'completed';
+        })->toArray();
     }
 
     public function clearFailed(): void
     {
-        $this->failedFiles = [];
+         $this->files = collect($this->files)->reject(function ($file) {
+            return $file['status'] === 'failed';
+        })->toArray();
     }
 
     public function getUploadStats(): array
     {
+        $files = collect($this->files);
         return [
-            'queued' => count($this->queuedFiles),
-            'uploading' => count($this->uploadingFiles),
-            'completed' => count($this->completedFiles),
-            'failed' => count($this->failedFiles),
-            'total' => count($this->queuedFiles) + count($this->uploadingFiles) +
-                count($this->completedFiles) + count($this->failedFiles),
+            'queued' => $files->where('status', 'queued')->count(),
+            'uploading' => $files->where('status', 'uploading')->count(),
+            'completed' => $files->where('status', 'completed')->count(),
+            'failed' => $files->where('status', 'failed')->count(),
+            'total' => $files->count(),
         ];
     }
 
