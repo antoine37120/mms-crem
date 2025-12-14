@@ -72,7 +72,8 @@
                 wire:click="startAllUploads"
                 color="primary"
                 size="lg"
-                :disabled="$isUploading || isProcessing"
+                :disabled="$isUploading"
+                x-bind:disabled="isProcessing"
             >
                 @if($isUploading)
                     <x-heroicon-o-arrow-path class="w-4 h-4 animate-spin mr-2" />
