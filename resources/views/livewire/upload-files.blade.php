@@ -107,7 +107,7 @@
 
             <div class="space-y-2">
                 @foreach($files as $fileId => $file)
-                    <div class="p-3 rounded border transition-colors relative
+                    <div class="px-4 py-3 rounded border transition-colors grid grid-cols-12 gap-4 items-center min-h-[4rem]
                         @if($file['status'] === 'queued') bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700
                         @elseif($file['status'] === 'uploading') bg-blue-50 dark:bg-blue-900/20 border-blue-200
                         @elseif($file['status'] === 'completed') bg-green-50 dark:bg-green-900/20 border-green-200
@@ -115,110 +115,100 @@
                         @endif
                     ">
 
-                        <div class="flex items-center justify-between mb-2">
-                            <div class="flex-1">
-                                <div class="flex items-center gap-2">
-                                     <span class="text-sm font-medium
-                                        @if($file['status'] === 'completed') text-green-900 dark:text-green-100
-                                        @elseif($file['status'] === 'failed') text-red-900 dark:text-red-100
-                                        @elseif($file['status'] === 'uploading') text-blue-900 dark:text-blue-100
-                                        @else text-gray-900 dark:text-white
-                                        @endif
-                                    ">
-                                        {{ $file['name'] }}
-                                    </span>
-
-                                     {{-- Indicateur de statut --}}
-                                    @if($file['status'] === 'completed')
-                                        <x-heroicon-o-check-circle class="w-5 h-5 text-green-600" />
-                                    @elseif($file['status'] === 'failed')
-                                        <x-heroicon-o-exclamation-circle class="w-5 h-5 text-red-600" />
-                                    @elseif($file['status'] === 'uploading')
-                                        <x-heroicon-o-arrow-path class="w-4 h-4 animate-spin text-blue-600" />
-                                    @endif
-                                </div>
-
-                                <div class="text-xs mt-1
-                                     @if($file['status'] === 'completed') text-green-700 dark:text-green-300
-                                     @elseif($file['status'] === 'failed') text-red-700 dark:text-red-300
-                                     @elseif($file['status'] === 'uploading') text-blue-700 dark:text-blue-300
-                                     @else text-gray-500
-                                     @endif
-                                ">
-                                    @if($file['status'] === 'queued')
-                                        {{ number_format($file['size'] / 1024 / 1024, 1) }} MB
-                                        @if($file['suggested_code'])
-                                            • Cote suggérée: <span class="font-mono text-blue-600">{{ $file['suggested_code'] }}</span>
-                                        @endif
-                                    @elseif($file['status'] === 'uploading')
-                                         <span x-show="getProgress('{{ $fileId }}') < 100">
-                                             <span x-text="getProgress('{{ $fileId }}')">0</span>%
-                                         </span>
-                                         <span x-show="getProgress('{{ $fileId }}') >= 100" class="font-semibold text-blue-800 animate-pulse">
-                                             Finalisation...
-                                         </span>
-                                    @elseif($file['status'] === 'completed')
-                                        ✅ Upload terminé
-                                        @if($file['suggested_code'])
-                                            • Cote: <span class="font-mono">{{ $file['suggested_code'] }}</span>
-                                        @endif
-                                    @elseif($file['status'] === 'failed')
-                                         ❌ {{ $file['error'] }}
-                                    @endif
-                                </div>
-
-                                {{-- Duplicate Warning --}}
-                                @if(!empty($file['duplicate_warning']))
-                                    <div class="mt-1 text-xs text-orange-600 font-medium flex items-center gap-1">
-                                        <x-heroicon-o-exclamation-triangle class="w-3 h-3" />
-                                        {{ $file['duplicate_warning'] }}
-                                    </div>
-                                @endif
-                            </div>
-
-                             {{-- Boutons d'action --}}
-                            <div>
-                                @if($file['status'] === 'queued')
-                                    <button
-                                        wire:click="removeFromQueue('{{ $fileId }}')"
-                                        class="text-gray-400 hover:text-red-500"
-                                        title="Retirer de la liste"
-                                    >
-                                        <x-heroicon-o-x-mark class="w-5 h-5" />
-                                    </button>
-                                @elseif($file['status'] === 'uploading')
-                                    <button
-                                        wire:click="cancelUpload('{{ $fileId }}')"
-                                        class="text-red-500 hover:text-red-700"
-                                        title="Annuler l'upload"
-                                    >
-                                        <x-heroicon-o-stop class="w-5 h-5" />
-                                    </button>
+                        {{-- Col 1-5: File Info --}}
+                        <div class="col-span-12 sm:col-span-5 flex items-center gap-3 overflow-hidden">
+                            {{-- Icon based on status --}}
+                             <div class="flex-shrink-0">
+                                @if($file['status'] === 'completed')
+                                    <x-heroicon-o-check-circle class="w-8 h-8 text-green-600" />
                                 @elseif($file['status'] === 'failed')
-                                     <button
-                                        wire:click="retryUpload('{{ $fileId }}')"
-                                        class="text-blue-500 hover:text-blue-700 text-sm font-medium"
-                                    >
-                                        Réessayer
-                                    </button>
+                                    <x-heroicon-o-exclamation-circle class="w-8 h-8 text-red-600" />
+                                @elseif($file['status'] === 'uploading')
+                                    <x-heroicon-o-arrow-path class="w-8 h-8 animate-spin text-blue-600" />
+                                @else
+                                    <x-heroicon-o-document class="w-8 h-8 text-gray-400" />
                                 @endif
-                            </div>
+                             </div>
+
+                             <div class="flex-1 min-w-0">
+                                 <div class="text-sm font-semibold truncate text-gray-900 dark:text-white" title="{{ $file['name'] }}">
+                                     {{ $file['name'] }}
+                                 </div>
+                                 <div class="text-xs text-gray-500 truncate">
+                                     {{ number_format($file['size'] / 1024 / 1024, 1) }} MB
+                                     @if($file['suggested_code'])
+                                        • <span class="font-mono text-blue-600 dark:text-blue-400">{{ $file['suggested_code'] }}</span>
+                                     @endif
+                                 </div>
+                             </div>
                         </div>
 
-                        {{-- Barre de progression pour upload (Frontend Driven) --}}
-                        @if($file['status'] === 'uploading')
-                             <div class="w-full bg-blue-200 rounded-full h-1.5 mt-2">
-                                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
-                                     x-bind:style="'width: ' + getProgress('{{ $fileId }}') + '%'"></div>
-                            </div>
-                        @endif
+                        {{-- Col 6-10: Status / Progress / Warning --}}
+                        <div class="col-span-12 sm:col-span-5 flex flex-col justify-center min-h-[2.5rem]">
+                             @if($file['status'] === 'uploading')
+                                 <div class="w-full bg-blue-200 rounded-full h-2 mb-1">
+                                    <div class="bg-blue-600 h-2 rounded-full transition-all duration-300"
+                                         x-bind:style="'width: ' + getProgress('{{ $fileId }}') + '%'"></div>
+                                </div>
+                                <div class="text-xs text-blue-700 dark:text-blue-300 font-medium flex justify-between">
+                                    <span x-show="getProgress('{{ $fileId }}') < 100">
+                                        En cours (<span x-text="getProgress('{{ $fileId }}')">0</span>%)
+                                    </span>
+                                    <span x-show="getProgress('{{ $fileId }}') >= 100" class="text-blue-800 animate-pulse">
+                                        Finalisation...
+                                    </span>
+                                </div>
+                            @elseif($file['status'] === 'queued')
+                                <div class="text-sm text-gray-500 italic">En attente de traitement</div>
+                            @elseif($file['status'] === 'completed')
+                                <div class="text-sm text-green-700 dark:text-green-400 font-medium">Upload terminé avec succès</div>
+                            @elseif($file['status'] === 'failed')
+                                <div class="text-sm text-red-600 font-medium break-words">❌ {{ $file['error'] }}</div>
+                            @endif
 
-                        {{-- Signature Display --}}
-                        @if($file['signature'])
-                            <div class="absolute bottom-1 right-2 text-[10px] text-gray-400 font-mono opacity-60 hover:opacity-100 transition-opacity" title="Signature MD5">
-                                {{ substr($file['signature'], 0, 8) }}...{{ substr($file['signature'], -8) }}
-                            </div>
-                        @endif
+                            {{-- Duplicate Warning (Inline to prevent jumping) --}}
+                            @if(!empty($file['duplicate_warning']))
+                                <div class="text-xs text-orange-600 font-medium flex items-center gap-1 mt-1">
+                                    <x-heroicon-o-exclamation-triangle class="w-3 h-3 flex-shrink-0" />
+                                    <span class="truncate" title="{{ $file['duplicate_warning'] }}">{{ $file['duplicate_warning'] }}</span>
+                                </div>
+                            @endif
+                        </div>
+
+                         {{-- Col 11-12: Actions --}}
+                        <div class="col-span-12 sm:col-span-2 flex flex-col items-end gap-1">
+                            @if($file['status'] === 'queued')
+                                <button
+                                    wire:click="removeFromQueue('{{ $fileId }}')"
+                                    class="text-gray-400 hover:text-red-500 p-1 rounded hover:bg-gray-100 dark:hover:bg-gray-700"
+                                    title="Retirer de la liste"
+                                >
+                                    <x-heroicon-o-x-mark class="w-5 h-5" />
+                                </button>
+                            @elseif($file['status'] === 'uploading')
+                                <button
+                                    wire:click="cancelUpload('{{ $fileId }}')"
+                                    class="text-red-500 hover:text-red-700 p-1 rounded hover:bg-red-50 dark:hover:bg-red-900/20"
+                                    title="Annuler l'upload"
+                                >
+                                    <x-heroicon-o-stop class="w-5 h-5" />
+                                </button>
+                            @elseif($file['status'] === 'failed')
+                                 <button
+                                    wire:click="retryUpload('{{ $fileId }}')"
+                                    class="text-blue-500 hover:text-blue-700 text-xs font-medium px-2 py-1 rounded border border-blue-200 hover:bg-blue-50"
+                                >
+                                    Réessayer
+                                </button>
+                            @endif
+
+                             {{-- Signature Display --}}
+                            @if($file['signature'])
+                                <div class="text-[10px] text-gray-400 font-mono opacity-60 hover:opacity-100 transition-opacity cursor-help" title="Signature MD5: {{ $file['signature'] }}">
+                                    MD5: {{ substr($file['signature'], 0, 4) }}...
+                                </div>
+                            @endif
+                        </div>
                     </div>
                 @endforeach
             </div>
