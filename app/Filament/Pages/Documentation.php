@@ -76,7 +76,7 @@ class Documentation extends Page
                 $routeName = $matches[2];
                 try {
                     $url = route($routeName);
-                    return "[$label]($url)";
+                    return "<a href=\"{$url}\" wire:navigate class=\"text-primary-600 hover:text-primary-500 underline\">{$label}</a>";
                 } catch (\Exception $e) {
                     // Fallback if route not found
                     return "$label (Route introuvable)";
