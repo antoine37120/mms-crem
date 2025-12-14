@@ -311,6 +311,11 @@ class UploadFiles extends Component
 
     public function finalizeUpload(string $fileId): void
     {
+        // Release session lock immediately to prevent blocking other requests (cancel, parallel uploads)
+        if (session_status() === PHP_SESSION_ACTIVE) {
+            session_write_close();
+        }
+
         if (!isset($this->files[$fileId])) {
             return;
         }

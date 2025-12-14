@@ -419,10 +419,13 @@
                      await $wire.finalizeUpload(fileId);
                 } catch (error) {
                      console.error('Finalization failed', error);
+                     // If finalization fails (e.g. timeout), we should mark it as failed in UI if possible
+                     // But we can't easily update Livewire state from here without another request.
+                     // The backend likely threw an exception or timeout.
+                } finally {
+                     // Always trigger next upload, even if this one failed
+                     $wire.startNextPending();
                 }
-
-                // Trigger next upload
-                $wire.startNextPending();
             },
 
             // Convertir fichier en base64
