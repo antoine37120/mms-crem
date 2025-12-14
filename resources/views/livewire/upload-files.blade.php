@@ -151,7 +151,12 @@
                                             • Cote suggérée: <span class="font-mono text-blue-600">{{ $file['suggested_code'] }}</span>
                                         @endif
                                     @elseif($file['status'] === 'uploading')
-                                         <span x-text="getProgress('{{ $fileId }}')">0</span>%
+                                         <span x-show="getProgress('{{ $fileId }}') < 100">
+                                             <span x-text="getProgress('{{ $fileId }}')">0</span>%
+                                         </span>
+                                         <span x-show="getProgress('{{ $fileId }}') >= 100" class="font-semibold text-blue-800 animate-pulse">
+                                             Finalisation...
+                                         </span>
                                     @elseif($file['status'] === 'completed')
                                         ✅ Upload terminé
                                         @if($file['suggested_code'])
@@ -287,27 +292,7 @@
                             signature: signature
                         }]);
 
-                        // Get the ID of the file just added?
-                        // Actually, we don't have the ID here yet easily without a roundtrip return.
-                        // But we can trigger the duplicate check separately if we know the ID,
-                        // or we can just ask the backend to check all queued files?
-                        // Better: The backend `addFilesToQueue` doesn't return the ID.
-                        // We will rely on the backend loop in `addFilesToQueue` to NOT check duplicates yet?
-                        // Wait, the plan said: Call `$wire.checkDuplicate(fileId)`.
-                        // To do that, we need the fileId.
-                        // The backend `addFilesToQueue` generates UUIDs.
-                        // Maybe we generate UUID in frontend?
-                        // Or we ask backend to check duplicates for the last added file?
-
-                        // Let's optimize: We pass the signature to `addFilesToQueue`.
-                        // In `addFilesToQueue` (Backend), we can immediately check duplicate!
-                        // I added `checkDuplicate` logic in the component but I should call it automatically in `addFilesToQueue` if signature is present.
-                        // That's much better.
-
-                        // I'll update the backend plan implicitly here: I'll rely on the `checkDuplicate` separate call
-                        // OR simpler: find the ID from $wire.files that matches name/size/signature.
-
-                        // Let's stick to the plan: Trigger check.
+                        // Check for duplicate
                         const filesState = $wire.files;
                         const fileId = Object.keys(filesState).find(id =>
                             filesState[id].name === file.name &&
@@ -428,10 +413,15 @@
                     }
                 }
 
-                // End of loop - trigger next upload
-                // We add a small delay to ensure backend has processed the last chunk if needed
-                // But generally the await above ensures it.
-                // Call startNextPending()
+                // End of loop - trigger FINALIZATION explicitly
+                // This ensures we tell the server "I'm done" and it can check everything.
+                try {
+                     await $wire.finalizeUpload(fileId);
+                } catch (error) {
+                     console.error('Finalization failed', error);
+                }
+
+                // Trigger next upload
                 $wire.startNextPending();
             },
 

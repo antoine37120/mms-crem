@@ -34,6 +34,7 @@ class UploadFiles extends Component
         'retryUpload' => 'retryUpload',
         'checkDuplicate' => 'checkDuplicate',
         'startNextPending' => 'startNextPending',
+        'finalizeUpload' => 'finalizeUpload',
     ];
 
     /**
@@ -293,38 +294,6 @@ class UploadFiles extends Component
             Storage::put($chunkPath, $stream);
             fclose($stream);
 
-            // We do NOT update $this->files progress here to avoid race conditions.
-            // But we do need to check if it was the last chunk to trigger assembly.
-            // Since we don't trust frontend to say "this is the last one" for security,
-            // we should count chunks on disk? Or assume the frontend tells truth about total chunks?
-            // The frontend passes chunkIndex.
-
-            // To be safe and avoid counting files every time, we rely on the frontend loop to finish.
-            // BUT, assembly must happen on the server.
-            // So we need to know if this is the last chunk.
-            // Let's rely on the count of chunk files on disk for now, or check index vs total.
-            // We have totalChunks in $this->files[$fileId]['chunks_total'].
-
-            if (isset($this->files[$fileId])) {
-                 $totalChunks = $this->files[$fileId]['chunks_total'];
-
-                 // If this is the last chunk index (0-based)
-                 if ($chunkIndex == $totalChunks - 1) {
-                     // Check if ALL chunks are present before assembling
-                     $allPresent = true;
-                     for($i=0; $i<$totalChunks; $i++) {
-                         if (!Storage::exists($pendingFile->file_path . '.chunk.' . $i)) {
-                             $allPresent = false;
-                             break;
-                         }
-                     }
-
-                     if ($allPresent) {
-                         $this->assembleFile($fileId, $pendingFileId);
-                     }
-                 }
-            }
-
             if (function_exists('gc_collect_cycles')) {
                 gc_collect_cycles();
             }
@@ -338,6 +307,39 @@ class UploadFiles extends Component
 
             $this->markFileAsFailed($fileId, 'Erreur upload chunk: ' . $e->getMessage());
         }
+    }
+
+    public function finalizeUpload(string $fileId): void
+    {
+        if (!isset($this->files[$fileId])) {
+            return;
+        }
+
+        $pendingFileId = $this->files[$fileId]['pending_file_id'];
+        $pendingFile = PendingFile::find($pendingFileId);
+
+        if (!$pendingFile) {
+            $this->markFileAsFailed($fileId, "Fichier en attente introuvable.");
+            return;
+        }
+
+        // Verify all chunks
+        $totalChunks = $this->files[$fileId]['chunks_total'];
+        $allPresent = true;
+        for($i=0; $i<$totalChunks; $i++) {
+             if (!Storage::exists($pendingFile->file_path . '.chunk.' . $i)) {
+                 $allPresent = false;
+                 break;
+             }
+        }
+
+        if (!$allPresent) {
+             $this->markFileAsFailed($fileId, "Chunks manquants lors de la finalisation.");
+             return;
+        }
+
+        // Proceed to assembly
+        $this->assembleFile($fileId, $pendingFileId);
     }
 
     private function assembleFile(string $fileId, int $pendingFileId): void
