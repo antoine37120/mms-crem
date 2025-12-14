@@ -12,7 +12,7 @@ On distingue deux grandes catégories d'items, bien qu'ils soient gérés de man
 ## Ajouter des Items
 
 ### Upload unitaire
-1.  Allez dans **Médias & Items > Tous les Items**.
+1.  Allez dans [Médias & Items > Tous les Items](route:filament.mms-admin.resources.items.index).
 2.  Cliquez sur **Créer**.
 3.  Choisissez l'élément parent (le conteneur de votre fichier, par exemple une Collection).
 4.  Si c'est un fichier secondaire, sélectionnez son **Type** (ex: Traduction).

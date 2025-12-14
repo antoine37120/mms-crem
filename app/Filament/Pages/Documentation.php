@@ -68,6 +68,23 @@ class Documentation extends Page
 
         $content = File::get($path);
 
+        // Process dynamic routes: [Label](route:route.name)
+        $content = preg_replace_callback(
+            '/\[([^\]]+)\]\(route:([a-zA-Z0-9\._-]+)\)/',
+            function ($matches) {
+                $label = $matches[1];
+                $routeName = $matches[2];
+                try {
+                    $url = route($routeName);
+                    return "[$label]($url)";
+                } catch (\Exception $e) {
+                    // Fallback if route not found
+                    return "$label (Route introuvable)";
+                }
+            },
+            $content
+        );
+
         return Str::markdown($content);
     }
 

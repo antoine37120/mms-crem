@@ -7,7 +7,7 @@ Cette section décrit comment gérer la structure hiérarchique de vos archives 
 Les **Fonds** constituent la racine de votre archivage. Ils représentent généralement un producteur d'archives ou une grande thématique.
 
 ### Créer un Fonds
-1.  Allez dans le menu **Gestion des Archives > Fonds**.
+1.  Allez dans le menu [Gestion des Archives > Fonds](route:filament.mms-admin.resources.fonds.index).
 2.  Cliquez sur le bouton **Créer**.
 3.  Renseignez le **Code** (identifiant unique, ex: `CNRSMH_Arnaud`) et le **Titre**.
 4.  Validez.
@@ -20,7 +20,7 @@ Depuis la liste des fonds, vous pouvez éditer ou supprimer un fonds existant. L
 Les **Corpus** sont des subdivisions d'un fonds. Ils permettent d'organiser les archives par thèmes, périodes ou projets.
 
 ### Créer un Corpus
-1.  Allez dans le menu **Gestion des Archives > Corpus**.
+1.  Allez dans le menu [Gestion des Archives > Corpus](route:filament.mms-admin.resources.corpuses.index).
 2.  Cliquez sur le bouton **Créer**.
 3.  Sélectionnez le **Fonds parent**.
 4.  Le système peut suggérer un code basé sur le parent. Renseignez ou ajustez le **Code** et le **Titre**.
@@ -30,7 +30,7 @@ Les **Corpus** sont des subdivisions d'un fonds. Ils permettent d'organiser les 
 Les **Collections** regroupent les items (enregistrements). C'est le niveau où sont généralement classés les médias.
 
 ### Créer une Collection
-1.  Allez dans le menu **Gestion des Archives > Collections**.
+1.  Allez dans le menu [Gestion des Archives > Collections](route:filament.mms-admin.resources.collections.index).
 2.  Cliquez sur le bouton **Créer**.
 3.  Sélectionnez le **Corpus parent**.
 4.  Renseignez le **Code** et le **Titre**.

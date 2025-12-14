@@ -4,7 +4,7 @@ Le MMS propose une interface dédiée pour naviguer dans vos archives de manièr
 
 ## Vue Hiérarchique
 
-Accessible via le menu **Explorateur**, cette page vous permet de parcourir l'arborescence complète de vos données sans passer par les tables de liste classiques.
+Accessible via le menu [Explorateur](route:filament.mms-admin.pages.hierarchy-explorer), cette page vous permet de parcourir l'arborescence complète de vos données sans passer par les tables de liste classiques.
 
 ### Modes d'exploration
 

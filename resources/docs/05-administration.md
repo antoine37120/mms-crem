@@ -4,7 +4,7 @@ Cette section concerne la gestion des accès et des utilisateurs du MMS.
 
 ## Gestion des Utilisateurs
 
-Accessible via **Administration > Utilisateurs**.
+Accessible via [Administration > Utilisateurs](route:filament.mms-admin.resources.users.index).
 
 Vous pouvez créer des comptes pour les chercheurs, les documentalistes ou d'autres administrateurs.
 Chaque utilisateur dispose d'un :
