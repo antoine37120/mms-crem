@@ -24,7 +24,7 @@
         {{-- Contenu principal --}}
         <div class="flex-1">
             <x-filament::section>
-                <div class="prose dark:prose-invert max-w-none">
+                <div class="mms-docs-content">
                     {!! $this->content !!}
                 </div>
             </x-filament::section>

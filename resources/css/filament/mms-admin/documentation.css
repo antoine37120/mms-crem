@@ -1,0 +1,144 @@
+/* Styles pour la documentation utilisateur MMS */
+
+.mms-docs-wrapper {
+    /* Container principal */
+}
+
+.mms-docs-content {
+    /* Style de base pour le contenu généré par markdown */
+    font-family: inherit;
+    line-height: 1.6;
+    color: var(--gray-700, #374151);
+}
+
+/* Titres */
+.mms-docs-content h1 {
+    font-size: 2.25rem;
+    font-weight: 800;
+    margin-bottom: 1.5rem;
+    color: var(--gray-900, #111827);
+    border-bottom: 2px solid var(--primary-100, #dbeafe);
+    padding-bottom: 0.5rem;
+}
+
+.mms-docs-content h2 {
+    font-size: 1.5rem;
+    font-weight: 700;
+    margin-top: 2rem;
+    margin-bottom: 1rem;
+    color: var(--gray-800, #1f2937);
+}
+
+.mms-docs-content h3 {
+    font-size: 1.25rem;
+    font-weight: 600;
+    margin-top: 1.5rem;
+    margin-bottom: 0.75rem;
+    color: var(--gray-800, #1f2937);
+}
+
+/* Paragraphes et Textes */
+.mms-docs-content p {
+    margin-bottom: 1rem;
+}
+
+.mms-docs-content strong {
+    font-weight: 600;
+    color: var(--gray-900, #111827);
+}
+
+.mms-docs-content em {
+    font-style: italic;
+}
+
+/* Listes */
+.mms-docs-content ul {
+    list-style-type: disc;
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.mms-docs-content ol {
+    list-style-type: decimal;
+    padding-left: 1.5rem;
+    margin-bottom: 1.25rem;
+}
+
+.mms-docs-content li {
+    margin-bottom: 0.5rem;
+}
+
+/* Liens */
+.mms-docs-content a {
+    color: var(--primary-600, #2563eb);
+    text-decoration: underline;
+    text-underline-offset: 2px;
+}
+
+.mms-docs-content a:hover {
+    color: var(--primary-800, #1e40af);
+}
+
+/* Blockquotes */
+.mms-docs-content blockquote {
+    border-left: 4px solid var(--primary-400, #60a5fa);
+    background-color: var(--primary-50, #eff6ff);
+    padding: 1rem;
+    margin: 1.5rem 0;
+    font-style: italic;
+    border-radius: 0 0.5rem 0.5rem 0;
+}
+
+/* Code */
+.mms-docs-content code {
+    background-color: var(--gray-100, #f3f4f6);
+    color: var(--primary-600, #2563eb);
+    padding: 0.2rem 0.4rem;
+    border-radius: 0.25rem;
+    font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+    font-size: 0.875em;
+}
+
+.mms-docs-content pre {
+    background-color: var(--gray-900, #111827);
+    color: #f3f4f6;
+    padding: 1rem;
+    border-radius: 0.5rem;
+    overflow-x: auto;
+    margin-bottom: 1.5rem;
+}
+
+.mms-docs-content pre code {
+    background-color: transparent;
+    color: inherit;
+    padding: 0;
+}
+
+/* Dark Mode support */
+@media (prefers-color-scheme: dark) {
+    .mms-docs-content {
+        color: var(--gray-300, #d1d5db);
+    }
+
+    .mms-docs-content h1,
+    .mms-docs-content h2,
+    .mms-docs-content h3,
+    .mms-docs-content strong {
+        color: var(--gray-100, #f3f4f6);
+    }
+
+    .mms-docs-content h1 {
+        border-bottom-color: var(--primary-800, #1e40af);
+    }
+
+    .mms-docs-content code {
+        background-color: var(--gray-800, #1f2937);
+        color: var(--primary-400, #60a5fa);
+    }
+
+    .mms-docs-content blockquote {
+        background-color: rgba(30, 64, 175, 0.1); /* primary-900 with opacity */
+        border-left-color: var(--primary-600, #2563eb);
+        color: var(--gray-300, #d1d5db);
+    }
+}

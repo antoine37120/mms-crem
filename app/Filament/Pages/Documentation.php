@@ -8,12 +8,12 @@ use Illuminate\Support\Facades\File;
 
 class Documentation extends Page
 {
-    protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-book-open';
-    protected static string|null|\UnitEnum $navigationGroup = 'Aide';
+    protected static ?string $navigationIcon = 'heroicon-o-book-open';
+    protected static ?string $navigationGroup = 'Aide';
     protected static ?string $title = 'Documentation Utilisateur';
     protected static ?int $navigationSort = 100;
 
-    protected string $view = 'filament.pages.documentation';
+    protected static string $view = 'filament.pages.documentation';
 
     public $currentSection = '01-introduction';
     public $sections = [];
