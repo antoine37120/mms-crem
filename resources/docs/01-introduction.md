@@ -10,9 +10,9 @@ L'objectif principal est de permettre le classement, la description et la conser
 
 Le système repose sur une hiérarchie à plusieurs niveaux :
 
-1.  **Fonds** : Le niveau le plus élevé (ex: `CNRSMH_Arnaud`). Il regroupe un ensemble cohérent d'archives.
-2.  **Corpus** : Subdivision thématique ou chronologique d'un fonds (ex: `CNRSMH_Arnaud_001`).
-3.  **Collections** : Groupes d'enregistrements au sein d'un corpus (ex: `CNRSMH_I_2011_001`).
+1.  **Fonds** : Le niveau le plus élevé (ex : `CNRSMH_Arnaud`). Il regroupe un ensemble cohérent d'archives.
+2.  **Corpus** : Subdivision thématique ou chronologique d'un fonds (ex : `CNRSMH_Arnaud_001`).
+3.  **Collections** : Groupes d'enregistrements au sein d'un corpus (ex : `CNRSMH_I_2011_001`).
 4.  **Items** : Les fichiers eux-mêmes. Il peut s'agir d'enregistrements principaux (sons, vidéos) ou de fichiers secondaires (documents texte, images).
 
 ## Navigation dans la documentation
