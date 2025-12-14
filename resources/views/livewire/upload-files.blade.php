@@ -107,7 +107,7 @@
 
             <div class="space-y-2">
                 @foreach($files as $fileId => $file)
-                    <div class="p-3 rounded border transition-colors
+                    <div class="p-3 rounded border transition-colors relative
                         @if($file['status'] === 'queued') bg-white dark:bg-gray-800 border-gray-200 dark:border-gray-700
                         @elseif($file['status'] === 'uploading') bg-blue-50 dark:bg-blue-900/20 border-blue-200
                         @elseif($file['status'] === 'completed') bg-green-50 dark:bg-green-900/20 border-green-200
@@ -151,7 +151,7 @@
                                             • Cote suggérée: <span class="font-mono text-blue-600">{{ $file['suggested_code'] }}</span>
                                         @endif
                                     @elseif($file['status'] === 'uploading')
-                                        {{ round($file['progress'], 1) }}% • {{ $file['chunks_uploaded'] }}/{{ $file['chunks_total'] }} chunks
+                                         <span x-text="getProgress('{{ $fileId }}')">0</span>%
                                     @elseif($file['status'] === 'completed')
                                         ✅ Upload terminé
                                         @if($file['suggested_code'])
@@ -161,6 +161,14 @@
                                          ❌ {{ $file['error'] }}
                                     @endif
                                 </div>
+
+                                {{-- Duplicate Warning --}}
+                                @if(!empty($file['duplicate_warning']))
+                                    <div class="mt-1 text-xs text-orange-600 font-medium flex items-center gap-1">
+                                        <x-heroicon-o-exclamation-triangle class="w-3 h-3" />
+                                        {{ $file['duplicate_warning'] }}
+                                    </div>
+                                @endif
                             </div>
 
                              {{-- Boutons d'action --}}
@@ -192,10 +200,18 @@
                             </div>
                         </div>
 
-                        {{-- Barre de progression pour upload --}}
+                        {{-- Barre de progression pour upload (Frontend Driven) --}}
                         @if($file['status'] === 'uploading')
                              <div class="w-full bg-blue-200 rounded-full h-1.5 mt-2">
-                                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300" style="width: {{ $file['progress'] }}%"></div>
+                                <div class="bg-blue-600 h-1.5 rounded-full transition-all duration-300"
+                                     x-bind:style="'width: ' + getProgress('{{ $fileId }}') + '%'"></div>
+                            </div>
+                        @endif
+
+                        {{-- Signature Display --}}
+                        @if($file['signature'])
+                            <div class="absolute bottom-1 right-2 text-[10px] text-gray-400 font-mono opacity-60 hover:opacity-100 transition-opacity" title="Signature MD5">
+                                {{ substr($file['signature'], 0, 8) }}...{{ substr($file['signature'], -8) }}
                             </div>
                         @endif
                     </div>
@@ -216,6 +232,7 @@
             isDragOver: false,
             isProcessing: false,
             selectedFiles: [],
+            filesProgress: {}, // Local progress state: { fileId: percentage }
 
             // Initialisation
             init() {
@@ -224,6 +241,10 @@
                     console.log('start-file-upload') ;
                     this.handleStartUpload(data);
                 });
+            },
+
+            getProgress(fileId) {
+                return this.filesProgress[fileId] || 0;
             },
 
             // Gestion de la sélection de fichiers
@@ -259,12 +280,44 @@
                         const signature = await this.calculateMD5(file);
 
                         // Add singular file to queue immediately
-                        $wire.addFilesToQueue([{
+                        await $wire.addFilesToQueue([{
                             name: file.name,
                             size: file.size,
                             type: file.type,
                             signature: signature
                         }]);
+
+                        // Get the ID of the file just added?
+                        // Actually, we don't have the ID here yet easily without a roundtrip return.
+                        // But we can trigger the duplicate check separately if we know the ID,
+                        // or we can just ask the backend to check all queued files?
+                        // Better: The backend `addFilesToQueue` doesn't return the ID.
+                        // We will rely on the backend loop in `addFilesToQueue` to NOT check duplicates yet?
+                        // Wait, the plan said: Call `$wire.checkDuplicate(fileId)`.
+                        // To do that, we need the fileId.
+                        // The backend `addFilesToQueue` generates UUIDs.
+                        // Maybe we generate UUID in frontend?
+                        // Or we ask backend to check duplicates for the last added file?
+
+                        // Let's optimize: We pass the signature to `addFilesToQueue`.
+                        // In `addFilesToQueue` (Backend), we can immediately check duplicate!
+                        // I added `checkDuplicate` logic in the component but I should call it automatically in `addFilesToQueue` if signature is present.
+                        // That's much better.
+
+                        // I'll update the backend plan implicitly here: I'll rely on the `checkDuplicate` separate call
+                        // OR simpler: find the ID from $wire.files that matches name/size/signature.
+
+                        // Let's stick to the plan: Trigger check.
+                        const filesState = $wire.files;
+                        const fileId = Object.keys(filesState).find(id =>
+                            filesState[id].name === file.name &&
+                            filesState[id].size === file.size &&
+                            filesState[id].signature === signature
+                        );
+
+                        if (fileId) {
+                            $wire.checkDuplicate(fileId, signature);
+                        }
 
                     } catch (error) {
                         console.error('Erreur calcul MD5 pour ' + file.name, error);
@@ -335,6 +388,7 @@
 
                 if (file) {
                     console.log('fichier trouvé pour transfert en chunk: ' + file.name) ;
+                    this.filesProgress[fileId] = 0; // Init progress
                     this.uploadFileInChunks(file, fileId, pendingFileId, totalChunks);
                 } else {
                     console.error('Fichier physique non trouvé pour:', fileState.name) ;
@@ -346,6 +400,8 @@
                 for (let chunkIndex = 0; chunkIndex < totalChunks; chunkIndex++) {
                     // Check if cancelled
                     const currentFileState = $wire.files[fileId];
+                    // If status is not uploading anymore (e.g. cancelled), stop.
+                    // Note: Since backend doesn't return progress anymore, we check status.
                     if (!currentFileState || currentFileState.status !== 'uploading') {
                         console.log('Upload stopped for ' + file.name);
                         return;
@@ -362,11 +418,21 @@
                         // Envoyer via Livewire
                         await $wire.uploadChunk(fileId, chunkIndex, chunkData, pendingFileId);
 
+                        // Update local progress
+                        const progress = ((chunkIndex + 1) / totalChunks) * 100;
+                        this.filesProgress[fileId] = Math.round(progress * 10) / 10;
+
                     } catch (error) {
                         console.error('Erreur upload chunk:', error);
                         break;
                     }
                 }
+
+                // End of loop - trigger next upload
+                // We add a small delay to ensure backend has processed the last chunk if needed
+                // But generally the await above ensures it.
+                // Call startNextPending()
+                $wire.startNextPending();
             },
 
             // Convertir fichier en base64

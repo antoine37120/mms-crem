@@ -5,6 +5,7 @@ namespace App\Livewire;
 use Livewire\Component;
 use Livewire\WithFileUploads;
 use App\Models\PendingFile;
+use App\Models\Item;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
 use Illuminate\Support\Facades\Log;
@@ -31,6 +32,8 @@ class UploadFiles extends Component
         'startUploads' => 'startAllUploads',
         'cancelUpload' => 'cancelUpload',
         'retryUpload' => 'retryUpload',
+        'checkDuplicate' => 'checkDuplicate',
+        'startNextPending' => 'startNextPending',
     ];
 
     /**
@@ -127,17 +130,43 @@ class UploadFiles extends Component
                 'type' => $fileData['type'],
                 'signature' => $fileData['signature'] ?? null, // Capture client signature
                 'chunks_total' => ceil($fileData['size'] / $this->CHUNK_SIZE),
-                'chunks_uploaded' => 0,
-                'progress' => 0,
+                //'chunks_uploaded' => 0, // Handled by frontend state now
+                //'progress' => 0, // Handled by frontend state now
                 'status' => 'queued',
                 'pending_file_id' => null,
                 'error' => null,
                 'suggested_code' => null,
                 'added_at' => now()->timestamp, // For sorting if needed
+                'duplicate_warning' => null,
             ];
         }
 
         $this->dispatch('queue-updated', count($this->files));
+    }
+
+    public function checkDuplicate(string $fileId, ?string $signature): void
+    {
+        if (!isset($this->files[$fileId]) || !$signature) {
+            return;
+        }
+
+        $this->files[$fileId]['signature'] = $signature;
+
+        // Check Items
+        $existingItem = Item::where('md5', $signature)->first();
+        if ($existingItem) {
+            $this->files[$fileId]['duplicate_warning'] = "Doublon détecté : Item existant ({$existingItem->code})";
+            return;
+        }
+
+        // Check PendingFiles
+        $existingPending = PendingFile::where('client_signature', $signature)
+            ->where('upload_status', 'completed')
+            ->first();
+
+        if ($existingPending) {
+            $this->files[$fileId]['duplicate_warning'] = "Doublon détecté : Fichier en attente ({$existingPending->original_name})";
+        }
     }
 
     public function removeFromQueue(string $fileId): void
@@ -166,6 +195,11 @@ class UploadFiles extends Component
                 $this->createPendingFile($fileId);
             }
         }
+    }
+
+    public function startNextPending(): void
+    {
+        $this->startNextQueuedUpload();
     }
 
     private function createPendingFile(string $fileId): void
@@ -259,14 +293,36 @@ class UploadFiles extends Component
             Storage::put($chunkPath, $stream);
             fclose($stream);
 
-            if (isset($this->files[$fileId])) {
-                $this->files[$fileId]['chunks_uploaded']++;
-                $totalChunks = $this->files[$fileId]['chunks_total'];
-                $this->files[$fileId]['progress'] = ($this->files[$fileId]['chunks_uploaded'] / $totalChunks) * 100;
+            // We do NOT update $this->files progress here to avoid race conditions.
+            // But we do need to check if it was the last chunk to trigger assembly.
+            // Since we don't trust frontend to say "this is the last one" for security,
+            // we should count chunks on disk? Or assume the frontend tells truth about total chunks?
+            // The frontend passes chunkIndex.
 
-                if ($this->files[$fileId]['chunks_uploaded'] >= $totalChunks) {
-                    $this->assembleFile($fileId, $pendingFileId);
-                }
+            // To be safe and avoid counting files every time, we rely on the frontend loop to finish.
+            // BUT, assembly must happen on the server.
+            // So we need to know if this is the last chunk.
+            // Let's rely on the count of chunk files on disk for now, or check index vs total.
+            // We have totalChunks in $this->files[$fileId]['chunks_total'].
+
+            if (isset($this->files[$fileId])) {
+                 $totalChunks = $this->files[$fileId]['chunks_total'];
+
+                 // If this is the last chunk index (0-based)
+                 if ($chunkIndex == $totalChunks - 1) {
+                     // Check if ALL chunks are present before assembling
+                     $allPresent = true;
+                     for($i=0; $i<$totalChunks; $i++) {
+                         if (!Storage::exists($pendingFile->file_path . '.chunk.' . $i)) {
+                             $allPresent = false;
+                             break;
+                         }
+                     }
+
+                     if ($allPresent) {
+                         $this->assembleFile($fileId, $pendingFileId);
+                     }
+                 }
             }
 
             if (function_exists('gc_collect_cycles')) {
@@ -375,11 +431,14 @@ class UploadFiles extends Component
     {
         if (isset($this->files[$fileId])) {
             $this->files[$fileId]['status'] = 'completed';
-            $this->files[$fileId]['progress'] = 100;
+            // $this->files[$fileId]['progress'] = 100; // Handled by frontend
             $this->dispatch('file-completed', $fileId);
         }
 
-        $this->startNextQueuedUpload();
+        // We do NOT call startNextQueuedUpload() here anymore.
+        // It is now the responsibility of the frontend to call startNextPending()
+        // when it detects completion or when the loop finishes.
+
         $this->checkAllUploadsCompleted();
     }
 
@@ -413,7 +472,11 @@ class UploadFiles extends Component
             $this->dispatch('file-failed', ['fileId' => $fileId, 'error' => $error]);
         }
 
-        $this->startNextQueuedUpload(); // Try to start next one even if this one failed
+        // For failures, we might want to auto-start next?
+        // Or wait for frontend to catch the error?
+        // Safer to let frontend drive it to keep sync.
+        //$this->startNextQueuedUpload();
+
         $this->checkAllUploadsCompleted();
     }
 
@@ -449,8 +512,6 @@ class UploadFiles extends Component
         if (isset($this->files[$fileId]) && $this->files[$fileId]['status'] === 'failed') {
             $this->files[$fileId]['status'] = 'queued';
             $this->files[$fileId]['error'] = null;
-            $this->files[$fileId]['chunks_uploaded'] = 0;
-            $this->files[$fileId]['progress'] = 0;
             $this->files[$fileId]['pending_file_id'] = null;
 
             // Trigger start if we have slots

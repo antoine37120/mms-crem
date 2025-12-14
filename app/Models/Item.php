@@ -46,6 +46,7 @@ class Item extends Model implements Auditable
         'created_by',
         'main_items_count',
         'secondary_items_count',
+        'md5',
     ];
 
     protected $casts = [
