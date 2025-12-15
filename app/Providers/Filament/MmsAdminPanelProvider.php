@@ -77,14 +77,15 @@ class MmsAdminPanelProvider extends PanelProvider
                     //->icon('heroicon-o-cog-6-tooth')
                     ->collapsible(),
             ])
-            /*->navigationItems([
-                NavigationItem::make('Upload Rapide')
-                    ->icon('heroicon-o-arrow-up-tray')
-                    ->group('Médias & Items')
-                    ->sort(1) // Placer en premier dans le groupe
-                    ->url('#') // URL vide ou '#' pour éviter la navigation
-                    ->openUrlInNewTab(false)
-            ])*/
+            ->navigationItems([
+                NavigationItem::make('tasksDashboard')
+                    ->group('Administration')
+                    ->openUrlInNewTab()
+                    ->label(fn (): string => 'Traitements médias')
+                    ->icon('heroicon-o-command-line')
+                    ->url(fn (): string => route('vantage.dashboard'))
+                    ->visible(fn(): bool => auth()->user()->isAdmin()),
+            ])
 
             ->brandName('MMS CREM')
             ->spa()

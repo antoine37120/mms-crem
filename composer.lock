@@ -4,7 +4,7 @@
         "Read more about it at https://getcomposer.org/doc/01-basic-usage.md#installing-dependencies",
         "This file is @generated automatically"
     ],
-    "content-hash": "2a12990a934b398f49453d880c317c4a",
+    "content-hash": "0637e29498081731f2f1f96473a2b4e2",
     "packages": [
         {
             "name": "anourvalar/eloquent-serialize",
@@ -2076,6 +2076,55 @@
                 }
             ],
             "time": "2025-08-22T14:27:06+00:00"
+        },
+        {
+            "name": "houdaslassi/vantage",
+            "version": "v0.1.21",
+            "source": {
+                "type": "git",
+                "url": "https://github.com/houdaslassi/vantage.git",
+                "reference": "db0f8c790ff52f0bafc3602c62e2235ef96998fd"
+            },
+            "dist": {
+                "type": "zip",
+                "url": "https://api.github.com/repos/houdaslassi/vantage/zipball/db0f8c790ff52f0bafc3602c62e2235ef96998fd",
+                "reference": "db0f8c790ff52f0bafc3602c62e2235ef96998fd",
+                "shasum": ""
+            },
+            "require": {
+                "illuminate/events": "^10.0|^11.0|^12.0",
+                "illuminate/notifications": "^10.0|^11.0|^12.0",
+                "illuminate/queue": "^10.0|^11.0|^12.0",
+                "illuminate/support": "^10.0|^11.0|^12.0",
+                "php": "^8.2|^8.3"
+            },
+            "require-dev": {
+                "orchestra/testbench": "^10.0",
+                "pestphp/pest": "^3.8"
+            },
+            "type": "library",
+            "extra": {
+                "laravel": {
+                    "providers": [
+                        "HoudaSlassi\\Vantage\\VantageServiceProvider"
+                    ]
+                }
+            },
+            "autoload": {
+                "psr-4": {
+                    "HoudaSlassi\\Vantage\\": "src/"
+                }
+            },
+            "notification-url": "https://packagist.org/downloads/",
+            "license": [
+                "MIT"
+            ],
+            "description": "Vantage: Strategic queue monitoring and observability for Laravel applications.",
+            "support": {
+                "issues": "https://github.com/houdaslassi/vantage/issues",
+                "source": "https://github.com/houdaslassi/vantage/tree/v0.1.21"
+            },
+            "time": "2025-12-10T16:02:45+00:00"
         },
         {
             "name": "kirschbaum-development/eloquent-power-joins",

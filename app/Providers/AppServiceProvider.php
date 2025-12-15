@@ -3,6 +3,7 @@
 namespace App\Providers;
 
 use Illuminate\Support\ServiceProvider;
+use Illuminate\Support\Facades\Gate;
 
 class AppServiceProvider extends ServiceProvider
 {
@@ -19,6 +20,12 @@ class AppServiceProvider extends ServiceProvider
      */
     public function boot(): void
     {
-        //
+        Gate::define('viewVantage', function ($user = null) {
+            // Only allow admins
+            return optional($user)->isAdmin();
+
+            // Or any other custom logic
+            // return $user && $user->hasRole('developer');
+        });
     }
 }
