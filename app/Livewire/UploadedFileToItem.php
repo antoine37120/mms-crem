@@ -70,6 +70,8 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ->columns(2)
                     ->columnSpanFull()
                     ->live()
+                    ->preload()
+                    ->searchable()->optionsLimit(50)
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         // Réinitialiser le champ langue si le type change
                         if ($get('itemable_type') && $get('itemable_id')) {
@@ -80,7 +82,9 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                             $set('code_prefix', $model->code);
                         }
                     })
-                    ->modifyTypeSelectUsing(fn (Select $select): Select => $select->default('App\Models\Collection'))
+                    ->modifyTypeSelectUsing(fn (Select $select): Select =>
+                        $select->default('App\Models\Collection')
+                    )
 
                     ->required(),
 

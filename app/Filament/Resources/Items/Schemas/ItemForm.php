@@ -46,6 +46,8 @@ class ItemForm
                     ->columns(2)
                     ->columnSpanFull()
                     ->live()
+                    ->preload()
+                    ->searchable()->optionsLimit(50)
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         // Réinitialiser le champ langue si le type change
                         if ($get('itemable_type') && $get('itemable_id')) {
