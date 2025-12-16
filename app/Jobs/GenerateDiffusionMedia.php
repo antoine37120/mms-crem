@@ -92,23 +92,28 @@ class GenerateDiffusionMedia implements ShouldQueue
                 $isStreaming = true;
 
             } else {
-                // Audio - MP3 conversion
-                $fileName = $this->item->code . '.mp3';
-                $outputFileAbsolute = $outputDirAbsolute . '/' . $fileName;
+                // Audio - HLS conversion (Streaming)
+                $playlistName = $this->item->code . '.m3u8';
+                $outputFileAbsolute = $outputDirAbsolute . '/' . $playlistName;
 
                 $command = [
                     $ffmpegPath,
                     '-y',
                     '-i', $inputPath,
-                    '-c:a', 'libmp3lame',
-                    '-q:a', '2', // VBR Quality
+                    '-c:a', 'aac',
+                    '-b:a', '128k', // Bitrate
+                    '-ac', '2',     // Channels
+                    '-f', 'hls',
+                    '-hls_time', '10', // Segment duration
+                    '-hls_playlist_type', 'vod',
+                    '-hls_segment_filename', $outputDirAbsolute . '/' . $this->item->code . '_%03d.ts',
                     $outputFileAbsolute
                 ];
 
                 $variationType = MediaVariationType::AUDIO;
-                $mimeType = 'audio/mpeg';
-                $finalPath = $outputDir . '/' . $fileName;
-                $isStreaming = false;
+                $mimeType = 'application/x-mpegURL';
+                $finalPath = $outputDir . '/' . $playlistName;
+                $isStreaming = true;
             }
 
             // 4. Execute
