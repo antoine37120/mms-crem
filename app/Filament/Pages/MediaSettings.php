@@ -54,6 +54,17 @@ class MediaSettings extends Page implements HasForms
                             ->label('Chemin FFProbe')
                             ->placeholder('/usr/bin/ffprobe')
                             ->helperText('Laissez vide pour utiliser le PATH système.'),
+
+                        TextInput::make('audiowaveform_path')
+                            ->label('Chemin Audiowaveform')
+                            ->placeholder('/usr/bin/audiowaveform')
+                            ->helperText('Laissez vide pour utiliser le PATH système.'),
+
+                        TextInput::make('diffusion_disk')
+                            ->label('Disque de diffusion')
+                            ->default('diffusion_medias')
+                            ->required()
+                            ->helperText('Nom du disque dans config/filesystems.php pour stocker les fichiers générés.'),
                     ])->columns(2),
             ])
             ->statePath('data');
