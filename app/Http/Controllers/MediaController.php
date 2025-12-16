@@ -11,32 +11,46 @@ use Symfony\Component\HttpFoundation\StreamedResponse;
 class MediaController extends Controller
 {
     /**
-     * Serve the master playlist (HLS .m3u8).
+     * Serve the master media file.
+     * Logic:
+     * 1. If HLS streaming variation exists -> Serve .m3u8 playlist.
+     * 2. Else -> Serve original file (PDF, Image, MP3, etc.).
      */
-    public function playlist(string $code)
+    public function master(string $code)
     {
         $item = Item::where('code', $code)->firstOrFail();
 
-        // Find the HLS variation
-        $variation = MediaVariation::where('item_id', $item->id)
+        // 1. Try to find a Streaming Variation (HLS)
+        $streamingVariation = MediaVariation::where('item_id', $item->id)
             ->where('is_streaming', true)
-            ->firstOrFail();
+            ->orderBy('created_at', 'desc')
+            ->first();
 
-        // The file_path in DB is like "items/CODE/diffusion/CODE.m3u8"
-        // We serve it from the disk configured in settings (default: diffusion_medias)
-        // Since we don't have access to dynamic settings here easily without querying DB or file,
-        // we assume the variation->disk field is correct.
+        if ($streamingVariation) {
+            $disk = $streamingVariation->disk;
+            $path = $streamingVariation->file_path;
 
-        $disk = $variation->disk;
-        $path = $variation->file_path;
-
-        if (!Storage::disk($disk)->exists($path)) {
-            abort(404);
+            if (Storage::disk($disk)->exists($path)) {
+                return Storage::disk($disk)->response($path, null, [
+                    'Content-Type' => 'application/x-mpegURL',
+                    'Access-Control-Allow-Origin' => '*',
+                ]);
+            }
         }
 
+        // 2. Fallback: Serve Original File (PDF, Image, non-transcoded Audio/Video)
+        // Note: Assuming 'original_medias' disk contains the source.
+        $disk = 'original_medias';
+        $path = $item->file_path;
+
+        if (!$path || !Storage::disk($disk)->exists($path)) {
+            abort(404, 'File not found');
+        }
+
+        // Determine MIME type if possible, or let Laravel/Storage detect it
+        // Basic CORS support
         return Storage::disk($disk)->response($path, null, [
-            'Content-Type' => 'application/x-mpegURL',
-            'Access-Control-Allow-Origin' => '*', // Adjust for CORS
+            'Access-Control-Allow-Origin' => '*',
         ]);
     }
 

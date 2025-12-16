@@ -5,8 +5,11 @@ use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\MediaController;
 
-Route::get('/media/{code}/playlist.m3u8', [MediaController::class, 'playlist'])->name('media.playlist');
+// Generic route for accessing media (HLS playlist or direct file)
+Route::get('/media/{code}', [MediaController::class, 'master'])->name('media.master');
+// HLS Segments
 Route::get('/media/{code}/{segment}', [MediaController::class, 'segment'])->where('segment', '.*\.ts$')->name('media.segment');
+// Waveform data
 Route::get('/media/{code}/waveform.json', [MediaController::class, 'waveform'])->name('media.waveform');
 
 Route::get('/', function () {
