@@ -23,7 +23,7 @@ class MediaSettings extends Page implements HasForms
 
     protected static ?string $title = 'MMS Settings';
 
-    protected static string $view = 'filament.pages.media-settings';
+    protected string $view = 'filament.pages.media-settings';
 
     public ?array $data = [];
 
