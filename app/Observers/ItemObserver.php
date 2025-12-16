@@ -4,6 +4,7 @@ namespace App\Observers;
 
 use App\Models\Item;
 use App\Models\Collection;
+use App\Services\MediaProcessor;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
 class ItemObserver implements ShouldHandleEventsAfterCommit
@@ -14,6 +15,10 @@ class ItemObserver implements ShouldHandleEventsAfterCommit
     public function created(Item $item): void
     {
         $this->updateCollectionCounter($item, 1);
+
+        if ($item->file_path) {
+            app(MediaProcessor::class)->processItem($item);
+        }
     }
 
     /**
@@ -21,6 +26,10 @@ class ItemObserver implements ShouldHandleEventsAfterCommit
      */
     public function updated(Item $item): void
     {
+        if ($item->isDirty('file_path') && $item->file_path) {
+            app(MediaProcessor::class)->processItem($item);
+        }
+
         // Si is_sub a changé, on doit recalculer
         if ($item->isDirty('is_sub')) {
             $this->decrementCounter($item, $item->getOriginal('is_sub'));

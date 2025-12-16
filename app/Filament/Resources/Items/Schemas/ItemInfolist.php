@@ -102,6 +102,7 @@ class ItemInfolist
                                 ->label('Envoyer par'),
                         ])
                     ->columns(1),
+                MediaProcessingSchema::make(),
             ])->columns(2);
     }
 }
