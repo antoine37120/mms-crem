@@ -73,7 +73,7 @@ class MediaScan extends Command
             $batch[] = $file;
 
             if (count($batch) >= $batchSize) {
-                $scanner->scanBatch($batch);
+                $scanner->scanBatch($batch, 'local', $scanPath);
                 $this->output->progressAdvance(count($batch));
                 $batch = [];
             }
@@ -81,7 +81,7 @@ class MediaScan extends Command
 
         // Process remaining
         if (count($batch) > 0) {
-            $scanner->scanBatch($batch);
+            $scanner->scanBatch($batch, 'local', $scanPath);
             $this->output->progressAdvance(count($batch));
         }
 

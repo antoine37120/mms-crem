@@ -6,6 +6,7 @@ use App\Enums\ScannedFileStatus;
 use App\Models\Item;
 use App\Models\ScannedFile;
 use Illuminate\Support\Collection;
+use Illuminate\Support\Str;
 use SplFileInfo;
 
 class MediaScanner
@@ -13,11 +14,10 @@ class MediaScanner
     /**
      * Scan a single file and update/create database record.
      */
-    public function scanFile(SplFileInfo $file, string $disk = 'local'): ScannedFile
+    public function scanFile(SplFileInfo $file, string $disk = 'local', ?string $rootScanPath = null): ScannedFile
     {
         $filePath = $file->getPathname();
         $fileName = $file->getBasename(); // e.g. "video.mp4"
-        $nameWithoutExtension = pathinfo($fileName, PATHINFO_FILENAME); // e.g. "video"
 
         // Find existing or new
         $scannedFile = ScannedFile::firstOrNew([
@@ -38,7 +38,7 @@ class MediaScanner
 
         // Attempt match if orphan
         if ($scannedFile->status === ScannedFileStatus::ORPHAN) {
-            $this->matchItem($scannedFile);
+            $this->matchItem($scannedFile, $rootScanPath);
         }
 
         return $scannedFile;
@@ -47,7 +47,7 @@ class MediaScanner
     /**
      * Attempt to match a ScannedFile to an Item by code.
      */
-    public function matchItem(ScannedFile $scannedFile): bool
+    public function matchItem(ScannedFile $scannedFile, ?string $rootScanPath = null): bool
     {
         // Logic: Filename without extension === Item Code
         $code = pathinfo($scannedFile->file_name, PATHINFO_FILENAME);
@@ -59,6 +59,18 @@ class MediaScanner
             $scannedFile->item_id = $item->id;
             $scannedFile->status = ScannedFileStatus::ASSOCIATED;
             $scannedFile->save();
+
+            // Auto-link Item file_path if empty
+            if (empty($item->file_path) && $rootScanPath) {
+                // Calculate relative path
+                $relativePath = Str::after($scannedFile->file_path, $rootScanPath . DIRECTORY_SEPARATOR);
+                // Ensure no leading slash if Str::after leaves one (depends on separator presence)
+                $relativePath = ltrim($relativePath, DIRECTORY_SEPARATOR);
+
+                $item->file_path = $relativePath;
+                $item->save(); // Triggers Observer -> Processing
+            }
+
             return true;
         }
 
@@ -70,7 +82,7 @@ class MediaScanner
      *
      * @param SplFileInfo[] $files
      */
-    public function scanBatch(array $files, string $disk = 'local'): void
+    public function scanBatch(array $files, string $disk = 'local', ?string $rootScanPath = null): void
     {
         if (empty($files)) {
             return;
@@ -100,9 +112,6 @@ class MediaScanner
         $items = Item::whereIn('code', $codesToLookup)->get()->keyBy('code');
 
         // 5. Upsert / Process records
-        // Note: 'upsert' works but handling 'status' logic (only if new) is tricky with upsert if we want to preserve existing status unless we force re-eval.
-        // For accurate status logic, we might iterate. Since we pre-loaded data, it's fast.
-
         foreach ($files as $file) {
             $path = $file->getPathname();
             $fileName = $file->getBasename();
@@ -121,17 +130,17 @@ class MediaScanner
             $record->size = $file->getSize();
             $record->last_scanned_at = now();
 
-            // If already associated, we generally keep it? Or verify?
-            // Spec says "Explore/Scan".
-            // If it's ORPHAN, try to match.
-            // If it's ASSOCIATED, check if item still exists?
-            // For now, let's just retry matching if ORPHAN, or if we want to ensure consistency.
-            // Let's stick to: If ORPHAN, try match.
-
             if ($record->status === ScannedFileStatus::ORPHAN) {
                 if ($item = $items->get($code)) {
                     $record->item_id = $item->id;
                     $record->status = ScannedFileStatus::ASSOCIATED;
+
+                    // Auto-link Item file_path if empty
+                    if (empty($item->file_path) && $rootScanPath) {
+                        $relativePath = ltrim(Str::after($path, $rootScanPath . DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
+                        $item->file_path = $relativePath;
+                        $item->save(); // Triggers Observer -> Processing
+                    }
                 }
             }
 
