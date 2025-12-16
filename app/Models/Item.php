@@ -7,6 +7,7 @@ use Carbon\Carbon;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
@@ -365,6 +366,30 @@ class Item extends Model implements Auditable
     public function childItems(): MorphMany
     {
         return $this->morphMany(Item::class, 'itemable');
+    }
+
+    /**
+     * Get the scanned files for the item.
+     */
+    public function scannedFiles(): HasMany
+    {
+        return $this->hasMany(ScannedFile::class);
+    }
+
+    /**
+     * Get the media variations for the item.
+     */
+    public function mediaVariations(): HasMany
+    {
+        return $this->hasMany(MediaVariation::class);
+    }
+
+    /**
+     * Get the processing states for the item.
+     */
+    public function processingStates(): HasMany
+    {
+        return $this->hasMany(ItemProcessingState::class);
     }
 
     /**
