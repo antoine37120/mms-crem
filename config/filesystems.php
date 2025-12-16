@@ -63,6 +63,14 @@ return [
             'report' => false,
         ],
 
+        'diffusion_medias' => [
+            'driver' => 'local',
+            'root' => env('MMS_DIFFUSION_MEDIAS_PATH', storage_path('app/diffusion_medias')),
+            'visibility' => 'private',
+            'throw' => false,
+            'report' => false,
+        ],
+
         's3' => [
             'driver' => 's3',
             'key' => env('AWS_ACCESS_KEY_ID'),

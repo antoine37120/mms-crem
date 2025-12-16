@@ -5,11 +5,9 @@ use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
 use App\Http\Controllers\MediaController;
 
-Route::middleware(['auth'])->group(function () {
-    Route::get('/media/{code}/playlist.m3u8', [MediaController::class, 'playlist'])->name('media.playlist');
-    Route::get('/media/{code}/{segment}', [MediaController::class, 'segment'])->where('segment', '.*\.ts$')->name('media.segment');
-    Route::get('/media/{code}/waveform.json', [MediaController::class, 'waveform'])->name('media.waveform');
-});
+Route::get('/media/{code}/playlist.m3u8', [MediaController::class, 'playlist'])->name('media.playlist');
+Route::get('/media/{code}/{segment}', [MediaController::class, 'segment'])->where('segment', '.*\.ts$')->name('media.segment');
+Route::get('/media/{code}/waveform.json', [MediaController::class, 'waveform'])->name('media.waveform');
 
 Route::get('/', function () {
     return view('welcome');
