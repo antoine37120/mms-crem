@@ -8,11 +8,11 @@ use App\Models\ScannedFile;
 use App\Services\MediaScanner;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
+use Filament\Actions\Action;
 use Filament\Schemas\Schema;
 use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Actions\Action;
 use Filament\Support\Icons\Heroicon;
 use BackedEnum;
 use UnitEnum;
@@ -69,7 +69,7 @@ class ScannedFileResource extends Resource
                 SelectFilter::make('status')
                     ->options(ScannedFileStatus::class),
             ])
-            ->actions([
+            ->recordActions([
                 Action::make('rescan')
                     ->label('Rescanner')
                     ->icon('heroicon-o-arrow-path')
@@ -113,7 +113,7 @@ class ScannedFileResource extends Resource
                          }
                     }),
             ])
-            ->bulkActions([
+            ->toolbarActions([
                 //
             ]);
     }
