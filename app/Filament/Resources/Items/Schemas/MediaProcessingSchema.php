@@ -18,15 +18,11 @@ class MediaProcessingSchema
                 RepeatableEntry::make('processingStates')
                     ->label('État des traitements')
                     ->table([
-                        TableColumn::make('Type')
-                            ->state(fn ($record) => $record->process_type->name ?? $record->process_type),
-                        TableColumn::make('Statut')
-                            ->state(fn ($record) => $record->status->name ?? $record->status),
+                        TableColumn::make('Type'),
+                        TableColumn::make('Statut'),
                         TableColumn::make('Message'),
-                        TableColumn::make('Début')
-                             ->state(fn ($record) => $record->started_at?->format('d/m/Y H:i:s')),
-                        TableColumn::make('Fin')
-                             ->state(fn ($record) => $record->finished_at?->format('d/m/Y H:i:s')),
+                        TableColumn::make('Début'),
+                        TableColumn::make('Fin'),
                     ])
                     ->schema([
                         TextEntry::make('process_type'),
@@ -47,13 +43,13 @@ class MediaProcessingSchema
                 RepeatableEntry::make('mediaVariations')
                     ->label('Fichiers générés')
                     ->table([
-                        TableColumn::make('Profil')
-                            ->state(fn ($record) => $record->profile_name),
-                        TableColumn::make('Type')
-                            ->state(fn ($record) => $record->type->name ?? $record->type),
+                        TableColumn::make('Profil'),
+                        TableColumn::make('Type'),
                         TableColumn::make('Mime'),
-                        TableColumn::make('Streaming')
-                            ->state(fn ($record) => $record->is_streaming ? 'Oui' : 'Non'),
+                        TableColumn::make('Streaming'),
+                        TableColumn::make('Chemin'),
+                        TableColumn::make('Disque'),
+                        TableColumn::make('Créé le'),
                     ])
                     ->schema([
                         TextEntry::make('profile_name'),
