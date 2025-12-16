@@ -114,7 +114,20 @@ class ScannedFileResource extends Resource
                     }),
             ])
             ->toolbarActions([
-                //
+                Action::make('run_scan')
+                    ->label('Lancer un scan')
+                    ->icon('heroicon-o-magnifying-glass')
+                    ->action(function () {
+                        // Using Artisan directly.
+                        // Ideally this should be queued or run via Process to avoid timeout on large scans.
+                        // But for "Launching" it, we can just run it.
+                        \Illuminate\Support\Facades\Artisan::call('media:scan');
+
+                        Notification::make()
+                            ->title('Scan terminé')
+                            ->success()
+                            ->send();
+                    }),
             ]);
     }
 
