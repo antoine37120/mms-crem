@@ -43,6 +43,7 @@ class GenerateDiffusionMedia implements ShouldQueue
                 $settings = json_decode(Storage::disk('local')->get($settingsPath), true);
             }
             $ffmpegPath = $settings['ffmpeg_path'] ?? 'ffmpeg';
+            $ffprobePath = $settings['ffprobe_path'] ?? 'ffprobe';
             $diffusionDisk = $settings['diffusion_disk'] ?? 'diffusion_medias';
 
             // 2. Input/Output Paths
@@ -59,6 +60,35 @@ class GenerateDiffusionMedia implements ShouldQueue
             // Ensure output directory exists
             Storage::disk($diffusionDisk)->makeDirectory($outputDir);
             $outputDirAbsolute = Storage::disk($diffusionDisk)->path($outputDir);
+
+            // 2.5 Extract Duration if missing (using ffprobe)
+            if (!$this->item->duration) {
+                try {
+                    // Command to get duration in seconds
+                    // ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 input.mp4
+                    $probeCommand = [
+                        $ffprobePath,
+                        '-v', 'error',
+                        '-show_entries', 'format=duration',
+                        '-of', 'default=noprint_wrappers=1:nokey=1',
+                        $inputPath
+                    ];
+
+                    $probeResult = Process::run($probeCommand);
+                    
+                    if ($probeResult->successful()) {
+                        $duration = (float) trim($probeResult->output());
+                        if ($duration > 0) {
+                            $this->item->duration = (int) round($duration);
+                            $this->item->saveQuietly(); // Save without triggering observers/events
+                        }
+                    } else {
+                         \Log::warning("FFprobe failed to extract duration for Item {$this->item->id}: " . $probeResult->errorOutput());
+                    }
+                } catch (\Exception $e) {
+                     \Log::warning("Exception during duration extraction for Item {$this->item->id}: " . $e->getMessage());
+                }
+            }
 
             // 3. Command Generation
             if ($this->item->isVideo()) {
@@ -82,6 +112,7 @@ class GenerateDiffusionMedia implements ShouldQueue
                     '-f', 'hls',
                     '-hls_time', '4',
                     '-hls_playlist_type', 'vod',
+                    '-hls_base_url', $this->item->code . '/',
                     '-hls_segment_filename', $outputDirAbsolute . '/' . $this->item->code . '_%03d.ts',
                     $outputFileAbsolute
                 ];
@@ -106,6 +137,7 @@ class GenerateDiffusionMedia implements ShouldQueue
                     '-f', 'hls',
                     '-hls_time', '10', // Segment duration
                     '-hls_playlist_type', 'vod',
+                    '-hls_base_url', $this->item->code . '/',
                     '-hls_segment_filename', $outputDirAbsolute . '/' . $this->item->code . '_%03d.ts',
                     $outputFileAbsolute
                 ];
