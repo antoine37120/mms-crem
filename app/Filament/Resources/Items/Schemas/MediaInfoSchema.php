@@ -22,7 +22,7 @@ class MediaInfoSchema
                 RepeatableEntry::make('mediaVariations')
                     ->label('Fichiers & Variations')
                     ->schema([
-                        Grid::make(5)
+                        Grid::make(3)
                             ->schema([
                                 TextEntry::make('profile_name')
                                     ->label('Profil'),
@@ -30,6 +30,9 @@ class MediaInfoSchema
                                     ->label('Type'),
                                 TextEntry::make('mime_type')
                                     ->label('Mime Type'),
+                            ]),
+                        Grid::make(2)
+                            ->schema([
                                 TextEntry::make('is_streaming')
                                     ->label('Streaming')
                                     ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),

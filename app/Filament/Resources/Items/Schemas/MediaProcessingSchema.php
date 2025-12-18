@@ -43,21 +43,21 @@ class MediaProcessingSchema
                 RepeatableEntry::make('mediaVariations')
                     ->label('Fichiers générés')
                     ->table([
-                        TableColumn::make('Profil'),
-                        TableColumn::make('Type'),
+                        //TableColumn::make('Profil'),
+                        //TableColumn::make('Type'),
                         TableColumn::make('Mime'),
-                        TableColumn::make('Streaming'),
+                        //TableColumn::make('Streaming'),
                         TableColumn::make('Chemin'),
-                        TableColumn::make('Disque'),
+                        //TableColumn::make('Disque'),
                         TableColumn::make('Créé le'),
                     ])
                     ->schema([
-                        TextEntry::make('profile_name'),
-                        TextEntry::make('type'),
+                        //TextEntry::make('profile_name'),
+                        //TextEntry::make('type'),
                         TextEntry::make('mime_type'),
-                        IconEntry::make('is_streaming')->boolean(),
+                        //IconEntry::make('is_streaming')->boolean(),
                         TextEntry::make('file_path')->label('Chemin relatif'),
-                        TextEntry::make('disk'),
+                        //TextEntry::make('disk'),
                         TextEntry::make('created_at')->dateTime(),
                     ])
                     ->columnSpanFull(),
