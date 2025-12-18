@@ -6,17 +6,22 @@ use App\Models\Fond;
 use App\Models\Corpus;
 use App\Models\Collection;
 use App\Models\Item;
+use App\Filament\Resources\Items\Schemas\MediaInfoSchema;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
+use Filament\Infolists\Concerns\InteractsWithInfolists;
+use Filament\Infolists\Contracts\HasInfolists;
+use Filament\Infolists\Infolist;
 use Filament\Schemas\Schema;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 
-class HierarchyExplorer extends Page implements HasForms
+class HierarchyExplorer extends Page implements HasForms, HasInfolists
 {
     use InteractsWithForms;
+    use InteractsWithInfolists;
 
     // Configuration de base
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-folder';
@@ -111,6 +116,8 @@ class HierarchyExplorer extends Page implements HasForms
             $this->selectedElement = null;
             $this->selectedItemId = null;
             $this->selectedItem = null;
+
+            unset($this->cachedInfolists['mediaInfolist']);
 
             // Réinitialiser la pagination des collections
             $this->collectionsPage = 1;
@@ -300,6 +307,8 @@ class HierarchyExplorer extends Page implements HasForms
         $this->selectedItemId = null; // Reset sélection item
         $this->selectedItem = null;
 
+        unset($this->cachedInfolists['mediaInfolist']);
+
         // Mise à jour URL
         $this->focus = $type;
         $this->id = $id;
@@ -341,6 +350,8 @@ class HierarchyExplorer extends Page implements HasForms
         $this->selectedItemId = $itemId;
         $item = Item::with(['childItems', 'itemType', 'itemable'])->find($itemId);
         $this->selectedItem = $item ? $item->toArray() : null;
+
+        unset($this->cachedInfolists['mediaInfolist']);
     }
 
     // Actions de basculement d'expansion
@@ -777,6 +788,24 @@ class HierarchyExplorer extends Page implements HasForms
             $url .= '?parent_item_id=' . $this->selectedItemId . '&item_type=translation';
         }
         $this->redirect($url);
+    }
+
+    public function mediaInfolist(Infolist $infolist): Infolist
+    {
+        return $infolist
+            ->record($this->getSelectedItemRecordProperty())
+            ->schema([
+                MediaInfoSchema::make(),
+            ]);
+    }
+
+    public function getSelectedItemRecordProperty(): ?Item
+    {
+        if (!$this->selectedItemId) {
+            return null;
+        }
+
+        return Item::find($this->selectedItemId);
     }
 
     public function hasChildren(string $type, $model): bool

@@ -103,6 +103,7 @@ class ItemInfolist
                         ])
                     ->columns(1),
                 MediaProcessingSchema::make(),
+                MediaInfoSchema::make(),
             ])->columns(2);
     }
 }
