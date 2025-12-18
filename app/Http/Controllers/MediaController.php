@@ -4,6 +4,7 @@ namespace App\Http\Controllers;
 
 use App\Models\Item;
 use App\Models\MediaVariation;
+use App\Jobs\RecordItemView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
 use Symfony\Component\HttpFoundation\StreamedResponse;
@@ -16,9 +17,19 @@ class MediaController extends Controller
      * 1. If HLS streaming variation exists -> Serve .m3u8 playlist.
      * 2. Else -> Serve original file (PDF, Image, MP3, etc.).
      */
-    public function master(string $code)
+    public function master(Request $request, string $code)
     {
         $item = Item::where('code', $code)->firstOrFail();
+
+        // Record View
+        RecordItemView::dispatch(
+            $item->id,
+            auth()->id(),
+            auth()->check(),
+            $request->ip(),
+            $request->userAgent(),
+            $request->header('referer')
+        );
 
         // 1. Try to find a Streaming Variation (HLS)
         $streamingVariation = MediaVariation::where('item_id', $item->id)
