@@ -10,7 +10,7 @@ use Illuminate\Database\Eloquent\Builder;
 
 class MostActiveUsersWidget extends BaseWidget
 {
-    protected static ?string $heading = 'Utilisateurs les plus actifs';
+    protected ?string $heading = 'Utilisateurs les plus actifs';
 
     protected static ?int $sort = 4;
 

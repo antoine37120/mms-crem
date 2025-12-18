@@ -10,7 +10,7 @@ use Carbon\Carbon;
 
 class ViewsOverTimeChart extends ChartWidget
 {
-    protected static ?string $heading = 'Vues par jour';
+    protected ?string $heading = 'Vues par jour';
 
     protected static ?int $sort = 1;
 
