@@ -23,6 +23,9 @@ class HierarchyExplorer extends Page implements HasForms, HasInfolists
     use InteractsWithForms;
     use InteractsWithInfolists;
 
+    // Cache infolists
+    public array $cachedInfolists = [];
+
     // Configuration de base
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-folder';
     protected static string|null|\UnitEnum $navigationGroup = 'Explorateur';
