@@ -9,7 +9,7 @@ use Filament\Widgets\TableWidget as BaseWidget;
 
 class LatestItemsWidget extends BaseWidget
 {
-    protected ?string $heading = 'Derniers ajouts d\'items';
+    protected static ?string $heading = 'Derniers ajouts d\'items';
 
     protected static ?int $sort = 2;
 
