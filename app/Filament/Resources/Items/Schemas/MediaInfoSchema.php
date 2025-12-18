@@ -4,10 +4,10 @@ namespace App\Filament\Resources\Items\Schemas;
 
 use App\Models\MediaVariation;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists\Components\Section;
+use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
-use Filament\Infolists\Components\Grid;
+use Filament\Schemas\Components\Grid;
 
 class MediaInfoSchema
 {
