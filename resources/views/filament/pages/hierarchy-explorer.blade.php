@@ -1,7 +1,7 @@
 <x-filament-panels::page>
     <div x-data="hierarchyExplorer()" class="space-y-4">
         {{-- Interface 3 colonnes égales (33% - 33% - 33%) --}}
-        <div class="grid grid-cols-3 gap-6 h-[700px]">
+        <div class="grid grid-cols-3 gap-6 h-[90vh]">
 
             {{-- COLONNE 1 (33%) - Arbre hiérarchique principal --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
