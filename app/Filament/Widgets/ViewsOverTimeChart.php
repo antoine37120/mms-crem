@@ -43,4 +43,23 @@ class ViewsOverTimeChart extends ChartWidget
     {
         return 'line';
     }
+
+    protected function getOptions(): array
+    {
+        return [
+            'scales' => [
+                'y' => [
+                    'beginAtZero' => true,
+                    'ticks' => [
+                        'stepSize' => 1,
+                    ],
+                ],
+                'x' => [
+                    'ticks' => [
+                        'maxTicksLimit' => 10,
+                    ],
+                ],
+            ],
+        ];
+    }
 }

@@ -9,7 +9,7 @@
         "php": "^8.2",
         "ext-fileinfo": "*",
         "filament/filament": "~4.1",
-        "flowframe/laravel-trend": "^0.4.0",
+        "flowframe/laravel-trend": "^0.3.0",
         "houdaslassi/vantage": "^0.1.21",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
