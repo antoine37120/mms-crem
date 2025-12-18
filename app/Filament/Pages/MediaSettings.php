@@ -19,7 +19,7 @@ class MediaSettings extends Page implements HasForms
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-cog-6-tooth';
 
-    protected static string|UnitEnum|null $navigationGroup = 'Configuration';
+    protected static string|UnitEnum|null $navigationGroup = 'Administration';
 
     protected static ?string $title = 'MMS Settings';
 

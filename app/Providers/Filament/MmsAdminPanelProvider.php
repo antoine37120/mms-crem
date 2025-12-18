@@ -73,6 +73,9 @@ class MmsAdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Médias & Items')
                     //->icon('heroicon-o-photo')
                     ->collapsible(),
+                NavigationGroup::make('Aide')
+                    //->icon('heroicon-o-photo')
+                    ->collapsible(),
                 NavigationGroup::make('Administration')
                     //->icon('heroicon-o-cog-6-tooth')
                     ->collapsible(),
