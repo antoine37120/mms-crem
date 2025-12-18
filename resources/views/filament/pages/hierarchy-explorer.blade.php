@@ -396,7 +396,10 @@
                                     </x-filament::button>
                                 </div>
                             </div>
+
                         </div>
+                            
+                        {{ $this->mediaInfolist }}
                     @endif
 
                     {{-- Section 2: Informations sélection Colonne 2 --}}
@@ -424,9 +427,7 @@
                                         </div>
                                     @endif
                                 </div>
-
                                 {{ $this->mediaInfolist }}
-
                                 <div class="flex flex-wrap gap-2 pt-2 justify-end border-t border-gray-100 dark:border-gray-700 mt-2">
                                     @if($this->getSelectedItemResourceRoute('view'))
                                         <x-filament::button size="xs" color="gray" tag="a"

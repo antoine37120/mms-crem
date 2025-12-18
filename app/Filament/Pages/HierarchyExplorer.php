@@ -12,19 +12,14 @@ use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
 use Filament\Infolists\Concerns\InteractsWithInfolists;
 use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Infolists\Infolist;
 use Filament\Schemas\Schema;
 use Filament\Pages\Page;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Contracts\Support\Htmlable;
 
-class HierarchyExplorer extends Page implements HasForms, HasInfolists
+class HierarchyExplorer extends Page implements HasForms
 {
     use InteractsWithForms;
-    use InteractsWithInfolists;
-
-    // Cache infolists
-    public array $cachedInfolists = [];
 
     // Configuration de base
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-folder';
@@ -120,7 +115,6 @@ class HierarchyExplorer extends Page implements HasForms, HasInfolists
             $this->selectedItemId = null;
             $this->selectedItem = null;
 
-            unset($this->cachedInfolists['mediaInfolist']);
 
             // Réinitialiser la pagination des collections
             $this->collectionsPage = 1;
@@ -310,7 +304,6 @@ class HierarchyExplorer extends Page implements HasForms, HasInfolists
         $this->selectedItemId = null; // Reset sélection item
         $this->selectedItem = null;
 
-        unset($this->cachedInfolists['mediaInfolist']);
 
         // Mise à jour URL
         $this->focus = $type;
@@ -354,7 +347,6 @@ class HierarchyExplorer extends Page implements HasForms, HasInfolists
         $item = Item::with(['childItems', 'itemType', 'itemable'])->find($itemId);
         $this->selectedItem = $item ? $item->toArray() : null;
 
-        unset($this->cachedInfolists['mediaInfolist']);
     }
 
     // Actions de basculement d'expansion
@@ -793,17 +785,20 @@ class HierarchyExplorer extends Page implements HasForms, HasInfolists
         $this->redirect($url);
     }
 
-    public function mediaInfolist(Infolist $infolist): Infolist
+    public function mediaInfolist(Schema $schema): Schema
     {
-        return $infolist
+        return $schema
             ->record($this->getSelectedItemRecordProperty())
-            ->schema([
+            ->components([
                 MediaInfoSchema::make(),
             ]);
     }
 
     public function getSelectedItemRecordProperty(): ?Item
     {
+        if ($this->selectedType === 'item') {
+            return Item::find($this->id);
+        }
         if (!$this->selectedItemId) {
             return null;
         }
