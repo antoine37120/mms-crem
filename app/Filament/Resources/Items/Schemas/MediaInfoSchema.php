@@ -8,6 +8,7 @@ use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Grid;
+use Illuminate\Support\Facades\Storage;
 
 class MediaInfoSchema
 {
@@ -17,10 +18,12 @@ class MediaInfoSchema
             ->schema([
                 ViewEntry::make('preview')
                     ->view('filament.infolists.components.media-preview')
+                    ->visible(fn ($record) => filled($record->file_path) && Storage::disk('original_medias')->exists($record->file_path))
                     ->columnSpanFull(),
 
                 RepeatableEntry::make('mediaVariations')
                     ->label('Fichiers & Variations')
+                    ->hidden(fn ($record) => $record->mediaVariations->isEmpty())
                     ->schema([
                         Grid::make(3)
                             ->schema([
@@ -56,7 +59,13 @@ class MediaInfoSchema
                                     ->openUrlInNewTab(),
                             ]),
                     ])
-                    ->columns(1)
+                    ->columns(1),
+
+                TextEntry::make('no_mediaVariations')
+                    ->label('Fichiers & Variations')
+                    ->default('Aucune variation disponible.')
+                    ->visible(fn ($record) => $record->mediaVariations->isEmpty())
+                    ->columnSpanFull(),
             ]);
     }
 }

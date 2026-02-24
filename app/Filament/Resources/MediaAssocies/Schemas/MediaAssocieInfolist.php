@@ -2,6 +2,8 @@
 
 namespace App\Filament\Resources\MediaAssocies\Schemas;
 
+use App\Filament\Resources\Items\Schemas\MediaInfoSchema;
+use App\Filament\Resources\Items\Schemas\MediaProcessingSchema;
 use App\Models\Collection;
 use App\Models\Corpus;
 use App\Models\Fond;

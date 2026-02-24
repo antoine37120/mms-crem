@@ -17,6 +17,7 @@ class MediaProcessingSchema
             ->schema([
                 RepeatableEntry::make('processingStates')
                     ->label('État des traitements')
+                    ->hidden(fn ($record) => $record->processingStates->isEmpty())
                     ->table([
                         TableColumn::make('Type'),
                         TableColumn::make('Statut'),
@@ -40,8 +41,15 @@ class MediaProcessingSchema
                     ])
                     ->columnSpanFull(),
 
+                TextEntry::make('no_processingStates')
+                    ->label('État des traitements')
+                    ->default('Aucun traitement en cours ou terminé.')
+                    ->visible(fn ($record) => $record->processingStates->isEmpty())
+                    ->columnSpanFull(),
+
                 RepeatableEntry::make('mediaVariations')
                     ->label('Fichiers générés')
+                    ->hidden(fn ($record) => $record->mediaVariations->isEmpty())
                     ->table([
                         //TableColumn::make('Profil'),
                         //TableColumn::make('Type'),
@@ -60,6 +68,12 @@ class MediaProcessingSchema
                         //TextEntry::make('disk'),
                         TextEntry::make('created_at')->dateTime(),
                     ])
+                    ->columnSpanFull(),
+
+                TextEntry::make('no_mediaVariations')
+                    ->label('Fichiers générés')
+                    ->default('Aucun fichier n\'a encore été généré.')
+                    ->visible(fn ($record) => $record->mediaVariations->isEmpty())
                     ->columnSpanFull(),
             ]);
     }

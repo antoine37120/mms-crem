@@ -22,6 +22,8 @@ use Filament\Navigation\NavigationGroup;
 use Filament\Support\Enums\Width;
 use Filament\Support\Assets\AlpineComponent;
 use Filament\Support\Facades\FilamentAsset;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
 use Filament\Navigation\NavigationItem;
 
 use Livewire\Livewire;
@@ -100,7 +102,11 @@ class MmsAdminPanelProvider extends PanelProvider
                 'panels::body.end',
                 fn (): string => view('filament.hooks.upload-manager-button')->render()
 
-            );
+            )
+            ->assets([
+                Css::make('plyr-stylesheet', resource_path('css/plyr.css')),
+                Js::make('plyr-script', resource_path('js/plyr.js')),
+            ]);
 
     }
 }
