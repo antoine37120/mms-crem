@@ -10,17 +10,20 @@
                 switch ($record->itemable_type) {
                     case 'App\Models\Collection':
                         $collection = $record->itemable;
+                        $firstCorpus = $collection ? $collection->corpuses->first() : null;
+                        $firstFond = $firstCorpus ? $firstCorpus->fonds->first() : null;
                         $breadcrumb = [
-                            '🏛️ ' . $collection->corpus->fond->code,
-                            '📚 ' . $collection->corpus->code,
-                            '📦 ' . $collection->code
+                            '🏛️ ' . ($firstFond ? $firstFond->code : 'N/A'),
+                            '📚 ' . ($firstCorpus ? $firstCorpus->code : 'N/A'),
+                            '📦 ' . ($collection ? $collection->code : 'N/A')
                         ];
                         break;
                     case 'App\Models\Corpus':
                         $corpus = $record->itemable;
+                        $firstFond = $corpus ? $corpus->fonds->first() : null;
                         $breadcrumb = [
-                            '🏛️ ' . $corpus->fond->code,
-                            '📚 ' . $corpus->code
+                            '🏛️ ' . ($firstFond ? $firstFond->code : 'N/A'),
+                            '📚 ' . ($corpus ? $corpus->code : 'N/A')
                         ];
                         break;
                     case 'App\Models\Fond':
