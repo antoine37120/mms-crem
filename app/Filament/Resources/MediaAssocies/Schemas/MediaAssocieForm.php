@@ -29,7 +29,7 @@ class MediaAssocieForm
         return $schema
             ->components([
                 MorphToSelect::make('itemable')
-                    ->label('Item pour')
+                    ->label('Média associé à')
                     ->types([
                         MorphToSelect\Type::make(Fond::class)
                             ->titleAttribute('code'), // Fond utilise le code simple
@@ -61,7 +61,7 @@ class MediaAssocieForm
                     ->required(),
 
                 Select::make('item_type_id')
-                    ->label('Type d\'Item')
+                    ->label('Type de Média')
                     ->relationship('itemType', 'name')
                     ->placeholder('Sélectionner un type (optionnel)')
                     ->searchable()
@@ -169,7 +169,7 @@ class MediaAssocieForm
                                 ->placeholder('Ex: TRA_en ou 02')
                                 ->columnSpan(1),
                             ])
-                            ->label('code')
+                            ->label('Cote')
                             ->extraAttributes(['class' => 'item_code_wrapper'])
                             ->columns(2)
                         ->columnSpan(2),
@@ -186,20 +186,10 @@ class MediaAssocieForm
                 TextInput::make('title')
                     ->label('Titre')
                     ->default(null),
-                FileUpload::make('file_path')
-                    ->disk('original_medias')
-                    ->required()
-                    ->acceptedFileTypes(['audio/*', 'video/*', 'image/*', 'application/pdf'])
-                    ->storeFileNamesIn('file_name')
-                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
-                        //connaite l'extention du fichier uploadé si $state n'est pas un string
-                        if (is_string($state) || $state === null) {
-                            return ;
-                        }
-                        $file = $state;
-                        $extension = $file->getClientOriginalExtension();
-                        $set('file_extension', $extension);
-                    }),
+                TextInput::make('file_path')
+                    ->label('Chemin du fichier')
+                    ->disabled()
+                    ->visible(fn ($record) => $record && $record->file_path),
 
                 TextInput::make('file_extension')
                     ->required(),

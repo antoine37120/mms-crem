@@ -73,7 +73,7 @@
                 <h2 class="text-lg font-semibold text-gray-900 dark:text-white">
 
                     @if($pending_file_to_item)
-                    Créer un item pour {{ $pending_file_to_item->original_name }}
+                    Créer {{ $is_sub ? 'un média associé' : 'un item' }} pour {{ $pending_file_to_item->original_name }}
                     @endif
                 </h2>
             </div>
@@ -82,7 +82,7 @@
         <div class="space-y-6">
             <div>
                 @if($pending_file_to_item != null)
-                    @livewire('uploaded-file-to-item', ['pending_file_to_item' => $pending_file_to_item], key('create_'.$pending_file_to_item->id))
+                    @livewire('uploaded-file-to-item', ['pending_file_to_item' => $pending_file_to_item, 'is_sub' => $is_sub], key('create_'.$pending_file_to_item->id))
                 @endif
             </div>
 

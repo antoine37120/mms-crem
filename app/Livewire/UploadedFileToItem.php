@@ -40,10 +40,12 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
 
     public ?array $data = [];
     public $pending_file_to_item;
+    public bool $is_sub = false;
 
-    public function mount($pending_file_to_item): void
+    public function mount($pending_file_to_item, $is_sub = false): void
     {
         $this->pending_file_to_item = $pending_file_to_item;
+        $this->is_sub = $is_sub;
         $this->form->fill();
     }
 
@@ -53,8 +55,8 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
             ->components([
 
                 MorphToSelect::make('itemable')
-                    ->label('Item pour')
-                    ->types([
+                    ->label(fn () => $this->is_sub ? 'Média associé pour' : 'Item pour')
+                    ->types(fn (): array => $this->is_sub ? [
                         MorphToSelect\Type::make(Fond::class)
                             ->titleAttribute('code'), // Fond utilise le code simple
                         MorphToSelect\Type::make(Corpus::class)
@@ -66,6 +68,10 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                         MorphToSelect\Type::make(Item::class)
                             ->titleAttribute('code')
                             ->getOptionLabelFromRecordUsing(fn (Item $record): string => "{$record->full_code}"),
+                    ] : [
+                        MorphToSelect\Type::make(Collection::class)
+                            ->titleAttribute('code')
+                            ->getOptionLabelFromRecordUsing(fn (Collection $record): string => "{$record->full_code}"),
                     ])
                     ->columns(2)
                     ->columnSpanFull()
@@ -89,12 +95,26 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ->required(),
 
                 Select::make('item_type_id')
-                    ->label('Type d\'Item')
+                    ->label('Type de Média')
+                    ->visible(fn () => $this->is_sub)
                     ->relationship('itemType', 'name')
                     ->placeholder('Sélectionner un type (optionnel)')
                     ->searchable()
                     ->preload()
                     ->live() // ← IMPORTANT : remplace "reactive()"
+                    ->rules([
+                        function (Get $get) {
+                            return function (string $attribute, $value, \Closure $fail) use ($get) {
+                                if ($value) {
+                                    $itemType = ItemType::find($value);
+                                    $fileExtension = $get('file_extension');
+                                    if ($itemType && $fileExtension && !$itemType->isExtensionAllowed($fileExtension)) {
+                                        $fail("L'extension '{$fileExtension}' n'est pas autorisée pour ce type de média.");
+                                    }
+                                }
+                            };
+                        },
+                    ])
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         // Réinitialiser le champ langue si le type change
                         if (!$state) {
@@ -106,9 +126,9 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                         $suffix = ItemType::find($state)->suffix ;
                         $itemLang = $get('language_code');
                         if ($suffix) {
-                            $set('code_suffix', '_'.$suffix);
+                            $set('code_suffix', $suffix);
                         } else {
-                            $set('code_suffix', '_'.$state.'_'.$itemLang);
+                            $set('code_suffix', $state.'_'.$itemLang);
                         }
                     }),
                 TextInput::make('language_code')
@@ -117,6 +137,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ->maxLength(5)
                     ->live()
                     ->visible(function (Get $get): bool {
+                        if (!$this->is_sub) return false;
                         $itemTypeId = $get('item_type_id');
                         if (!$itemTypeId) {
                             return false;
@@ -125,6 +146,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                         return $itemType && $itemType->requires_language;
                     })
                     ->required(function (Get $get): bool {
+                        if (!$this->is_sub) return false;
                         $itemTypeId = $get('item_type_id');
                         if (!$itemTypeId) {
                             return false;
@@ -185,6 +207,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                                     return true;
                                 })*/
                                 ->required(function (Get $get): bool {
+                                    if (!$this->is_sub) return false;
                                     $itemTypeId = $get('item_type_id');
 
                                     if (!$itemTypeId) {
@@ -204,7 +227,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                                 ->placeholder('Ex: TRA_en ou 02')
                                 ->columnSpan(1),
                         ])
-                            ->label('code')
+                            ->label('Cote')
                             ->extraAttributes(['class' => 'item_code_wrapper'])
                             ->columns(2)
                             ->columnSpan(2),
@@ -219,10 +242,11 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ->columnSpanFull(),
 
                 TextInput::make('title')
+                    ->label('Titre')
                     ->default(null),
 
                 Hidden::make('is_sub')
-                    ->default(false),
+                    ->default(fn () => $this->is_sub),
                 TextInput::make('file_path')
                     ->default($this->pending_file_to_item->file_path)
                     ->required(),

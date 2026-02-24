@@ -12,12 +12,15 @@ use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Columns\Layout\Stack;
 use Illuminate\Contracts\View\View;
 use Filament\Tables\Table;
 use App\Models\PendingFile;
 use Filament\Actions\Action;
 use Filament\Actions\DeleteAction;
 use Livewire\Attributes\On;
+use Illuminate\Support\Number; //  Number::fileSize(1024);
+
 class UploadedFilesTable extends Component implements HasActions, HasSchemas, HasTable
 {
     use InteractsWithActions;
@@ -29,33 +32,38 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
         return $table
             ->query(fn (): Builder => PendingFile::completed()->byUser(auth()->id()))
             ->columns([
-                /*TextColumn::make('user.name')
-                    ->searchable(),*/
-                TextColumn::make('original_name')
-                    ->searchable(),
-                /*TextColumn::make('stored_name')
-                    ->searchable(),*/
-                /*TextColumn::make('file_path')
-                    ->searchable(),*/
-                TextColumn::make('file_size')
-                    ->numeric()
-                    ->sortable(),
-                TextColumn::make('file_type')
-                    ->searchable(),
-                /*TextColumn::make('file_extension')
-                    ->searchable(),
-                TextColumn::make('upload_status')
-                    ->badge(),*/
-                TextColumn::make('suggested_code')
-                    ->searchable(),
-                TextColumn::make('created_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
-                TextColumn::make('updated_at')
-                    ->dateTime()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true),
+                    /*TextColumn::make('user.name')
+                        ->searchable(),*/
+                    TextColumn::make('original_name')
+                    ->label('Nom du fichier')
+                        ->sortable()
+                        ->searchable(),
+                    /*TextColumn::make('stored_name')
+                        ->searchable(),*/
+                    /*TextColumn::make('file_path')
+                        ->searchable(),*/
+                    TextColumn::make('file_size')
+                        ->label('Taille du fichier')
+                        ->state(fn (PendingFile $record): string => Number::fileSize($record->file_size))
+                        ->sortable(),
+                    TextColumn::make('file_type')
+                        ->label('Type de fichier')
+                        ->sortable()
+                        ->searchable(),
+                    /*TextColumn::make('file_extension')
+                        ->searchable(),
+                    TextColumn::make('upload_status')
+                        ->badge(),
+                    TextColumn::make('suggested_code')
+                        ->searchable(),*/
+                    TextColumn::make('created_at')
+                        ->dateTime()
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
+                    TextColumn::make('updated_at')
+                        ->dateTime()
+                        ->sortable()
+                        ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
                 //
@@ -66,10 +74,17 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
             ->recordActions([
 
                 Action::make('convertToItem')
-                    ->label('Convertir en Item')
-                    ->icon('heroicon-o-arrow-path')
+                    ->label('Item')
+                    ->icon('heroicon-m-arrow-turn-down-right')
                     ->action(function (PendingFile $record) {
-                        $this->dispatch('actionPendingFileToItem', pendingFileId: $record->id);
+                        $this->dispatch('actionPendingFileToItem', pendingFileId: $record->id, isSub: false);
+                    })
+                    ->color('primary'),
+                Action::make('convertToMedia')
+                    ->label('Média associé')
+                    ->icon('heroicon-m-arrow-turn-down-right')
+                    ->action(function (PendingFile $record) {
+                        $this->dispatch('actionPendingFileToItem', pendingFileId: $record->id, isSub: true);
                     })
                     ->color('primary'),
                 DeleteAction::make(),

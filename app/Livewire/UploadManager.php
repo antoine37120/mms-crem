@@ -10,6 +10,7 @@ class UploadManager extends Component
 {
     public bool $isVisible = false;
     public PendingFile|null $pending_file_to_item= null;
+    public bool $is_sub = false;
     public $pending_files_count = 0;
     protected $listeners = [
         'openUploadManager' => 'openModal',
@@ -75,8 +76,9 @@ class UploadManager extends Component
     }
 
     #[On('actionPendingFileToItem')]
-    public function actionPendingFileToItem($pendingFileId) {
+    public function actionPendingFileToItem($pendingFileId, $isSub = false) {
         $this->pending_file_to_item = PendingFile::find($pendingFileId);
+        $this->is_sub = $isSub;
         $this->closeModalPendingFiles();
         $this->openModalPendingFilesToItem();
     }
