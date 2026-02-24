@@ -42,7 +42,7 @@ class SubItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
 
-    protected static ?string $title = 'Items Directs';
+    protected static ?string $title = 'Items';
     protected static ?string $modelLabel = 'item';
     protected static ?string $pluralModelLabel = 'items';
 
@@ -58,7 +58,7 @@ class SubItemsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                Select::make('item_type_id')
+                /*Select::make('item_type_id')
                     ->label('Type d\'Item')
                     ->relationship('itemType', 'name')
                     ->placeholder('Sélectionner un type (optionnel)')
@@ -113,10 +113,10 @@ class SubItemsRelationManager extends RelationManager
                                 $set('code_suffix', $itemType . '_' . $state);
                             }
                         }
-                    }),
+                    }),*/
                 FusedGroup::make([
                     TextInput::make('code_prefix')
-                        ->label('Code de l\'Item')
+                        ->label('Cote de l\'Item')
                         ->autofocus(false)
                         ->default(function (RelationManager $livewire): string {
                             return $livewire->getOwnerRecord()->code ;
@@ -145,11 +145,11 @@ class SubItemsRelationManager extends RelationManager
                             return true;
                         })*/
                         ->required(function (Get $get): bool {
-                            $itemTypeId = $get('item_type_id');
+                            /*$itemTypeId = $get('item_type_id');
 
                             if (!$itemTypeId) {
                                 return false;
-                            }
+                            }*/
                             return true;
                         })
                         ->placeholder('Ex: TRA_en ou 02'),
@@ -171,17 +171,13 @@ class SubItemsRelationManager extends RelationManager
                     ->placeholder('Ex: Documentation générale')
                     ->columnSpan(2),
 
-                FileUpload::make('file_path')
-                    ->disk('original_medias')
-                    ->label('Fichier')
-                    ->required()
-                    ->acceptedFileTypes(['audio/*', 'video/*', 'application/pdf', 'text/plain', 'application/msword', 'image/*'])
-                    ->maxSize(50 * 1024) // 50MB
-                    ->storeFileNamesIn('file_name')
-                    ->columnSpanFull(),
+                TextInput::make('file_path')
+                    ->label('Chemin du fichier')
+                    ->disabled()
+                    ->visible(fn ($record) => $record && $record->file_path),
                 // Champs cachés auto-remplis
                 Hidden::make('is_sub')
-                    ->default(true),
+                    ->default(false),
                 Hidden::make('created_by')
                     ->default(auth()->id()),
                 Hidden::make('uploaded_by')
@@ -230,6 +226,7 @@ class SubItemsRelationManager extends RelationManager
                 ]),
             ])
             ->modifyQueryUsing(fn (Builder $query) => $query
+                ->where('is_sub', false) 
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,
                 ]));

@@ -21,7 +21,7 @@
                     {{-- Items directs --}}
                     <div class="bg-success-50 dark:bg-success-900/20 p-4 rounded-lg text-center">
                         <div class="text-2xl font-semibold text-success-700 dark:text-success-300">{{ $state['items_count'] }}</div>
-                        <div class="text-sm font-medium text-success-900 dark:text-success-100">Items Directs</div>
+                        <div class="text-sm font-medium text-success-900 dark:text-success-100">Médias associés</div>
                     </div>
 
                     {{-- Total items --}}

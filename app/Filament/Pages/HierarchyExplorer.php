@@ -23,10 +23,10 @@ class HierarchyExplorer extends Page implements HasForms
 
     // Configuration de base
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-folder';
-    protected static string|null|\UnitEnum $navigationGroup = 'Explorateur';
+    protected static string|null|\UnitEnum $navigationGroup = 'Recherche & Exploration';
     protected static ?string $navigationLabel = 'Vue Hiérarchique';
     protected static ?string $title = '';
-    protected static ?int $navigationSort = 1;
+    protected static ?int $navigationSort = 2;
     protected static ?string $slug = 'hierarchy-explorer';
 
     protected string $view = 'filament.pages.hierarchy-explorer';

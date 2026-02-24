@@ -28,6 +28,7 @@ class ViewCollection extends ViewRecord
     {
         return [
             \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            \App\Filament\Resources\MediaAssocies\RelationManagers\SubItemsRelationManager::class,
             AuditsRelationManager::class,
         ];
     }
@@ -91,7 +92,7 @@ class ViewCollection extends ViewRecord
                                     TextEntry::make('title')
                                         ->label('Titre')
                                         ->placeholder('Aucun titre défini')
-                                        ->icon('heroicon-o-tag')
+                                        //->icon('heroicon-o-tag')
                                         ->size(TextSize::Large),
                                 ]),
 

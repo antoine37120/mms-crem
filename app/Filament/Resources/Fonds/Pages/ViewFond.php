@@ -30,7 +30,7 @@ class ViewFond extends ViewRecord
     {
         return [
             \App\Filament\Resources\Fonds\RelationManagers\CorpusesRelationManager::class,
-            \App\Filament\Resources\Items\RelationManagers\SubItemsRelationManager::class,
+            \App\Filament\Resources\MediaAssocies\RelationManagers\SubItemsRelationManager::class,
             AuditsRelationManager::class,
         ];
     }
@@ -76,7 +76,7 @@ class ViewFond extends ViewRecord
                                     TextEntry::make('title')
                                         ->label('Titre')
                                         ->placeholder('Aucun titre défini')
-                                        ->icon('heroicon-o-tag')
+                                        //->icon('heroicon-o-tag')
                                         ->size(TextSize::Large),
                                 ]),
 

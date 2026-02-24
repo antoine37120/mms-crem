@@ -22,7 +22,7 @@ class ScannedFileResource extends Resource
     protected static ?string $model = ScannedFile::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-eye';
-    protected static string|UnitEnum|null $navigationGroup = 'Médias & Items';
+    protected static string|UnitEnum|null $navigationGroup = 'Administration';
     protected static ?string $navigationLabel = 'Fichiers Scannés';
 
     public static function form(Schema $schema): Schema

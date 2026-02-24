@@ -16,13 +16,13 @@
                     {{-- Items directs --}}
                     <div class="bg-success-50 dark:bg-success-900/20 p-4 rounded-lg text-center">
                         <div class="text-2xl font-semibold text-success-700 dark:text-success-300">{{ $state['items_count'] }}</div>
-                        <div class="text-sm font-medium text-success-900 dark:text-success-100">Items Directs</div>
+                        <div class="text-sm font-medium text-success-900 dark:text-success-100">Médias associés</div>
                     </div>
 
                     {{-- Total items --}}
                     <div class="bg-info-50 dark:bg-info-900/20 p-4 rounded-lg text-center">
                         <div class="text-2xl font-semibold text-info-700 dark:text-info-300">{{ $state['total_items_count'] }}</div>
-                        <div class="text-sm font-medium text-info-900 dark:text-info-100">Total Items</div>
+                        <div class="text-sm font-medium text-info-900 dark:text-info-100">Items</div>
                     </div>
 
                     {{-- Taille totale --}}

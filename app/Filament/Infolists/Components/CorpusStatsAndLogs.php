@@ -24,7 +24,7 @@ class CorpusStatsAndLogs extends Entry
 
         // Calcul des statistiques
         $collectionsCount = $corpus->collections()->count();
-        $itemsCount = $corpus->items()->count();
+        $itemsCount = $corpus->secondaryItems()->count();
         $totalItemsCount = $itemsCount + $corpus->collections()
                 ->withCount('items')
                 ->get()

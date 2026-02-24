@@ -38,10 +38,10 @@ class AdvancedSearch extends Page implements HasTable
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-magnifying-glass';
     protected string $view = 'filament.pages.advanced-search';
-    protected static string|null|\UnitEnum $navigationGroup = 'Médias & Items';
+    protected static string|null|\UnitEnum $navigationGroup = 'Recherche & Exploration';
     protected static ?string $navigationLabel = 'Recherche Avancée';
     protected static ?string $title = 'Recherche Avancée';
-    protected static ?int $navigationSort = 3;
+    protected static ?int $navigationSort = 1;
 
     protected ?string $heading = 'Recherche Avancée dans les Médias';
 

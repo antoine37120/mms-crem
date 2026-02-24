@@ -42,9 +42,9 @@ class SubItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
 
-    protected static ?string $title = 'Items Directs';
-    protected static ?string $modelLabel = 'item';
-    protected static ?string $pluralModelLabel = 'items';
+    protected static ?string $title = 'Médias associés';
+    protected static ?string $modelLabel = 'médias associé';
+    protected static ?string $pluralModelLabel = 'médias associés';
 
     protected static ?string $recordTitleAttribute = 'code';
 
@@ -133,7 +133,7 @@ class SubItemsRelationManager extends RelationManager
                         })
                         ->placeholder('Ex: CNRSMH_Arnaud_001'),
                     TextInput::make('code_suffix')
-                        ->label('Code de l\'Item')
+                        ->label('Cote du média associé')
                         ->prefix('_')
                         ->autofocus(false)
                         /*->visible(function (Get $get): bool {
@@ -157,7 +157,7 @@ class SubItemsRelationManager extends RelationManager
                             $get('code_suffix') ? `Cote enregistrée : ${$get('code_prefix')}_${$get('code_suffix')}` : `Cote enregistrée : ${$get('code_prefix')}`
                             JS)
                         ->js()
-                ])->label('code')
+                ])->label('Cote')
 
                     /*->afterLabel(function (Get $get): string {
                         if($get('code_suffix') != '') {
@@ -171,14 +171,10 @@ class SubItemsRelationManager extends RelationManager
                     ->placeholder('Ex: Documentation générale')
                     ->columnSpan(2),
 
-                FileUpload::make('file_path')
-                    ->disk('original_medias')
-                    ->label('Fichier')
-                    ->required()
-                    ->acceptedFileTypes(['audio/*', 'video/*', 'application/pdf', 'text/plain', 'application/msword', 'image/*'])
-                    ->maxSize(50 * 1024) // 50MB
-                    ->storeFileNamesIn('file_name')
-                    ->columnSpanFull(),
+                TextInput::make('file_path')
+                    ->label('Chemin du fichier')
+                    ->disabled()
+                    ->visible(fn ($record) => $record && $record->file_path),
                 // Champs cachés auto-remplis
                 Hidden::make('is_sub')
                     ->default(true),
@@ -230,6 +226,7 @@ class SubItemsRelationManager extends RelationManager
                 ]),
             ])
             ->modifyQueryUsing(fn (Builder $query) => $query
+                ->where('is_sub', true) 
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,
                 ]));

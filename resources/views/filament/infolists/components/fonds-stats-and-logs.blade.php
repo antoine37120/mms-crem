@@ -16,8 +16,8 @@
                 </div>
 
                 <div class="bg-green-50 dark:bg-green-900/20 p-4 rounded-lg text-center">
-                    <div class="text-2xl font-bold text-green-600">{{ $fond->items()->count() }}</div>
-                    <div class="text-sm text-green-700 dark:text-green-300">Items Directs</div>
+                    <div class="text-2xl font-bold text-green-600">{{ $fond->secondaryItems()->count() }}</div>
+                    <div class="text-sm text-green-700 dark:text-green-300">Médias associés</div>
                 </div>
 
                 <div class="bg-purple-50 dark:bg-purple-900/20 p-4 rounded-lg text-center">
@@ -43,59 +43,6 @@
                     <div class="text-2xl font-bold text-orange-600">{{ $formattedSize }}</div>
                     <div class="text-sm text-orange-700 dark:text-orange-300">Stockage Total</div>
                 </div>
-            </div>
-
-            {{-- Graphique de répartition par type de fichier --}}
-            <div class="bg-gray-50 dark:bg-gray-800 p-6 rounded-lg">
-                <h3 class="text-lg font-semibold mb-4 flex items-center">
-                    Répartition par Type de Fichier
-                </h3>
-
-                @php
-                    $fileTypes = $fond->items()
-                        ->selectRaw('file_extension, COUNT(*) as count, SUM(file_size) as total_size')
-                        ->groupBy('file_extension')
-                        ->get();
-
-                    $totalFiles = $fileTypes->sum('count');
-                @endphp
-
-                @if($fileTypes->count() > 0)
-                    <div class="space-y-3">
-                        @foreach($fileTypes as $type)
-                            @php
-                                $percentage = $totalFiles > 0 ? round(($type->count / $totalFiles) * 100, 1) : 0;
-                                $colors = [
-                                    'pdf' => 'bg-red-200 text-red-800',
-                                    'wav' => 'bg-green-200 text-green-800',
-                                    'mp3' => 'bg-green-200 text-green-800',
-                                    'mp4' => 'bg-yellow-200 text-yellow-800',
-                                    'mov' => 'bg-yellow-200 text-yellow-800',
-                                ];
-                                $colorClass = $colors[strtolower($type->file_extension)] ?? 'bg-gray-200 text-gray-800';
-                            @endphp
-
-                            <div class="flex items-center justify-between">
-                                <div class="flex items-center space-x-3">
-                            <span class="px-2 py-1 rounded text-xs font-medium {{ $colorClass }}">
-                                {{ strtoupper($type->file_extension) }}
-                            </span>
-                                    <span class="text-sm">{{ $type->count }} fichier(s)</span>
-                                </div>
-
-                                <div class="flex items-center space-x-2">
-                                    <div class="w-32 bg-gray-200 rounded-full h-2">
-                                        <div class="h-2 rounded-full {{ str_replace('text-', 'bg-', explode(' ', $colorClass)[1]) }}"
-                                             style="width: {{ $percentage }}%"></div>
-                                    </div>
-                                    <span class="text-sm font-medium">{{ $percentage }}%</span>
-                                </div>
-                            </div>
-                        @endforeach
-                    </div>
-                @else
-                    <p class="text-gray-500 italic text-center py-4">Aucun fichier dans ce fonds</p>
-                @endif
             </div>
 
             {{-- Timeline d'activité --}}
