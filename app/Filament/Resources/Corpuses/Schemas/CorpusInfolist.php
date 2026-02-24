@@ -17,7 +17,7 @@ class CorpusInfolist
                 TextEntry::make('fond.code')
                     ->label('Fonds')
                     ->numeric(),
-                TextEntry::make('code'),
+                TextEntry::make('code')->label('Cote'),
                 TextEntry::make('title')
                     ->label('Titre'),
 

@@ -11,7 +11,7 @@ class FondInfolist
     {
         return $schema
             ->components([
-                TextEntry::make('code'),
+                TextEntry::make('code')->label('Cote'),
                 TextEntry::make('title'),
                 TextEntry::make('creator.name')
                     ->label('Créé par'),

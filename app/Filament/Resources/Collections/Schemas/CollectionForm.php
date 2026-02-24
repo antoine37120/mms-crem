@@ -13,7 +13,7 @@ class CollectionForm
     {
         return $schema
             ->components([
-                TextInput::make('code')
+                TextInput::make('code')->label('Cote')
                     ->required(),
                 TextInput::make('title')
                     ->label('Titre')

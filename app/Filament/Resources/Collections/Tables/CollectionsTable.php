@@ -8,9 +8,11 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
+use Filament\Support\Enums\TextSize;
 
 class CollectionsTable
 {
@@ -18,22 +20,28 @@ class CollectionsTable
     {
         return $table
             ->columns([
-                TextColumn::make('corpus.code')
+                TextColumn::make('corpuses.code')
+                    ->listWithLineBreaks()
                     ->copyable()
                     ->copyMessage('Copié!')
                     ->copyMessageDuration(1500)
                     ->sortable(),
-                TextColumn::make('code')
+                TextColumn::make('code')->label('Cote')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('title')
+                    ->wrap()
+                    ->sortable()
                     ->label('Titre')
                     ->searchable(),
                 TextColumn::make('main_items_count')
+                    ->sortable()
                     ->counts('mainItems')
-                    ->label('Nombre d\'items'),
+                    ->label('Items'),
                 TextColumn::make('secondary_items_count')
+                    ->sortable()
                     ->counts('secondaryItems')
-                    ->label('Nombre de meta items'),
+                    ->label('Médias associés'),
                 TextColumn::make('creator.name')
                     ->label('Créé par')
                     ->sortable(),
@@ -57,8 +65,10 @@ class CollectionsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

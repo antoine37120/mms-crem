@@ -63,7 +63,7 @@ class ViewFond extends ViewRecord
                             Grid::make(2)
                                 ->schema([
                                     TextEntry::make('code')
-                                        ->label('Code du Fonds')
+                                        ->label('Cote')
                                         //->icon('heroicon-o-archive-box-arrow-down')
                                         ->iconColor('gray')
                                         ->icon(Heroicon::OutlinedClipboardDocument)

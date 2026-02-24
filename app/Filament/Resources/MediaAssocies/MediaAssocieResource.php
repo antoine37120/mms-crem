@@ -1,15 +1,15 @@
 <?php
 
-namespace App\Filament\Resources\Items;
+namespace App\Filament\Resources\MediaAssocies;
 
 use App\Filament\Pages\HierarchyExplorer;
-use App\Filament\Resources\Items\Pages\CreateItem;
-use App\Filament\Resources\Items\Pages\EditItem;
-use App\Filament\Resources\Items\Pages\ListItems;
-use App\Filament\Resources\Items\Pages\ViewItem;
-use App\Filament\Resources\Items\Schemas\ItemForm;
-use App\Filament\Resources\Items\Schemas\ItemInfolist;
-use App\Filament\Resources\Items\Tables\ItemsTable;
+use App\Filament\Resources\MediaAssocies\Pages\CreateMediaAssocie;
+use App\Filament\Resources\MediaAssocies\Pages\EditMediaAssocie;
+use App\Filament\Resources\MediaAssocies\Pages\ListMediaAssocies;
+use App\Filament\Resources\MediaAssocies\Pages\ViewMediaAssocie;
+use App\Filament\Resources\MediaAssocies\Schemas\MediaAssocieForm;
+use App\Filament\Resources\MediaAssocies\Schemas\MediaAssocieInfolist;
+use App\Filament\Resources\MediaAssocies\Tables\MediaAssociesTable;
 use App\Models\Item;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -22,29 +22,31 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 use UnitEnum;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
-class ItemResource extends Resource
+class MediaAssocieResource extends Resource
 {
     protected static ?string $model = Item::class;
 
+    protected static ?string $modelLabel = 'Média associé';
+    protected static ?string $pluralModelLabel = 'Médias associés';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocument;
     protected static string | UnitEnum | null $navigationGroup = 'Gestion des Archives';
-    protected static ?int $navigationSort = 4;
+    protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'code';
 
     public static function form(Schema $schema): Schema
     {
-        return ItemForm::configure($schema);
+        return MediaAssocieForm::configure($schema);
     }
 
     public static function infolist(Schema $schema): Schema
     {
-        return ItemInfolist::configure($schema);
+        return MediaAssocieInfolist::configure($schema);
     }
 
     public static function table(Table $table): Table
     {
-        return ItemsTable::configure($table);
+        return MediaAssociesTable::configure($table);
     }
 
     public static function getRelations(): array
@@ -58,10 +60,10 @@ class ItemResource extends Resource
     public static function getPages(): array
     {
         return [
-            'index' => ListItems::route('/'),
-            'create' => CreateItem::route('/create'),
-            'view' => ViewItem::route('/{record}'),
-            'edit' => EditItem::route('/{record}/edit'),
+            'index' => ListMediaAssocies::route('/'),
+            'create' => CreateMediaAssocie::route('/create'),
+            'view' => ViewMediaAssocie::route('/{record}'),
+            'edit' => EditMediaAssocie::route('/{record}/edit'),
         ];
     }
 
@@ -71,7 +73,7 @@ class ItemResource extends Resource
             ->withoutGlobalScopes([
                 SoftDeletingScope::class,
             ])
-            ->where('is_sub', false);
+            ->where('is_sub', true);
     }
 
     public static function getRecordRouteBindingEloquentQuery(): Builder

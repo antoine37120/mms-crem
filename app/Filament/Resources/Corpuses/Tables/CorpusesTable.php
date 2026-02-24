@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -23,19 +24,24 @@ class CorpusesTable
                     ->copyMessage('Copié!')
                     ->copyMessageDuration(1500)
                     ->sortable(),*/
-                TextColumn::make('code')
+                TextColumn::make('code')->label('Cote')
+                    ->sortable()
                     ->copyable()
                     ->copyMessage('Copié!')
                     ->copyMessageDuration(1500)
                     ->searchable(),
                 TextColumn::make('title')
+                    ->wrap()
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('collections_count')
+                    ->sortable()
                     ->counts('collections')
-                    ->label('Nombre de collections'),
-                TextColumn::make('items_count')
-                    ->counts('items')
-                    ->label('Nombre de meta items'),
+                    ->label('Collections'),
+                TextColumn::make('secondary_items_count')
+                    ->sortable()
+                    ->counts('secondaryItems')
+                    ->label('Médias associés'),
                 TextColumn::make('creator.name')
                     ->label('Créé par')
                     ->sortable(),
@@ -60,8 +66,10 @@ class CorpusesTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

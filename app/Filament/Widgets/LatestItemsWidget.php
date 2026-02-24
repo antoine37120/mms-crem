@@ -27,7 +27,7 @@ class LatestItemsWidget extends BaseWidget
                     ->limit(30)
                     ->tooltip(fn (Item $record): string => $record->title),
                 Tables\Columns\TextColumn::make('code')
-                    ->label('Code'),
+                    ->label('Cote'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime('d/m/Y H:i')
                     ->label('Créé le'),

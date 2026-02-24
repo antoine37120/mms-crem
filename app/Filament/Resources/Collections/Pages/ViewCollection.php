@@ -79,7 +79,7 @@ class ViewCollection extends ViewRecord
                             Grid::make(2)
                                 ->schema([
                                     TextEntry::make('code')
-                                        ->label('Code de la collection')
+                                        ->label('Cote')
                                         ->iconColor('gray')
                                         ->icon(Heroicon::OutlinedClipboardDocument)
                                         ->iconPosition(IconPosition::After)

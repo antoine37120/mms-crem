@@ -8,6 +8,7 @@ use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
+use Filament\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -18,20 +19,25 @@ class FondsTable
     {
         return $table
             ->columns([
-                TextColumn::make('code')
+                TextColumn::make('code')->label('Cote')
+                    ->sortable()
                     ->copyable()
                     ->copyMessage('Copié!')
                     ->copyMessageDuration(1500)
                     ->searchable(),
                 TextColumn::make('title')
+                    ->wrap()
+                    ->sortable()
                     ->label('Titre')
                     ->searchable(),
                 TextColumn::make('corpuses_count')
+                    ->sortable()
                     ->counts('corpuses')
-                    ->label('Nombre de corpus'),
-                TextColumn::make('items_count')
-                    ->counts('items')
-                    ->label('Nombre de meta items'),
+                    ->label('Corpus'),
+                TextColumn::make('secondary_items_count')
+                    ->sortable()
+                    ->counts('secondaryItems')
+                    ->label('Médias associés'),
                 TextColumn::make('creator.name')
                     ->label('Créé par')
                     ->sortable(),
@@ -56,8 +62,10 @@ class FondsTable
                 TrashedFilter::make(),
             ])
             ->recordActions([
-                ViewAction::make(),
-                EditAction::make(),
+                ActionGroup::make([
+                    ViewAction::make(),
+                    EditAction::make(),
+                ])
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

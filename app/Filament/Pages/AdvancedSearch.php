@@ -57,7 +57,7 @@ class AdvancedSearch extends Page implements HasTable
             ->columns([
                 // Code avec icône selon le type
                 TextColumn::make('code')
-                    ->label('Code')
+                    ->label('Cote')
                     ->searchable()
                     ->sortable()
                     ->copyable()

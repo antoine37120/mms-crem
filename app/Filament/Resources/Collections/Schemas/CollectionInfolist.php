@@ -13,7 +13,7 @@ class CollectionInfolist
             ->components([
                 TextEntry::make('corpuses.code')
                     ->listWithLineBreaks(),
-                TextEntry::make('code'),
+                TextEntry::make('code')->label('Cote'),
                 TextEntry::make('title')
                     ->label('Titre'),
                 TextEntry::make('created_by')

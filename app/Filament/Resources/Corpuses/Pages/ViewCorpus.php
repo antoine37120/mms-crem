@@ -85,7 +85,7 @@ class ViewCorpus extends ViewRecord
                             Grid::make(2)
                                 ->schema([
                                     TextEntry::make('code')
-                                        ->label('Code du Corpus')
+                                        ->label('Cote')
                                         ->iconColor('gray')
                                         ->icon(Heroicon::OutlinedClipboardDocument)
                                         ->iconPosition(IconPosition::After)

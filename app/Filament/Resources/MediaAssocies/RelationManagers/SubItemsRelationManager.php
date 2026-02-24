@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Items\RelationManagers;
+namespace App\Filament\Resources\MediaAssocies\RelationManagers;
 
 use App\Models\ItemType;
 use App\Models\Item;

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Items\Schemas;
+namespace App\Filament\Resources\MediaAssocies\Schemas;
 
 use App\Models\Collection;
 use App\Models\Corpus;
@@ -11,7 +11,7 @@ use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
 use Illuminate\Support\Number;
 
-class ItemInfolist
+class MediaAssocieInfolist
 {
     public static function configure(Schema $schema): Schema
     {
@@ -45,11 +45,11 @@ class ItemInfolist
                             ->copyMessage('Copié!')
                             ->copyMessageDuration(1500)
                             ->label('Code Parent'),
-                        /*TextEntry::make('itemType.name')
+                        TextEntry::make('itemType.name')
                             ->inlineLabel()
                             ->label('Type d\'item'),
                         TextEntry::make('language_code')
-                            ->inlineLabel(),*/
+                            ->inlineLabel(),
                         TextEntry::make('creator.name')
                             ->inlineLabel()
                             ->label('Créé par'),

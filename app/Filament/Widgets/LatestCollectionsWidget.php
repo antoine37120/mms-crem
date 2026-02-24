@@ -26,7 +26,7 @@ class LatestCollectionsWidget extends BaseWidget
                     ->label('Titre')
                     ->limit(30),
                 Tables\Columns\TextColumn::make('code')
-                    ->label('Code'),
+                    ->label('Cote'),
                 Tables\Columns\TextColumn::make('created_at')
                     ->dateTime('d/m/Y')
                     ->label('Créé le'),

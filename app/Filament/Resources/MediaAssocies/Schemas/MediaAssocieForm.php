@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Items\Schemas;
+namespace App\Filament\Resources\MediaAssocies\Schemas;
 
 use App\Models\ItemType;
 use Filament\Forms\Components\DatePicker;
@@ -22,7 +22,7 @@ use App\Models\Item;
 use Illuminate\Validation\Rules\Unique;
 use Filament\Schemas\Components\Grid;
 
-class ItemForm
+class MediaAssocieForm
 {
     public static function configure(Schema $schema): Schema
     {
@@ -59,6 +59,63 @@ class ItemForm
                         }
                     })
                     ->required(),
+
+                Select::make('item_type_id')
+                    ->label('Type d\'Item')
+                    ->relationship('itemType', 'name')
+                    ->placeholder('Sélectionner un type (optionnel)')
+                    ->searchable()
+                    ->preload()
+                    ->live() // ← IMPORTANT : remplace "reactive()"
+                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                        // Réinitialiser le champ langue si le type change
+                        if (!$state) {
+                            $set('language_code', null);
+                        }
+                        if (!$state) {
+                            return ;
+                        }
+                        $suffix = ItemType::find($state)->suffix ;
+                        $itemLang = $get('language_code');
+                        if ($suffix) {
+                            $set('code_suffix', '_'.$suffix);
+                        } else {
+                            $set('code_suffix', '_'.$state.'_'.$itemLang);
+                        }
+                    }),
+                TextInput::make('language_code')
+                    ->label('Code Langue')
+                    ->placeholder('Ex: fr, en')
+                    ->maxLength(5)
+                    ->live()
+                    ->visible(function (Get $get): bool {
+                        $itemTypeId = $get('item_type_id');
+                        if (!$itemTypeId) {
+                            return false;
+                        }
+                        $itemType = ItemType::find($itemTypeId);
+                        return $itemType && $itemType->requires_language;
+                    })
+                    ->required(function (Get $get): bool {
+                        $itemTypeId = $get('item_type_id');
+                        if (!$itemTypeId) {
+                            return false;
+                        }
+                        $itemType = ItemType::find($itemTypeId);
+                        return $itemType && $itemType->requires_language;
+                    })
+                    ->afterStateUpdated(function ($state, Set $set, Get $get) {
+                        // Réinitialiser le champ langue si le type change
+                        $itemTypeId = $get('item_type_id');
+                        $itemType = ItemType::find($itemTypeId)->suffix ;
+                        if($itemType) {
+                            if (!$state) {
+                                $set('code_suffix', $itemType);
+                            } else {
+                                $set('code_suffix', $itemType . '_' . $state);
+                            }
+                        }
+                    }),
                 Grid::make()
                     ->schema([
                         FusedGroup::make([
@@ -93,7 +150,22 @@ class ItemForm
                                 ->label('Code de l\'Item')
                                 ->prefix('_')
                                 ->autofocus(false)
-                                ->required(false)
+                                /*->visible(function (Get $get): bool {
+                                    $itemTypeId = $get('item_type_id');
+
+                                    if (!$itemTypeId) {
+                                        return false;
+                                    }
+                                    return true;
+                                })*/
+                                ->required(function (Get $get): bool {
+                                    $itemTypeId = $get('item_type_id');
+
+                                    if (!$itemTypeId) {
+                                        return false;
+                                    }
+                                    return true;
+                                })
                                 ->placeholder('Ex: TRA_en ou 02')
                                 ->columnSpan(1),
                             ])
@@ -132,7 +204,7 @@ class ItemForm
                 TextInput::make('file_extension')
                     ->required(),
                 Hidden::make('is_sub')
-                    ->default(false),
+                    ->default(true),
                 /*TextInput::make('file_name')
                     ->required(),
                 TextInput::make('file_size')

@@ -1,6 +1,6 @@
 <?php
 
-namespace App\Filament\Resources\Items\Tables;
+namespace App\Filament\Resources\MediaAssocies\Tables;
 
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
@@ -20,7 +20,7 @@ use App\Models\Fond;
 use App\Models\Corpus;
 use App\Models\Collection;
 
-class ItemsTable
+class MediaAssociesTable
 {
     public static function configure(Table $table): Table
     {
@@ -32,80 +32,59 @@ class ItemsTable
                     ->copyMessage('Copié!')
                     ->copyMessageDuration(1500)
                     ->searchable(),
-                /*TextColumn::make('itemable_type')
-                    ->label('Type de parent')
-                    ->formatStateUsing(fn ($state) => match($state) {
-                        Fond::class => 'Fonds',
-                        Corpus::class => 'Corpus',
-                        Collection::class => 'Collection',
-                        Item::class => 'Item',
-                        default => $state
-                    })
-                    ->searchable(),*/
-                TextColumn::make('secondary_items_count')
-                    ->sortable()
-                    ->counts('secondaryItems')
-                    ->label('Médias associés'),
-                /*TextColumn::make('itemable.code')
-                    ->label('Code parent')
-                    ->copyable()
-                    ->copyMessage('Copié!')
-                    ->copyMessageDuration(1500)
-                    ->searchable(),*/
-                    // Hidden is_sub since we filter it via resource query
-                    /*TextColumn::make('itemType.name')
+                TextColumn::make('itemType.name')
                     ->label('Type')
+                    ->sortable()
                     ->searchable(),
                 TextColumn::make('language_code')
                     ->label('Langue')
-                    ->searchable(),*/
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('file_name')
                     ->label('Nom d\'origine du fichier')
                     ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->searchable(),
                 TextColumn::make('file_type')
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->label('Type mime')
+                    ->searchable()
                     ->sortable()
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('file_path')
-                    ->toggleable(isToggledHiddenByDefault: true)
+                    ->searchable()
                     ->sortable()
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('file_size')
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->searchable()
-                    ->sortable(),
-                TextColumn::make('file_extension')
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->sortable()
-                    ->searchable(),
+                    ->toggleable(isToggledHiddenByDefault: true),
+                TextColumn::make('file_extension')
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('duration')
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('upload_date')
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->date()
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('uploaded_by')
-                    ->toggleable(isToggledHiddenByDefault: true)
                     ->numeric()
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('creator.name')
                     ->label('Créé par')
                     ->numeric()
-                    ->searchable()
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->label('Créé le')
                     ->dateTime()
-                    ->searchable()
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('updated_at')
@@ -121,13 +100,6 @@ class ItemsTable
             ])
             ->filters([
                 TrashedFilter::make(),
-                /*SelectFilter::make('itemable_type')
-                    ->options([
-                        Fond::class => 'Fonds',
-                        Corpus::class => 'Corpus',
-                        Collection::class => 'Collection',
-                        Item::class => 'Item',
-                    ]),*/
             ])
             ->recordActions([
                 ActionGroup::make([

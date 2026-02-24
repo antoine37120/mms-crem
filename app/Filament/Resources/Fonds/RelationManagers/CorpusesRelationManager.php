@@ -50,7 +50,7 @@ class CorpusesRelationManager extends RelationManager
         return $schema
             ->components([
                 TextInput::make('code')
-                    ->label('Code du corpus')
+                    ->label('Cote')
                     ->autofocus(false)
                     ->default(function (RelationManager $livewire): string {
                         return $livewire->getOwnerRecord()->full_code ;
@@ -78,7 +78,7 @@ class CorpusesRelationManager extends RelationManager
         return $table
             ->recordTitleAttribute('code')
             ->columns([
-                TextColumn::make('code')
+                TextColumn::make('code')->label('Cote')
                     ->searchable(),
                 TextColumn::make('created_at')
                     ->label('Ajouté le')

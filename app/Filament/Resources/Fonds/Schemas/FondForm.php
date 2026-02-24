@@ -15,7 +15,7 @@ class FondForm
     {
         return $schema
             ->components([
-                TextInput::make('code')
+                TextInput::make('code')->label('Cote')
                     ->required(),
                 TextInput::make('title')
                     ->default(null),

@@ -38,7 +38,7 @@ class CorpusForm
                         }
                     }),
 
-                TextInput::make('code')
+                TextInput::make('code')->label('Cote')
                     ->required()
                     ->unique(ignoreRecord: true)
                     ->placeholder('Ex: CNRSMH_Arnaud_001'),
