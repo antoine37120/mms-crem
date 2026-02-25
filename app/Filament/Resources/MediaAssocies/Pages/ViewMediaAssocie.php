@@ -21,6 +21,15 @@ class ViewMediaAssocie extends ViewRecord
                 ->icon('heroicon-o-arrow-down-tray')
                 ->action(fn ($record) => Storage::disk('original_medias')->download($record->file_path, $record->code . '.' . $record->file_extension))
                 ->visible(fn ($record) => filled($record->file_path) && Storage::disk('original_medias')->exists($record->file_path)),
+            Action::make('viewInHierarchy')
+                ->label('Hiérarchie')
+                ->icon('heroicon-o-folder')
+                ->color('info')
+                ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
+                    'focus' => 'item',
+                    'id' => $record->id
+                ]))
+                ->openUrlInNewTab(),
             EditAction::make(),
         ];
     }

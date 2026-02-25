@@ -18,6 +18,9 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
@@ -213,10 +216,24 @@ class SubItemsRelationManager extends RelationManager
                     ->modalAutofocus(false),
             ])
             ->recordActions([
-                EditAction::make(),
-                DeleteAction::make(),
-                ForceDeleteAction::make(),
-                RestoreAction::make(),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->url(fn ($record) => $record->is_sub 
+                            ? route('filament.mms-admin.resources.media-associes.view', ['record' => $record])
+                            : route('filament.mms-admin.resources.items.view', ['record' => $record])),
+                    Action::make('viewInHierarchy')
+                        ->label('Hiérarchie')
+                        ->icon('heroicon-o-folder')
+                        ->color('info')
+                        ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
+                            'focus' => 'item',
+                            'id' => $record->id
+                        ])),
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    ForceDeleteAction::make(),
+                    RestoreAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

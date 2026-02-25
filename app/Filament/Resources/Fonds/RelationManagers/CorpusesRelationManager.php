@@ -16,6 +16,9 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
+use Filament\Actions\ActionGroup;
+use Filament\Actions\ViewAction;
+use Filament\Actions\Action;
 use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
@@ -98,11 +101,23 @@ class CorpusesRelationManager extends RelationManager
                     ->preloadRecordSelect(),
             ])
             ->recordActions([
-                DetachAction::make(),
-                EditAction::make(),
-                DeleteAction::make(),
-                ForceDeleteAction::make(),
-                RestoreAction::make(),
+                ActionGroup::make([
+                    ViewAction::make()
+                        ->url(fn ($record) => route('filament.mms-admin.resources.corpuses.view', ['record' => $record])),
+                    Action::make('viewInHierarchy')
+                        ->label('Hiérarchie')
+                        ->icon('heroicon-o-folder')
+                        ->color('info')
+                        ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
+                            'focus' => 'corpus',
+                            'id' => $record->id
+                        ])),
+                    DetachAction::make(),
+                    EditAction::make(),
+                    DeleteAction::make(),
+                    ForceDeleteAction::make(),
+                    RestoreAction::make(),
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([
