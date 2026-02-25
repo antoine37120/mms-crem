@@ -127,8 +127,8 @@ class CollectionsRelationManager extends RelationManager
                             'focus' => 'collection',
                             'id' => $record->id
                         ])),
-                    DetachAction::make(),
                     EditAction::make(),
+                    DetachAction::make(),
                     DeleteAction::make(),
                     ForceDeleteAction::make(),
                     RestoreAction::make(),

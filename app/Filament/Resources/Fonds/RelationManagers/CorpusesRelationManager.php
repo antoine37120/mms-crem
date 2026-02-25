@@ -112,8 +112,8 @@ class CorpusesRelationManager extends RelationManager
                             'focus' => 'corpus',
                             'id' => $record->id
                         ])),
-                    DetachAction::make(),
                     EditAction::make(),
+                    DetachAction::make(),
                     DeleteAction::make(),
                     ForceDeleteAction::make(),
                     RestoreAction::make(),
