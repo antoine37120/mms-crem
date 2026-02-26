@@ -29,7 +29,7 @@ class MediaAssocieResource extends Resource
     protected static ?string $modelLabel = 'Média associé';
     protected static ?string $pluralModelLabel = 'Médias associés';
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocument;
-    protected static string | UnitEnum | null $navigationGroup = 'Gestion des Archives';
+    protected static string | UnitEnum | null $navigationGroup = 'Médias associés';
     protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'code';

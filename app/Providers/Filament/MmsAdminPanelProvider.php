@@ -69,12 +69,12 @@ class MmsAdminPanelProvider extends PanelProvider
                 NavigationGroup::make('Gestion des Archives')
                     //->icon('heroicon-o-archive-box')
                     ->collapsible(),
+                NavigationGroup::make('Médias associés')
+                    //->icon('heroicon-o-photo')
+                    ->collapsible(),
                 NavigationGroup::make('Recherche & Exploration')
                     //->icon('heroicon-o-folder-tree')
                     ->collapsible(),
-                /*NavigationGroup::make('Médias & Items')
-                    //->icon('heroicon-o-photo')
-                    ->collapsible(),*/
                 NavigationGroup::make('Aide')
                     //->icon('heroicon-o-photo')
                     ->collapsible(),
