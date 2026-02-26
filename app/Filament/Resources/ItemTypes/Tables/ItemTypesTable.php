@@ -27,6 +27,12 @@ class ItemTypesTable
                 TextColumn::make('suffix')
                 ->label('Suffixe')
                     ->searchable(),
+                TextColumn::make('allowed_extensions')
+                    ->label('Extensions autorisées')
+                    ->badge()
+    ->wrap()
+                    ->getStateUsing(fn ($record) => !empty($record->allowed_extensions) ? array_filter(array_map('trim', explode(',', $record->allowed_extensions))) : null)
+                    ->searchable(),
                 ToggleColumn::make('requires_language')
                 ->label('Nécessite une langue'),
                 ToggleColumn::make('is_active')
