@@ -18,12 +18,12 @@ class MediaInfoSchema
             ->schema([
                 ViewEntry::make('preview')
                     ->view('filament.infolists.components.media-preview')
-                    ->visible(fn ($record) => filled($record->file_path) && Storage::disk('original_medias')->exists($record->file_path))
+                    ->visible(fn ($record) => $record && filled($record->file_path) && Storage::disk('original_medias')->exists($record->file_path))
                     ->columnSpanFull(),
 
                 RepeatableEntry::make('mediaVariations')
                     ->label('Fichiers & Variations')
-                    ->hidden(fn ($record) => $record->mediaVariations->isEmpty())
+                    ->hidden(fn ($record) => !$record || $record->mediaVariations->isEmpty())
                     ->schema([
                         Grid::make(3)
                             ->schema([
@@ -64,7 +64,7 @@ class MediaInfoSchema
                 TextEntry::make('no_mediaVariations')
                     ->label('Fichiers & Variations')
                     ->default('Aucune variation disponible.')
-                    ->visible(fn ($record) => $record->mediaVariations->isEmpty())
+                    ->visible(fn ($record) => !$record || $record->mediaVariations->isEmpty())
                     ->columnSpanFull(),
             ]);
     }

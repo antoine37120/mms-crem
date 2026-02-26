@@ -67,12 +67,18 @@
                                          wire:click="selectElement('collection', {{ $collection->id }})"
                                          @if($selectedType === 'collection' && $selectedId == $collection->id) data-selected-element="true" @endif>
 
-                                        {{-- Toggle pour mainItems --}}
-                                        <button
-                                            wire:click.stop="toggleCollection({{ $collection->id }})"
-                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($collection->id, $expandedCollections) ? 'rotate-180' : '' }}">
-                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
-                                        </button>
+                                        {{-- Toggle pour mainItems (Conditionnel) --}}
+                                        @if($this->hasChildren('collection', $collection))
+                                            <button
+                                                wire:click.stop="toggleCollection({{ $collection->id }})"
+                                                class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($collection->id, $expandedCollections) ? 'rotate-180' : '' }}">
+                                                <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                            </button>
+                                        @else
+                                            <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                            </span>
+                                        @endif
 
                                         <div class="flex-1 min-w-0">
                                             <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -152,12 +158,18 @@
                                          wire:click="selectElement('fond', {{ $fond->id }})"
                                          @if($selectedType === 'fond' && $selectedId == $fond->id) data-selected-element="true" @endif>
 
-                                        {{-- Icône de dépliant --}}
-                                        <button
-                                            wire:click.stop="toggleFond({{ $fond->id }})"
-                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($fond->id, $expandedFonds) ? 'rotate-180' : '' }}">
-                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
-                                        </button>
+                                        {{-- Icône de dépliant (Conditionnel) --}}
+                                        @if($this->hasChildren('fond', $fond))
+                                            <button
+                                                wire:click.stop="toggleFond({{ $fond->id }})"
+                                                class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($fond->id, $expandedFonds) ? 'rotate-180' : '' }}">
+                                                <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                            </button>
+                                        @else
+                                            <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                            </span>
+                                        @endif
 
                                         <div class="flex-1 min-w-0">
                                             <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -182,11 +194,18 @@
                                                          wire:click="selectElement('corpus', {{ $corpus->id }})"
                                                          @if($selectedType === 'corpus' && $selectedId == $corpus->id) data-selected-element="true" @endif>
 
-                                                        <button
-                                                            wire:click.stop="toggleCorpus({{ $corpus->id }})"
-                                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($corpus->id, $expandedCorpuses) ? 'rotate-180' : '' }}">
-                                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
-                                                        </button>
+                                                        {{-- Toggle Corpus (Conditionnel) --}}
+                                                        @if($this->hasChildren('corpus', $corpus))
+                                                            <button
+                                                                wire:click.stop="toggleCorpus({{ $corpus->id }})"
+                                                                class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($corpus->id, $expandedCorpuses) ? 'rotate-180' : '' }}">
+                                                                <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                                            </button>
+                                                        @else
+                                                            <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                                <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                                            </span>
+                                                        @endif
 
                                                         <div class="flex-1 min-w-0">
                                                             <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
@@ -247,85 +266,172 @@
                 </div>
             </div>
 
-            {{-- COLONNE 2 (33%) - Liste des Items (Secondaires ou Enfants) --}}
+            {{-- COLONNE 2 (33%) - Détails Élément & Médias Associés --}}
             <div class="bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700 overflow-hidden flex flex-col">
-                {{-- <div class="p-3 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">
-                    <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
-                        @if($selectedType === 'collection' && $this->mode === 'collections')
-                            Items Secondaires
-                        @elseif($selectedType === 'item')
-                            Items Enfants
-                        @else
-                            Items
-                        @endif
-                    </h3>
-                </div> --}}
-
                 <div class="overflow-y-auto flex-1 " x-ref="column2Scroll">
                     @if($selectedType && $selectedId)
-                        @php
-                            $items = $this->selectedElementItems;
-                            $isCollectionInFondsMode = $this->mode === 'fonds' && $selectedType === 'collection';
-                            $metaItems = $this->metaItems;
-                            $standardItems = $this->standardItems;
-                        @endphp
-
-                        @if($metaItems->isNotEmpty() || $standardItems->isNotEmpty())
-
-                            {{-- Cas Spécial: Mode Fonds + Collection (Séparation Secondary / Main) --}}
-
-
-                                {{-- Items Secondaires --}}
-                                @if($metaItems->isNotEmpty())
-                                    <div class="mb-4">
-                                        <div class="p-2 mb-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 rounded">
-                                            <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
-                                                Medias associés
-                                            </h3>
-                                        </div>
-                                        <div class="space-y-1">
-                                            @foreach($metaItems as $item)
-                                                @include('filament.pages.partials.hierarchy-item-row', ['item' => $item])
-                                            @endforeach
-                                        </div>
-                                    </div>
-                                @endif
-
-                                {{-- Items Principaux --}}
-                                @if($standardItems->isNotEmpty())
+                        {{-- EN TÊTE: Informations de l'élément sélectionné en Col 1 --}}
+                        <div class="p-4 border-b border-gray-200 dark:border-gray-700 bg-gray-50/50 dark:bg-gray-900/30">
+                            @if($selectedType === 'item')
+                                <div class="space-y-4">
                                     <div>
-                                        <div class="p-2 mb-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 rounded">
-                                            <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
-                                                Items
-                                            </h3>
+                                        <div class="flex items-center font-medium text-lg text-gray-900 dark:text-gray-100">
+                                            <span class="flex-shrink-0 w-5 mr-2 text-primary-600"><x-heroicon-o-document /></span>
+                                            <span class="truncate">{{ $selectedElement['code'] ?? 'Sans nom' }}</span>
                                         </div>
-                                        <div class="space-y-1">
-                                            @foreach($standardItems as $item)
-                                                @include('filament.pages.partials.hierarchy-item-row', ['item' => $item])
-                                            @endforeach
+                                        @if(isset($selectedElement['title']) && $selectedElement['title'])
+                                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $selectedElement['title'] }}</div>
+                                        @endif
+<div class="text-gray-600 dark:text-gray-400">
+                                        <x-filament::badge size="xs" color="primary" class="font-medium px-2 py-0.5" circular>
+                                            Item
+                                        </x-filament::badge> 
+                                        {{ strtoupper($selectedElement['file_extension'] ?? 'N/A') }} • {{ $this->formatFileSize($selectedElement['file_size'] ?? 0) }}
+                                        </div>
+                                        @if(isset($selectedElement['duration']) && $selectedElement['duration'])
+                                            <div class="text-gray-600 dark:text-gray-400">
+                                                Durée: {{ $this->formatDuration($selectedElement['duration']) }}
+                                            </div>
+                                        @endif
+
+                                    </div>
+
+                                    <div class="pt-0">
+                                        {{ $this->mediaInfolist }}
+                                    </div>
+
+                                    <div class="flex flex-wrap gap-2 pt-4 justify-end border-t border-gray-100 dark:border-gray-700 mt-4">
+                                        @if($this->getSelectedElementResourceRoute('view'))
+                                            <x-filament::button size="sm" color="gray" icon="heroicon-m-eye" tag="a"
+                                                                href="{{ $this->getSelectedElementResourceRoute('view') }}" target="_blank">
+                                                Voir
+                                            </x-filament::button>
+                                        @endif
+                                        @if(!empty($selectedElement['file_path']) && \Illuminate\Support\Facades\Storage::disk('original_medias')->exists($selectedElement['file_path']))
+                                            <x-filament::button size="sm" color="primary" tag="a"
+                                                                href="{{ asset('storage/' . $selectedElement['file_path']) }}" target="_blank">
+                                                Télécharger
+                                            </x-filament::button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @else
+                                <div class="space-y-3">
+                                    <div>
+                                        <div class="flex items-center font-medium text-gray-900 dark:text-gray-100">
+                                            <span class="flex-shrink-0 w-4 mr-2 text-primary-600">{{ \Filament\Support\generate_icon_html($this->getSelectedElementTypeIcon()) }}</span>
+                                            <span class="truncate">{{ $selectedElement['code'] ?? 'Sans nom' }}</span>
+                                        </div>
+                                        @if(isset($selectedElement['title']) && $selectedElement['title'])
+                                            <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $selectedElement['title'] }}</div>
+                                        @endif
+                                    </div>
+                                    <div class="flex items-center gap-2">
+                                        <x-filament::badge size="xs" color="primary" class="font-medium px-2 py-0.5" circular>
+                                            {{ $this->getSelectedElementTypeLabel() }}
+                                        </x-filament::badge>
+                                        <div class="text-xs text-gray-500 dark:text-gray-400">
+                                            @if($selectedType === 'fond')
+                                                {{ $selectedElement['corpuses_count'] ?? 0 }} corpus • {{ $selectedElement['secondary_items_count'] ?? 0 }} medias associés
+                                            @elseif($selectedType === 'corpus')
+                                                {{ $selectedElement['collections_count'] ?? 0 }} collections • {{ $selectedElement['secondary_items_count'] ?? 0 }} medias associés
+                                            @elseif($selectedType === 'collection')
+                                                {{ $selectedElement['main_items_count'] ?? 0 }} items, {{ $selectedElement['secondary_items_count'] ?? 0 }} medias associés
+                                            @endif
                                         </div>
                                     </div>
-                                @endif
+                                    <div class="flex flex-wrap gap-2 pt-2 justify-end">
+                                        @if($this->getSelectedElementResourceRoute('view'))
+                                            <x-filament::button size="sm" color="gray" icon="heroicon-m-eye" tag="a"
+                                                                href="{{ $this->getSelectedElementResourceRoute('view') }}" target="_blank">
+                                                Voir
+                                            </x-filament::button>
+                                        @endif
+                                    </div>
+                                </div>
+                            @endif
+                        </div>
 
-
-                                {{-- Cas Standard (Liste plate)
-                                <div class="p-3 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">
-                                    <h3 class="font-medium text-sm text-gray-700 dark:text-gray-200">
-                                        Items Secondaires
+                        {{-- LISTE: Médias Associés directs --}}
+                        @if($directMedia->isNotEmpty())
+                            <div class="mb-4">
+                                <div class="p-2 mb-2 border-b border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50 rounded-b">
+                                    <h3 class="font-medium text-xs text-gray-500 uppercase tracking-wider">
+                                        Médias associés
                                     </h3>
                                 </div>
-                                <div class="space-y-1">
-                                    @foreach($items as $item)
+                                <div class="space-y-1 px-2">
+                                    @foreach($directMedia as $item)
                                         @include('filament.pages.partials.hierarchy-item-row', ['item' => $item])
                                     @endforeach
-                                </div> --}}
-
-
+                                </div>
+                            </div>
                         @else
-                            <div class="text-center text-gray-500 py-8">
-                                <p class="text-sm">Aucun item disponible</p>
+                            <div class="text-center text-gray-500 py-4">
+                                <p class="text-xs">Aucun média associé direct</p>
                             </div>
                         @endif
+
+                        {{-- LISTE ARBORESCENTE: Items (Uniquement Mode Fonds > Collection) --}}
+                        @if($mode === 'fonds' && $selectedType === 'collection')
+                            @if($collectionItems->isNotEmpty())
+                                <div>
+                                    <div class="p-2 mb-2 border-y border-gray-200 dark:border-gray-600 bg-gray-50 dark:bg-gray-900/50">
+                                        <h3 class="font-medium text-xs text-gray-500 uppercase tracking-wider">
+                                            Items
+                                        </h3>
+                                    </div>
+                                    <div class="space-y-1 px-2 pb-4">
+                                        @foreach($collectionItems as $item)
+                                            <div class="mb-1" wire:key="col2-item-{{ $item->id }}">
+                                                <div class="flex items-center group hover:bg-gray-50 dark:hover:bg-gray-700 rounded py-1 px-2 cursor-pointer {{ $selectedItemId == $item->id ? 'bg-primary-50 dark:bg-primary-900/50 border border-primary-200' : '' }}"
+                                                     wire:click="selectItem({{ $item->id }})"
+                                                     @if($selectedItemId == $item->id) data-selected-item="true" @endif>
+                                                    
+                                                    {{-- Chevron (Conditionnel) --}}
+                                                    @if($this->hasChildren('item', $item))
+                                                        <button
+                                                            wire:click.stop="toggleColumn2Item({{ $item->id }})"
+                                                            class="flex-shrink-0 w-4 h-4 mr-2 text-gray-500 hover:text-gray-700 transition-transform duration-200 {{ in_array($item->id, $expandedColumn2Items) ? 'rotate-180' : '' }}">
+                                                            <x-heroicon-o-chevron-up-down class="w-4 h-4" />
+                                                        </button>
+                                                    @else
+                                                        <span class="flex-shrink-0 w-4 h-4 mr-2 flex items-center justify-center">
+                                                            <span class="w-1.5 h-1.5 bg-gray-400 rounded-full"></span>
+                                                        </span>
+                                                    @endif
+                                                    
+                                                    <div class="flex-1 min-w-0">
+                                                        <div class="font-medium text-sm text-gray-900 dark:text-gray-100 truncate">
+                                                            {{ $item->code }}
+                                                        </div>
+                                                        @if($item->title)
+                                                            <div class="text-xs text-gray-500 truncate">{{ $item->title }}</div>
+                                                        @endif
+                                                    </div>
+                                                </div>
+
+                                                {{-- Médias de cet item --}}
+                                                @if(in_array($item->id, $expandedColumn2Items))
+                                                    <div class="ml-6 border-l-2 border-gray-100 dark:border-gray-700 pl-1 mt-1 space-y-1">
+                                                        @foreach($item->childItems as $media)
+                                                            @if($media->is_sub)
+                                                                @include('filament.pages.partials.hierarchy-item-row', ['item' => $media])
+                                                            @endif
+                                                        @endforeach
+                                                    </div>
+                                                @endif
+                                            </div>
+                                        @endforeach
+                                    </div>
+                                </div>
+                            @else
+                                <div class="text-center text-gray-500 py-4 border-t border-gray-100 dark:border-gray-700">
+                                    <p class="text-xs">Aucun item</p>
+                                </div>
+                            @endif
+                        @endif
+
                     @else
                         <div class="h-full flex items-center justify-center text-center text-gray-500">
                             <div>
@@ -338,122 +444,57 @@
             </div>
 
             {{-- COLONNE 3 (33%) - Informations et Actions --}}
-            <div class="overflow-hidden flex flex-col h-full">
-                <div class="overflow-y-auto flex-1 space-y-4">
-
-                    {{-- Section 1: Informations sélection Colonne 1 --}}
-                    @if($selectedElement)
-                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="flex items-center font-medium text-gray-900 dark:text-gray-100">
-                                        <span class="flex-shrink-0 w-4 mr-2">{{ \Filament\Support\generate_icon_html($this->getSelectedElementTypeIcon()) }}</span>
-                                        <span class="truncate">{{ $selectedElement['code'] ?? 'Sans nom' }}</span>
-                                    </div>
-                                    @if(isset($selectedElement['title']) && $selectedElement['title'])
-                                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $selectedElement['title'] }}</div>
-                                    @endif
-                                </div>
-
-                                <div class="text-sm text-gray-600 dark:text-gray-400">
-                                    @if($selectedType === 'fond')
-                                        {{ $selectedElement['corpuses_count'] ?? 0 }} corpus • {{ $selectedElement['items_count'] ?? 0 }} items
-                                    @elseif($selectedType === 'corpus')
-                                        {{ $selectedElement['collections_count'] ?? 0 }} collections • {{ $selectedElement['items_count'] ?? 0 }} items
-                                    @else
-                                        {{ $selectedElement['main_items_count'] ?? 0 }} items, {{ $selectedElement['secondary_items_count'] ?? 0 }} medias associés
-                                    @endif
-                                </div>
-
-                                <div class="flex flex-wrap gap-2 pt-2 justify-end border-t border-gray-100 dark:border-gray-700 mt-2">
-                                    @if($this->getSelectedElementResourceRoute('view'))
-                                        <x-filament::button size="xs" color="gray" tag="a"
-                                                            href="{{ $this->getSelectedElementResourceRoute('view') }}" target="_blank">
-                                            Voir
-                                        </x-filament::button>
-                                    @endif
-                                    @if($this->getSelectedElementResourceRoute('edit'))
-                                        <x-filament::button size="xs" color="primary" tag="a"
-                                                            href="{{ $this->getSelectedElementResourceRoute('edit') }}" target="_blank">
-                                            Éditer
-                                        </x-filament::button>
-                                    @endif
-                                </div>
-
-                                {{-- Actions de création --}}
-                                <div class="flex flex-wrap justify-end gap-2 pt-2">
-                                    @if($selectedType === 'fond')
-                                        <x-filament::button size="xs" color="success" wire:click="createCorpus">
-                                            + Corpus
-                                        </x-filament::button>
-                                    @elseif($selectedType === 'corpus')
-                                        <x-filament::button size="xs" color="success" wire:click="createCollection">
-                                            + Collection
-                                        </x-filament::button>
-                                    @endif
-                                    <x-filament::button size="xs" color="success" wire:click="createItem">
-                                        + Item
-                                    </x-filament::button>
-                                </div>
-                            </div>
-
-                        </div>
-                            
-                        {{ $this->mediaInfolist }}
-                    @endif
-
-                    {{-- Section 2: Informations sélection Colonne 2 --}}
+            <div class="overflow-hidden flex flex-col h-full bg-white dark:bg-gray-800 rounded-lg shadow-sm border border-gray-200 dark:border-gray-700">
+                <div class="overflow-y-auto flex-1 p-4 space-y-4">
                     @if($selectedItem)
-                        <div class="bg-white dark:bg-gray-800 border border-gray-200 dark:border-gray-600 rounded-lg p-4 shadow-sm">
-
-                            <div class="space-y-3">
-                                <div>
-                                    <div class="flex items-center font-medium text-gray-900 dark:text-gray-100">
-                                        <span class="flex-shrink-0 w-4 mr-2"><x-heroicon-o-document /></span>
-                                        <span class="truncate">{{ $selectedItem['code'] ?? 'Sans nom' }}</span>
-                                    </div>
-                                    @if(isset($selectedItem['title']) && $selectedItem['title'])
-                                        <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $selectedItem['title'] }}</div>
-                                    @endif
+                        <div class="space-y-4">
+                            <div>
+                                <div class="flex items-center font-medium text-lg text-gray-900 dark:text-gray-100">
+                                    <span class="flex-shrink-0 w-5 mr-2"><x-heroicon-o-document /></span>
+                                    <span class="truncate">{{ $selectedItem['code'] ?? 'Sans nom' }}</span>
                                 </div>
+                                @if(isset($selectedItem['title']) && $selectedItem['title'])
+                                    <div class="text-sm text-gray-600 dark:text-gray-400 mt-1">{{ $selectedItem['title'] }}</div>
+                                @endif
+                            </div>
 
-                                <div class="text-sm space-y-1">
+                            <div class="text-sm space-y-1 bg-gray-50 dark:bg-gray-900/50 p-3 rounded border border-gray-100 dark:border-gray-700">
+                                @if($selectedItem['is_sub'])
+                                    <div class="font-medium text-xs text-primary-600 mb-2 uppercase tracking-wide">Média Associé</div>
+                                @else
+                                    <div class="font-medium text-xs text-gray-500 mb-2 uppercase tracking-wide">Item</div>
+                                @endif
+                                <div class="text-gray-600 dark:text-gray-400">
+                                    {{ strtoupper($selectedItem['file_extension'] ?? 'N/A') }} • {{ $this->formatFileSize($selectedItem['file_size'] ?? 0) }}
+                                </div>
+                                @if(isset($selectedItem['duration']) && $selectedItem['duration'])
                                     <div class="text-gray-600 dark:text-gray-400">
-                                        {{ strtoupper($selectedItem['file_extension'] ?? 'N/A') }} • {{ $this->formatFileSize($selectedItem['file_size'] ?? 0) }}
+                                        Durée: {{ $this->formatDuration($selectedItem['duration']) }}
                                     </div>
-                                    @if(isset($selectedItem['duration']) && $selectedItem['duration'])
-                                        <div class="text-gray-600 dark:text-gray-400">
-                                            Durée: {{ $this->formatDuration($selectedItem['duration']) }}
-                                        </div>
-                                    @endif
-                                </div>
-                                {{ $this->mediaInfolist }}
-                                <div class="flex flex-wrap gap-2 pt-2 justify-end border-t border-gray-100 dark:border-gray-700 mt-2">
-                                    @if($this->getSelectedItemResourceRoute('view'))
-                                        <x-filament::button size="xs" color="gray" tag="a"
-                                                            href="{{ $this->getSelectedItemResourceRoute('view') }}" target="_blank">
-                                            Voir
-                                        </x-filament::button>
-                                    @endif
-                                    @if($selectedItem['file_path'] ?? false)
-                                        <x-filament::button size="xs" color="primary" tag="a"
-                                                            href="{{ asset('storage/' . $selectedItem['file_path']) }}" target="_blank">
-                                            Télécharger
-                                        </x-filament::button>
-                                    @endif
-                                </div>
+                                @endif
+                            </div>
 
-                                <div class="flex flex-wrap gap-2 pt-2 justify-end">
-                                    <x-filament::button size="xs" color="success" wire:click="createItemTranslation">
-                                        + Traduction
+                            {{-- Infolist pour les détails techniques et lecteur --}}
+                            <div class="pt-2">
+                                {{ $this->mediaInfolist }}
+                            </div>
+
+                            <div class="flex flex-wrap gap-2 pt-4 justify-end border-t border-gray-100 dark:border-gray-700 mt-4">
+                                @if($this->getSelectedItemResourceRoute('view'))
+                                    <x-filament::button size="sm" color="gray" icon="heroicon-m-eye" tag="a"
+                                                        href="{{ $this->getSelectedItemResourceRoute('view') }}" target="_blank">
+                                        Voir
                                     </x-filament::button>
-                                </div>
+                                @endif
+                                @if(!empty($selectedItem['file_path']) && \Illuminate\Support\Facades\Storage::disk('original_medias')->exists($selectedItem['file_path']))
+                                    <x-filament::button size="sm" color="primary" tag="a"
+                                                        href="{{ asset('storage/' . $selectedItem['file_path']) }}" target="_blank">
+                                        Télécharger
+                                    </x-filament::button>
+                                @endif
                             </div>
                         </div>
-                    @endif
-
-                    {{-- État vide --}}
-                    @if(!$selectedElement && !$selectedItem)
+                    @else
                         <div class="h-full flex items-center justify-center text-center text-gray-500">
                             <div>
                                 <x-heroicon-o-information-circle class="mx-auto h-12 w-12 mb-4 text-gray-300" />
