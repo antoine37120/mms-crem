@@ -69,7 +69,21 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
                 //
             ])
             ->headerActions([
-                //
+                Action::make('import_csv')
+                    ->label('Importer depuis CSV')
+                    ->icon('heroicon-o-document-arrow-up')
+                    ->color('success')
+                    ->modalHeading('Import en masse via CSV')
+                    ->modalWidth('7xl')
+                    ->modalContent(fn () => view('livewire.import-items-csv-modal'))
+                    ->modalSubmitAction(false)
+                    ->modalCancelAction(false),
+                    
+                Action::make('download_template')
+                    ->label('Télécharger le modèle CSV')
+                    ->icon('heroicon-o-document-arrow-down')
+                    ->color('gray')
+                    ->action(fn () => response()->download(public_path('import_items_template.csv'))),
             ])
             ->recordActions([
 
@@ -98,6 +112,7 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
 
     #[On('item-created')]
     #[On('pending-file-deleted')]
+    #[On('import-csv-completed')]
     public function refreshTable()
     {
         // Cette méthode sera appelée quand l'événement 'pending-file-deleted' est émis

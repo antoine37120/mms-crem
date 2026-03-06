@@ -1,0 +1,4 @@
+file_name,parent_code,code_suffix,title,is_sub,item_type_suffix,language_code
+audio_interview.wav,CREM_001,,Interview complète de Test,0,,
+extrait.wav,CREM_001,01,Extrait version courte,1,TRA,fr
+photo_groupe.jpg,CREM_001,02,Photo du groupe,1,IMG,
