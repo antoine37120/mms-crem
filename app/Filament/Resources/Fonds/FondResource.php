@@ -106,29 +106,6 @@ class FondResource extends Resource
 
     }
 
-    // Configuration des permissions basées sur les rôles
-    public static function canCreate(): bool
-    {
-        return auth()->user()->hasRole(['documentaliste', 'administrateur']);
-    }
-
-    public static function canEdit($record): bool
-    {
-        return auth()->user()->hasRole(['documentaliste', 'administrateur']) ||
-            $record->created_by === auth()->id();
-    }
-
-    public static function canDelete($record): bool
-    {
-        return auth()->user()->hasRole(['administrateur']) ||
-            ($record->created_by === auth()->id() && $record->corpuses()->count() === 0);
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return auth()->user()->hasRole(['administrateur']);
-    }
-
     // Configuration pour les actions en lot
     public static function canBulkDelete(): bool
     {

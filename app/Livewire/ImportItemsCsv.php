@@ -164,6 +164,10 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
 
             if (!$parentModel) {
                 $errors[] = "parent_code '{$parentCode}' introuvable.";
+            } else {
+                if (!auth()->user()->hasAccessToModel($parentModel)) {
+                    $errors[] = "Vous n'avez pas l'autorisation d'importer dans ce parent ({$parentCode}).";
+                }
             }
         }
 

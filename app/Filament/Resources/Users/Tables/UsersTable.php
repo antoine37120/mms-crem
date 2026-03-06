@@ -21,11 +21,8 @@ class UsersTable
                 TextColumn::make('email')
                     ->label('Email address')
                     ->searchable(),
-                TextColumn::make('email_verified_at')
-                    ->dateTime()
-                    ->sortable(),
-                TextColumn::make('two_factor_confirmed_at')
-                    ->dateTime()
+                TextColumn::make('role')
+                    ->badge()
                     ->sortable(),
                 TextColumn::make('created_at')
                     ->dateTime()

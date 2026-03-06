@@ -180,6 +180,97 @@ class User extends Authenticatable implements FilamentUser, Auditable
         return $this->admin_access && $this->isAdmin();
     }
 
+    public function scopedFonds()
+    {
+        return $this->morphedByMany(Fond::class, 'scopeable', 'user_documentary_scopes');
+    }
 
+    public function scopedCorpuses()
+    {
+        return $this->morphedByMany(Corpus::class, 'scopeable', 'user_documentary_scopes');
+    }
 
+    public function scopedCollections()
+    {
+        return $this->morphedByMany(Collection::class, 'scopeable', 'user_documentary_scopes');
+    }
+
+    public function hasAccessToModel($model): bool
+    {
+        if ($this->isSuperAdmin()) {
+            return true;
+        }
+
+        if ($this->hasRole(UserRole::DOCUMENTALISTE)) {
+            if ($model instanceof Fond) {
+                return $this->scopedFonds()->where('fonds.id', $model->id)->exists();
+            }
+
+            if ($model instanceof Corpus) {
+                $hasDirect = $this->scopedCorpuses()->where('corpuses.id', $model->id)->exists();
+                if ($hasDirect) return true;
+                
+                // Un corpus appartient à plusieurs fonds
+                $fondsIds = $model->fonds()->pluck('fonds.id');
+                if ($fondsIds->isNotEmpty()) {
+                    return $this->scopedFonds()->whereIn('fonds.id', $fondsIds)->exists();
+                }
+                return false;
+            }
+
+            if ($model instanceof Collection) {
+                $hasDirect = $this->scopedCollections()->where('collections.id', $model->id)->exists();
+                if ($hasDirect) return true;
+                
+                // Une collection appartient à plusieurs corpus
+                $corpusesIds = $model->corpuses()->pluck('corpuses.id');
+                if ($corpusesIds->isNotEmpty()) {
+                    $hasCorpus = $this->scopedCorpuses()->whereIn('corpuses.id', $corpusesIds)->exists();
+                    if ($hasCorpus) return true;
+                    
+                    // On vérifie les fonds de ces corpus
+                    $fondsIds = \App\Models\Corpus::whereIn('id', $corpusesIds)
+                        ->with('fonds')
+                        ->get()
+                        ->flatMap->fonds
+                        ->pluck('id')
+                        ->unique();
+
+                    if ($fondsIds->isNotEmpty()) {
+                        return $this->scopedFonds()->whereIn('fonds.id', $fondsIds)->exists();
+                    }
+                }
+                return false;
+            }
+
+            if ($model instanceof Item) {
+                return $this->hasAccessToItemable($model->itemable_type, $model->itemable_id);
+            }
+        }
+
+        if ($this->hasRole(UserRole::CHERCHEUR)) {
+            return $model->created_by === $this->id;
+        }
+
+        return false;
+    }
+
+    public function hasAccessToItemable(?string $type, ?int $id): bool
+    {
+        if (!$type || !$id) return false;
+
+        $modelClass = $type; 
+        if (!class_exists($modelClass)) {
+            return false;
+        }
+
+        $model = $modelClass::find($id);
+        if (!$model) return false;
+
+        if ($model instanceof Item) {
+             return $this->hasAccessToItemable($model->itemable_type, $model->itemable_id);
+        }
+
+        return $this->hasAccessToModel($model);
+    }
 }

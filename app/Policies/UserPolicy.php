@@ -11,47 +11,44 @@ class UserPolicy
 
     public function viewAny(User $user): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
 
     public function view(User $user, User $item): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
 
     public function create(User $user): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
 
     public function update(User $user, User $item): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
 
     public function delete(User $user, User $item): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
 
     public function restore(User $user, User $item): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
 
     public function forceDelete(User $user, User $item): bool
     {
-        return true;
+        return $user->isSuperAdmin();
     }
     public function audit(User $user, User $item): bool
     {
-        return true;
+        return clone $user->isSuperAdmin();
     }
     public function restoreAudit(User $user, User $item): bool
     {
         return false;
     }
-
-
-
 }

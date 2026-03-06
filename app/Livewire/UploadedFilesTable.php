@@ -77,13 +77,15 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
                     ->modalWidth('7xl')
                     ->modalContent(fn () => view('livewire.import-items-csv-modal'))
                     ->modalSubmitAction(false)
-                    ->modalCancelAction(false),
+                    ->modalCancelAction(false)
+                    ->visible(fn () => auth()->user()->canManageItems()),
                     
                 Action::make('download_template')
                     ->label('Télécharger le modèle CSV')
                     ->icon('heroicon-o-document-arrow-down')
                     ->color('gray')
-                    ->action(fn () => response()->download(public_path('import_items_template.csv'))),
+                    ->action(fn () => response()->download(public_path('import_items_template.csv')))
+                    ->visible(fn () => auth()->user()->canManageItems()),
             ])
             ->recordActions([
 

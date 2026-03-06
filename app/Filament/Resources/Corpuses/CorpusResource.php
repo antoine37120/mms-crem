@@ -99,29 +99,6 @@ class CorpusResource extends Resource
             ->with(['fonds', 'creator']);
     }
 
-    // Configuration des permissions basées sur les rôles (similaire aux fonds)
-    public static function canCreate(): bool
-    {
-        return auth()->user()?->hasRole(['documentaliste', 'administrateur']) ?? false;
-    }
-
-    public static function canEdit($record): bool
-    {
-        return auth()->user()?->hasRole(['documentaliste', 'administrateur']) ||
-            $record->created_by === auth()->id();
-    }
-
-    public static function canDelete($record): bool
-    {
-        return auth()->user()?->hasRole(['administrateur']) ||
-            ($record->created_by === auth()->id() && $record->collections()->count() === 0);
-    }
-
-    public static function canDeleteAny(): bool
-    {
-        return auth()->user()?->hasRole(['administrateur']) ?? false;
-    }
-
     // Configuration pour les actions en lot
     public static function canBulkDelete(): bool
     {

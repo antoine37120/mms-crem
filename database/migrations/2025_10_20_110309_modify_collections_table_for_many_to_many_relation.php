@@ -13,8 +13,10 @@ return new class extends Migration
     {
         // Supprimer la colonne corpus_id existante
         Schema::table('collections', function (Blueprint $table) {
-            $table->dropForeign(['corpus_id']);
-            $table->dropColumn('corpus_id');
+            if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+                $table->dropForeign(['corpus_id']);
+                $table->dropColumn('corpus_id');
+            }
         });
 
         // Créer la table pivot

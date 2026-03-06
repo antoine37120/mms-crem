@@ -120,9 +120,12 @@ class ItemForm
                     ->visible(fn ($record) => $record && $record->file_path),
 
                 TextInput::make('file_extension')
-                    ->required(),
+                    ->label('Extension du fichier'),
                 Hidden::make('is_sub')
                     ->default(false),
+                // Auto-remplir l'utilisateur connecté
+                Hidden::make('created_by')
+                    ->default(auth()->id()),
                 /*TextInput::make('file_name')
                     ->required(),
                 TextInput::make('file_size')

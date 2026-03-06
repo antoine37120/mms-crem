@@ -13,8 +13,10 @@ return new class extends Migration
     {
         Schema::table('corpuses', function (Blueprint $table) {
             // Supprimer la colonne fond_id existante
-            $table->dropForeign(['fond_id']);
-            $table->dropColumn('fond_id');
+            if (\Illuminate\Support\Facades\DB::getDriverName() !== 'sqlite') {
+                $table->dropForeign(['fond_id']);
+                $table->dropColumn('fond_id');
+            }
         });
 
         // Créer une table pivot pour la relation many-to-many

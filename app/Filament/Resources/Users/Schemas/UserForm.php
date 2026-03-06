@@ -6,6 +6,10 @@ use Filament\Forms\Components\DateTimePicker;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Textarea;
 use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Components\Utilities\Get;
+use App\Enums\UserRole;
 use Filament\Schemas\Schema;
 
 class UserForm
@@ -20,19 +24,42 @@ class UserForm
                     ->label('Email address')
                     ->email()
                     ->required(),
-                DateTimePicker::make('email_verified_at'),
                 TextInput::make('password')
                     ->password()
-                    ->required(),
-                Textarea::make('two_factor_secret')
-                    ->default(null)
-                    ->columnSpanFull(),
-                Textarea::make('two_factor_recovery_codes')
-                    ->default(null)
-                    ->columnSpanFull(),
-                DateTimePicker::make('two_factor_confirmed_at'),
+                    ->dehydrated(fn (?string $state): bool => filled($state))
+                    ->required(fn (string $operation): bool => $operation === 'create'),
+                Select::make('role')
+                    ->options(UserRole::options())
+                    ->required()
+                    ->default(UserRole::CHERCHEUR->value)
+                    ->live(),
                 Toggle::make('admin_access')
                     ->required(),
+                Section::make('Périmètre d\'intervention (Documentalistes)')
+                    ->description('Sélectionnez les fonds, corpus et collections sur lesquels ce documentaliste peut intervenir (inclut les enfants automatiquements).')
+                    ->schema([
+                        Select::make('scopedFonds')
+                            ->label('Fonds autorisés')
+                            ->multiple()
+                            ->relationship('scopedFonds', 'code')
+                            ->preload()
+                            ->searchable(),
+                        Select::make('scopedCorpuses')
+                            ->label('Corpus autorisés')
+                            ->multiple()
+                            ->relationship('scopedCorpuses', 'code')
+                            ->preload()
+                            ->searchable(),
+                        Select::make('scopedCollections')
+                            ->label('Collections autorisées')
+                            ->multiple()
+                            ->relationship('scopedCollections', 'code')
+                            ->preload()
+                            ->searchable(),
+                    ])
+                    ->visible(fn (Get $get) => $get('role') === UserRole::DOCUMENTALISTE->value)
+                    ->columns(3)
+                    ->columnSpanFull(),
             ]);
     }
 }
