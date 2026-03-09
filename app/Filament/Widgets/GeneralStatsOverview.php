@@ -35,6 +35,11 @@ class GeneralStatsOverview extends BaseWidget
                 ->description('Taille de tous les fichiers')
                 ->descriptionIcon('heroicon-m-server')
                 ->color('warning'),
+
+            Stat::make('Utilisateurs Actifs', \App\Models\User::where('admin_access', true)->count())
+                ->description('Utilisateurs avec accès administration')
+                ->descriptionIcon('heroicon-m-users')
+                ->color('primary'),
         ];
     }
 }
