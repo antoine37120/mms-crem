@@ -45,7 +45,7 @@ class UserPolicy
     }
     public function audit(User $user, User $item): bool
     {
-        return clone $user->isSuperAdmin();
+        return $user->isSuperAdmin();
     }
     public function restoreAudit(User $user, User $item): bool
     {

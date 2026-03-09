@@ -58,6 +58,16 @@ class User extends Authenticatable implements FilamentUser, Auditable
         'admin_access' => 'boolean',
     ];
 
+        /**
+     * Attributes to exclude from the Audit.
+     *
+     * @var array
+     */
+    protected $auditExclude = [
+       /* 'code_prefix',*/
+        'password',
+    ];
+
 
     /**
      * Get the user's initials
@@ -272,5 +282,14 @@ class User extends Authenticatable implements FilamentUser, Auditable
         }
 
         return $this->hasAccessToModel($model);
+    }
+
+    /**
+     * Get the audits where this user is the actor.
+     */
+    public function auditsAsUser(): HasMany
+    {
+        return $this->hasMany(\OwenIt\Auditing\Models\Audit::class, 'user_id')
+            ->where('user_type', $this->getMorphClass());
     }
 }
