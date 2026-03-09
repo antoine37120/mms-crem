@@ -15,6 +15,7 @@ class ItemView extends Model
         'user_id',
         'is_authenticated',
         'ip_address',
+        'country',
         'user_agent',
         'referer',
     ];

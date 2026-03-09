@@ -13,6 +13,7 @@
         "ext-fileinfo": "*",
         "filament/filament": "~4.1",
         "flowframe/laravel-trend": "^0.4.0",
+        "geoip2/geoip2": "^3.3",
         "houdaslassi/vantage": "^0.1.21",
         "laravel/fortify": "^1.30",
         "laravel/framework": "^12.0",
@@ -21,6 +22,7 @@
         "livewire/volt": "^1.7.0",
         "owen-it/laravel-auditing": "^14.0",
         "ralouphie/mimey": "^1.0",
+        "stevebauman/location": "^7.6",
         "tapp/filament-auditing": "^4.0"
     },
     "require-dev": {

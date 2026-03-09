@@ -15,7 +15,7 @@ class ViewsOverTimeChart extends ChartWidget
     protected static ?int $sort = 1;
 
     // Make it span full width if needed, or stick to default
-    protected int | string | array $columnSpan = 'full';
+    protected int | string | array $columnSpan = 1;
 
     protected function getData(): array
     {

@@ -11,7 +11,7 @@ class LatestItemsWidget extends BaseWidget
 {
     protected static ?string $heading = 'Derniers ajouts d\'items';
 
-    protected static ?int $sort = 2;
+    protected static ?int $sort = 3;
 
     protected int | string | array $columnSpan = 1;
 

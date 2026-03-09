@@ -12,7 +12,7 @@ class MostActiveUsersWidget extends BaseWidget
 {
     protected static ?string $heading = 'Utilisateurs les plus actifs';
 
-    protected static ?int $sort = 4;
+    protected static ?int $sort = 5;
 
     protected int | string | array $columnSpan = 'full';
 

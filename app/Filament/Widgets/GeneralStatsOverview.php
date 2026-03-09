@@ -28,6 +28,15 @@ class GeneralStatsOverview extends BaseWidget
                     ItemView::count()
                 ])
                 ->color('info'),
+
+            Stat::make('Vues (30 derniers jours)', ItemView::where('created_at', '>=', now()->subDays(30))->count())
+                ->description('Consultations récentes')
+                ->descriptionIcon('heroicon-m-chart-bar')
+                ->chart([
+                    ItemView::whereBetween('created_at', [now()->subDays(30), now()->subDays(15)])->count(),
+                    ItemView::where('created_at', '>=', now()->subDays(15))->count()
+                ])
+                ->color('warning'),
         ];
     }
 }
