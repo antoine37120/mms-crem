@@ -10,63 +10,48 @@ class Documentation extends Page
 {
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-book-open';
     protected static string|null|\UnitEnum $navigationGroup = 'Aide';
-    protected static ?string $title = 'Documentation Utilisateur';
+    protected static ?string $title = 'Guide Utilisateur';
     protected static ?int $navigationSort = 100;
 
     protected string $view = 'filament.pages.documentation';
 
-    public $currentSection = '01-introduction';
-    public $sections = [];
+    public $currentPageId;
 
     // Persist state in URL
     protected $queryString = [
-        'currentSection' => ['except' => '01-introduction', 'as' => 'section'],
+        'currentPageId' => ['as' => 'p'],
     ];
 
     public function mount()
     {
-        $this->loadSections();
-
-        // Ensure currentSection is valid
-        if (!array_key_exists($this->currentSection, $this->sections)) {
-            $this->currentSection = array_key_first($this->sections) ?? '01-introduction';
+        if (!$this->currentPageId) {
+            $firstPage = \App\Models\DocumentationPage::orderBy('order')->first();
+            $this->currentPageId = $firstPage?->id;
         }
     }
 
-    public function loadSections()
+    public function getPagesProperty()
     {
-        $path = resource_path('docs');
+        return \App\Models\DocumentationPage::whereNull('parent_id')
+            ->orderBy('order')
+            ->with(['children' => fn($q) => $q->orderBy('order')])
+            ->get();
+    }
 
-        if (!File::exists($path)) {
-            return;
-        }
-
-        $files = File::files($path);
-        foreach ($files as $file) {
-            $filename = $file->getFilenameWithoutExtension();
-            // Format title: "01-introduction" -> "Introduction"
-            $titleParts = explode('-', $filename, 2);
-            $title = isset($titleParts[1]) ? Str::title(str_replace('-', ' ', $titleParts[1])) : Str::title($filename);
-
-            $this->sections[$filename] = $title;
-        }
-
-        ksort($this->sections);
+    public function getCurrentPageProperty()
+    {
+        return \App\Models\DocumentationPage::find($this->currentPageId);
     }
 
     public function getContentProperty()
     {
-        // Security check: ensure the section is valid
-        if (!array_key_exists($this->currentSection, $this->sections)) {
-            return "Section invalide.";
+        $page = $this->currentPage;
+
+        if (!$page) {
+            return "Sélectionnez une page pour commencer.";
         }
 
-        $path = resource_path("docs/{$this->currentSection}.md");
-        if (!File::exists($path)) {
-            return "Fichier non trouvé.";
-        }
-
-        $content = File::get($path);
+        $content = $page->content;
 
         // Process dynamic routes: [Label](route:route.name)
         $content = preg_replace_callback(
@@ -78,20 +63,17 @@ class Documentation extends Page
                     $url = route($routeName);
                     return "<a href=\"{$url}\" wire:navigate class=\"text-primary-600 hover:text-primary-500 underline\">{$label}</a>";
                 } catch (\Exception $e) {
-                    // Fallback if route not found
                     return "$label (Route introuvable)";
                 }
             },
             $content
         );
 
-        return Str::markdown($content);
+        return Str::markdown($content ?? '');
     }
 
-    public function setSection($section)
+    public function setPage($id)
     {
-        if (array_key_exists($section, $this->sections)) {
-            $this->currentSection = $section;
-        }
+        $this->currentPageId = $id;
     }
 }
