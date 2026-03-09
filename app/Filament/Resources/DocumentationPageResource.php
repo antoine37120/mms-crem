@@ -72,7 +72,7 @@ class DocumentationPageResource extends Resource
                                     ->view('filament.infolists.entries.documentation-navigation')
                             ])
                             ->columnSpan(['sm' => 4, 'md' => 1]),
-                    ])
+                    ])->columnSpanFull(),
             ]);
     }
 
