@@ -9,6 +9,7 @@ use Filament\Http\Middleware\DispatchServingFilamentEvent;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
+use Filament\Actions\Action;
 use Filament\Support\Colors\Color;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
@@ -37,6 +38,7 @@ class MmsAdminPanelProvider extends PanelProvider
             ->id('mms-admin')
             ->path('mms-admin')
             ->login()
+            ->profile()
             ->colors([
                 'primary' => Color::Blue,
             ])
@@ -90,6 +92,10 @@ class MmsAdminPanelProvider extends PanelProvider
                     ->icon('heroicon-o-command-line')
                     ->url(fn (): string => route('vantage.dashboard'))
                     ->visible(fn(): bool => auth()->user()->isAdmin()),
+            ])
+            ->userMenuItems([
+                'profile' => fn (Action $action) => $action->label('Edit profile'),
+                // ...
             ])
 
             ->brandName('MMS CREM')
