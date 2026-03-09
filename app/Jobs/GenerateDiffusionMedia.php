@@ -155,6 +155,13 @@ class GenerateDiffusionMedia implements ShouldQueue
                 throw new \Exception("FFmpeg failed: " . $result->errorOutput());
             }
 
+            // Calculate total size of the generated folder
+            $totalSize = 0;
+            $files = Storage::disk($diffusionDisk)->allFiles($outputDir);
+            foreach ($files as $file) {
+                $totalSize += Storage::disk($diffusionDisk)->size($file);
+            }
+
             // 5. Create Variation
             MediaVariation::create([
                 'item_id' => $this->item->id,
@@ -162,6 +169,7 @@ class GenerateDiffusionMedia implements ShouldQueue
                 'type' => $variationType,
                 'disk' => $diffusionDisk,
                 'file_path' => $finalPath,
+                'file_size' => $totalSize,
                 'mime_type' => $mimeType,
                 'is_streaming' => $isStreaming,
                 'status' => MediaVariationStatus::READY,

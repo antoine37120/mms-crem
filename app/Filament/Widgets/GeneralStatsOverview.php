@@ -29,13 +29,11 @@ class GeneralStatsOverview extends BaseWidget
                 ])
                 ->color('info'),
 
-            Stat::make('Vues (30 derniers jours)', ItemView::where('created_at', '>=', now()->subDays(30))->count())
-                ->description('Consultations récentes')
-                ->descriptionIcon('heroicon-m-chart-bar')
-                ->chart([
-                    ItemView::whereBetween('created_at', [now()->subDays(30), now()->subDays(15)])->count(),
-                    ItemView::where('created_at', '>=', now()->subDays(15))->count()
-                ])
+            Stat::make('Espace Disque Utilisé', \Illuminate\Support\Number::fileSize(
+                \App\Models\Item::sum('file_size') + \App\Models\MediaVariation::sum('file_size')
+            ))
+                ->description('Taille de tous les fichiers')
+                ->descriptionIcon('heroicon-m-server')
                 ->color('warning'),
         ];
     }

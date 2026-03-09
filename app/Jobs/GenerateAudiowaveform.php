@@ -75,6 +75,8 @@ class GenerateAudiowaveform implements ShouldQueue
                 throw new \Exception("Audiowaveform failed: " . $result->errorOutput());
             }
 
+            $fileSize = Storage::disk($diffusionDisk)->size($outputDir . '/' . $fileName);
+
             // 5. Create Variation
             MediaVariation::create([
                 'item_id' => $this->item->id,
@@ -82,6 +84,7 @@ class GenerateAudiowaveform implements ShouldQueue
                 'type' => MediaVariationType::DATA, // Data for JSON
                 'disk' => $diffusionDisk,
                 'file_path' => $outputDir . '/' . $fileName,
+                'file_size' => $fileSize,
                 'mime_type' => 'application/json',
                 'is_streaming' => false,
                 'status' => MediaVariationStatus::READY,

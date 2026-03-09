@@ -34,8 +34,11 @@ class MediaInfoSchema
                                 TextEntry::make('mime_type')
                                     ->label('Mime Type'),
                             ]),
-                        Grid::make(2)
+                        Grid::make(3)
                             ->schema([
+                                TextEntry::make('file_size')
+                                    ->label('Taille totale')
+                                    ->formatStateUsing(fn ($state) => $state ? \Illuminate\Support\Number::fileSize($state) : '-'),
                                 TextEntry::make('is_streaming')
                                     ->label('Streaming')
                                     ->formatStateUsing(fn (bool $state): string => $state ? 'Oui' : 'Non'),
