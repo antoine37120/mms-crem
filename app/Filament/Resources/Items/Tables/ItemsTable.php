@@ -97,6 +97,10 @@ class ItemsTable
                     ->numeric()
                     ->searchable()
                     ->sortable(),
+                TextColumn::make('views_count')
+                    ->counts('views')
+                    ->label('Vues')
+                    ->sortable(),
                 TextColumn::make('creator.name')
                     ->label('Créé par')
                     ->numeric()

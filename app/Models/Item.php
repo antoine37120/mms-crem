@@ -394,6 +394,14 @@ class Item extends Model implements Auditable
     }
 
     /**
+     * Get the views for the item.
+     */
+    public function views(): HasMany
+    {
+        return $this->hasMany(ItemView::class);
+    }
+
+    /**
      * Scope pour les items principaux (sans type)
      */
     public function scopeMain($query)

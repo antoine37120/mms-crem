@@ -29,6 +29,10 @@ class ItemInfolist
                             ->copyable()
                             ->copyMessage('Copié!')
                             ->copyMessageDuration(1500),
+                        TextEntry::make('views_count')
+                            ->state(fn ($record) => $record->views()->count())
+                            ->inlineLabel()
+                            ->label('Nombre de vues'),
                         TextEntry::make('itemable_type')
                             ->label('Element parent')
                             ->inlineLabel()
