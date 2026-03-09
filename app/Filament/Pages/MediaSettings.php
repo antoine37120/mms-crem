@@ -25,6 +25,11 @@ class MediaSettings extends Page implements HasForms
 
     protected string $view = 'filament.pages.media-settings';
 
+    public static function canAccess(): bool
+    {
+        return auth()->user()->isSuperAdmin();
+    }
+
     public ?array $data = [];
 
     public function mount(): void
