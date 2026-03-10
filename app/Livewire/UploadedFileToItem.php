@@ -248,29 +248,51 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                 Hidden::make('is_sub')
                     ->default(fn () => $this->is_sub),
                 TextInput::make('file_path')
+                    ->label('Chemin du fichier')
                     ->default($this->pending_file_to_item->file_path)
+                    ->disabled()
                     ->required(),
                 TextInput::make('file_name')
+                    ->label('Nom du fichier')
+                    ->disabled()
                     ->default($this->pending_file_to_item->original_name),
                 TextInput::make('file_size')
+                    ->label('Taille')
                     ->default($this->pending_file_to_item->file_size)
+                    ->disabled()
                     ->required(),
                 TextInput::make('file_type')
+                    ->label('Type')
                     ->default($this->pending_file_to_item->file_type)
+                    ->disabled()
                     ->required(),
                 TextInput::make('file_extension')
+                    ->label('Extension')
                     ->default($this->pending_file_to_item->file_extension)
+                    ->disabled()
                     ->required(),
                 TextInput::make('duration')
+                    ->label('Durée')
+                    ->disabled()
                     ->default(null),
                 TextInput::make('upload_date')
+                    ->label('Date de téléchargement')
                     ->default($this->pending_file_to_item->created_at)
+                    ->disabled()
                     ->required(),
-                TextInput::make('uploaded_by')
+                Select::make('uploaded_by')
+                    ->label('Téléchargé par')
+                    ->relationship('uploader', 'name')
                     ->default($this->pending_file_to_item->user_id)
+                    ->disabled()
+                    ->dehydrated()
                     ->required(),
-                TextInput::make('created_by')
+                Select::make('created_by')
+                    ->label('Créé par')
+                    ->relationship('creator', 'name')
                     ->default(auth()->user()->id)
+                    ->disabled()
+                    ->dehydrated()
                     ->required(),
             ])
             ->statePath('data')
