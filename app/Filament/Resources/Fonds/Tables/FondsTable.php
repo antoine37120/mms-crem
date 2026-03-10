@@ -18,6 +18,7 @@ class FondsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('code')->label('Cote')
                     ->sortable()
@@ -37,6 +38,7 @@ class FondsTable
                 TextColumn::make('secondary_items_count')
                     ->sortable()
                     ->counts('secondaryItems')
+                    ->wrapHeader()
                     ->label('Médias associés'),
                 TextColumn::make('creator.name')
                     ->label('Créé par')

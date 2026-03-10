@@ -19,12 +19,17 @@ class CollectionsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
                 TextColumn::make('corpuses.code')
-                    ->listWithLineBreaks()
-                    ->copyable()
-                    ->copyMessage('Copié!')
-                    ->copyMessageDuration(1500)
+                    ->label('Corpuses')
+                    ->html()
+                    ->getStateUsing(function ($record) {
+                        return $record->corpuses->map(function ($corpus) {
+                            $url = \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $corpus->id]);
+                            return "<a href='{$url}'>{$corpus->code}</a>";
+                        })->implode('<br>');
+                    })
                     ->sortable(),
                 TextColumn::make('code')->label('Cote')
                     ->sortable()
@@ -41,6 +46,7 @@ class CollectionsTable
                 TextColumn::make('secondary_items_count')
                     ->sortable()
                     ->counts('secondaryItems')
+                    ->wrapHeader()
                     ->label('Médias associés'),
                 TextColumn::make('creator.name')
                     ->label('Créé par')

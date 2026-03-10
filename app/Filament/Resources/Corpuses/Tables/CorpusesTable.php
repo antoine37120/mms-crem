@@ -18,12 +18,20 @@ class CorpusesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
-                /*TextColumn::make('fond.code')
-                    ->copyable()
-                    ->copyMessage('Copié!')
-                    ->copyMessageDuration(1500)
-                    ->sortable(),*/
+                TextColumn::make('fonds.code')
+                    ->label('Fonds')
+                    ->wrap()
+                    ->html()
+                    ->getStateUsing(function ($record) {
+                        return $record->fonds->map(function ($fond) {
+                            $url = \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $fond->id]);
+                            return "<a href='{$url}'>{$fond->code}</a>";
+                        })->implode('<br>');
+                    })
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('code')->label('Cote')
                     ->sortable()
                     ->copyable()
@@ -41,6 +49,7 @@ class CorpusesTable
                 TextColumn::make('secondary_items_count')
                     ->sortable()
                     ->counts('secondaryItems')
+                    ->wrapHeader()
                     ->label('Médias associés'),
                 TextColumn::make('creator.name')
                     ->label('Créé par')

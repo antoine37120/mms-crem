@@ -25,13 +25,32 @@ class ItemsTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
+                TextColumn::make('itemable.code')
+                    ->label('Cote parent')
+                    ->url(fn ($record) => match($record->itemable_type) {
+                        \App\Models\Fond::class => \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Corpus::class => \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Collection::class => \App\Filament\Resources\Collections\CollectionResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Item::class => \App\Filament\Resources\Items\ItemResource::getUrl('view', ['record' => $record->itemable_id]),
+                        default => null,
+                    })
+                    ->searchable()
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('code')->label('Cote')
                     ->sortable()
                     ->copyable()
                     ->copyMessage('Copié!')
                     ->copyMessageDuration(1500)
                     ->searchable(),
+                TextColumn::make('title')
+                    ->wrap()
+                    ->sortable()
+                    ->label('Titre')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 /*TextColumn::make('itemable_type')
                     ->label('Type de parent')
                     ->formatStateUsing(fn ($state) => match($state) {
@@ -45,13 +64,9 @@ class ItemsTable
                 TextColumn::make('secondary_items_count')
                     ->sortable()
                     ->counts('secondaryItems')
-                    ->label('Médias associés'),
-                /*TextColumn::make('itemable.code')
-                    ->label('Code parent')
-                    ->copyable()
-                    ->copyMessage('Copié!')
-                    ->copyMessageDuration(1500)
-                    ->searchable(),*/
+                    ->wrapHeader()
+                    ->label('Médias associés')
+                    ->toggleable(isToggledHiddenByDefault: false),
                     // Hidden is_sub since we filter it via resource query
                     /*TextColumn::make('itemType.name')
                     ->label('Type')
@@ -100,12 +115,14 @@ class ItemsTable
                 TextColumn::make('views_count')
                     ->counts('views')
                     ->label('Vues')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('creator.name')
                     ->label('Créé par')
                     ->numeric()
                     ->searchable()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('created_at')
                     ->label('Créé le')
                     ->dateTime()
@@ -125,13 +142,6 @@ class ItemsTable
             ])
             ->filters([
                 TrashedFilter::make(),
-                /*SelectFilter::make('itemable_type')
-                    ->options([
-                        Fond::class => 'Fonds',
-                        Corpus::class => 'Corpus',
-                        Collection::class => 'Collection',
-                        Item::class => 'Item',
-                    ]),*/
             ])
             ->recordActions([
                 ActionGroup::make([

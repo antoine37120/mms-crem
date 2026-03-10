@@ -25,7 +25,26 @@ class MediaAssociesTable
     public static function configure(Table $table): Table
     {
         return $table
+            ->defaultPaginationPageOption(25)
             ->columns([
+                TextColumn::make('itemable.code')
+                    ->label('Associé à')
+                    ->icon(fn ($record) => match($record->itemable_type) {
+                        \App\Models\Fond::class => \Filament\Support\Icons\Heroicon::OutlinedBuildingLibrary,
+                        \App\Models\Corpus::class => \Filament\Support\Icons\Heroicon::OutlinedBookOpen,
+                        \App\Models\Collection::class => \Filament\Support\Icons\Heroicon::OutlinedArchiveBoxArrowDown,
+                        \App\Models\Item::class => \Filament\Support\Icons\Heroicon::OutlinedDocument,
+                        default => null,
+                    })
+                    ->url(fn ($record) => match($record->itemable_type) {
+                        \App\Models\Fond::class => \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Corpus::class => \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Collection::class => \App\Filament\Resources\Collections\CollectionResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Item::class => \App\Filament\Resources\Items\ItemResource::getUrl('view', ['record' => $record->itemable_id]),
+                        default => null,
+                    })
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('code')->label('Cote')
                     ->sortable()
                     ->copyable()
@@ -33,9 +52,11 @@ class MediaAssociesTable
                     ->copyMessageDuration(1500)
                     ->searchable(),
                 TextColumn::make('itemType.name')
-                    ->label('Type')
+                    ->label('Type de média')
+                    ->wrapHeader()
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('language_code')
                     ->label('Langue')
                     ->searchable()
@@ -43,8 +64,10 @@ class MediaAssociesTable
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('file_name')
                     ->label('Nom d\'origine du fichier')
+                    ->wrapHeader()
                     ->sortable()
-                    ->searchable(),
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('file_type')
                     ->label('Type mime')
                     ->searchable()
@@ -81,11 +104,13 @@ class MediaAssociesTable
                 TextColumn::make('views_count')
                     ->counts('views')
                     ->label('Vues')
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('creator.name')
                     ->label('Créé par')
                     ->numeric()
-                    ->sortable(),
+                    ->sortable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('created_at')
                     ->label('Créé le')
                     ->dateTime()
@@ -103,6 +128,14 @@ class MediaAssociesTable
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
+                SelectFilter::make('itemable_type')
+                    ->label('Associé à un')
+                    ->options([
+                        Fond::class => 'Fond',
+                        Corpus::class => 'Corpus',
+                        Collection::class => 'Collection',
+                        Item::class => 'Item',
+                    ]),
                 TrashedFilter::make(),
             ])
             ->recordActions([
