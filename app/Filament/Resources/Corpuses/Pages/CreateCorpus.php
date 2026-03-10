@@ -9,18 +9,18 @@ class CreateCorpus extends CreateRecord
 {
     protected static string $resource = CorpusResource::class;
 
-    protected function afterFill(): void
-    {
-        if (request()->has('fond_id')) {
-            // Runs before the form fields are populated with their default values.
-            $this->form->fill([
-                'fond_id' => request()->get('fond_id'),
-            ]);
-        }
-    }
+
 
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');
+    }
+
+    protected function getCancelFormAction(): \Filament\Actions\Action
+    {
+        return \Filament\Actions\Action::make('cancel')
+            ->label(__('filament-panels::resources/pages/create-record.form.actions.cancel.label'))
+            ->url($this->previousUrl ?? $this->getResource()::getUrl('index'))
+            ->color('gray');
     }
 }

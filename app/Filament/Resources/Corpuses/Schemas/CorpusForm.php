@@ -19,6 +19,7 @@ class CorpusForm
                     ->label('Fonds')
                     ->relationship('fonds', 'code')
                     ->multiple()
+                    ->default(fn () => request()->has('fond_id') ? [request()->query('fond_id')] : null)
                     ->searchable()
                     ->preload()
                     ->required()

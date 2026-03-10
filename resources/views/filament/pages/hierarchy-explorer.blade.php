@@ -341,6 +341,26 @@
                                         </div>
                                     </div>
                                     <div class="flex flex-wrap gap-2 pt-2 justify-end">
+                                        @php
+                                            $createRoute = null;
+                                            $createLabel = null;
+                                            if ($selectedType === 'fond') {
+                                                $createRoute = route('filament.mms-admin.resources.corpuses.create', ['fond_id' => $selectedId]);
+                                                $createLabel = 'Créer un corpus';
+                                            } elseif ($selectedType === 'corpus') {
+                                                $createRoute = route('filament.mms-admin.resources.collections.create', ['corpus_id' => $selectedId]);
+                                                $createLabel = 'Créer une collection';
+                                            } elseif ($selectedType === 'collection') {
+                                                $createRoute = route('filament.mms-admin.resources.items.create', ['collection_id' => $selectedId]);
+                                                $createLabel = 'Créer un item';
+                                            }
+                                        @endphp
+                                        @if($createRoute)
+                                            <x-filament::button size="sm" color="primary" icon="heroicon-m-plus" tag="a"
+                                                                href="{{ $createRoute }}">
+                                                {{ $createLabel }}
+                                            </x-filament::button>
+                                        @endif
                                         @if($this->getSelectedElementResourceRoute('view'))
                                             <x-filament::button size="sm" color="gray" icon="heroicon-m-eye" tag="a"
                                                                 href="{{ $this->getSelectedElementResourceRoute('view') }}" target="_blank">

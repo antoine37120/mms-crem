@@ -13,15 +13,16 @@ class CollectionForm
     {
         return $schema
             ->components([
+                Select::make('corpuses')
+                    ->label('Corpus associés')
+                    ->relationship('corpuses', 'code')
+                    ->multiple()
+                    ->default(fn () => request()->has('corpus_id') ? [request()->query('corpus_id')] : null),
                 TextInput::make('code')->label('Cote')
                     ->required(),
                 TextInput::make('title')
                     ->label('Titre')
                     ->default(null),
-                Select::make('corpuses')
-                    ->label('Corpus associés')
-                    ->relationship('corpuses', 'code')
-                    ->multiple(),
                     //->required(),
                 // Auto-remplir l'utilisateur connecté
                 Hidden::make('created_by')
