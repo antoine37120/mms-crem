@@ -34,4 +34,8 @@ npm run dev
 - Tailwind CSS 4.1
 
 
-push
+## Commande utiles 
+Recalculer le md5 des fichiers : 
+```bash
+php artisan items:calculate-md5 --force
+```

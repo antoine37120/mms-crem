@@ -287,6 +287,8 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
             $data['code'] = $data['code'].'_'.$data['code_suffix'] ;
         }
 
+        $data['md5'] = $this->pending_file_to_item->client_signature;
+
         // Log avant l'opération
         Log::info('Tentative de création d\'un item', [
             'form_data' => $data,

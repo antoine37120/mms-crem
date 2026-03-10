@@ -181,7 +181,7 @@ class AdvancedSearch extends Page implements HasTable
             ->filters([
                 // Texte libre
                 Filter::make('global_search')
-                    ->columnSpan('full')
+                    ->columnSpan(2)
                     ->form([
                         TextInput::make('search')
                             ->label('Recherche globale')
@@ -201,6 +201,27 @@ class AdvancedSearch extends Page implements HasTable
                     ->indicateUsing(function (array $data): ?string {
                         if ($data['search'] ?? null) {
                             return 'Recherche: ' . $data['search'];
+                        }
+                        return null;
+                    }),
+
+                // Recherche par empreinte MD5 du fichier
+                Filter::make('md5_search')
+                    ->columnSpan(1)
+                    ->form([
+                        \Filament\Forms\Components\ViewField::make('md5_hash')
+                            ->view('filament.filters.file-md5-search')
+                            ->label('Fichier similaire à')
+                    ])
+                    ->query(function (Builder $query, array $data): Builder {
+                        return $query->when(
+                            $data['md5_hash'] ?? null,
+                            fn (Builder $query, $md5): Builder => $query->where('md5', $md5)
+                        );
+                    })
+                    ->indicateUsing(function (array $data): ?string {
+                        if ($data['md5_hash'] ?? null) {
+                            return 'Fichier avec même MD5';
                         }
                         return null;
                     }),

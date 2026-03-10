@@ -1,6 +1,4 @@
 <div x-data="fileUploadHandler()">
-    {{-- Script MD5 --}}
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/spark-md5/3.0.2/spark-md5.min.js"></script>
 
     {{-- Zone de sélection des fichiers --}}
     <div

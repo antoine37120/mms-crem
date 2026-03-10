@@ -63,13 +63,18 @@ class MediaScanner
             // Auto-link Item file_path if empty
             if (empty($item->file_path) && $rootScanPath) {
                 // Calculate relative path
-                $relativePath = Str::after($scannedFile->file_path, $rootScanPath . DIRECTORY_SEPARATOR);
-                // Ensure no leading slash if Str::after leaves one (depends on separator presence)
-                $relativePath = ltrim($relativePath, DIRECTORY_SEPARATOR);
+                $relativePath = ltrim(Str::after($scannedFile->file_path, $rootScanPath . DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
 
                 $item->file_path = $relativePath;
-                $item->save(); // Triggers Observer -> Processing
             }
+            
+            // Calculer et mettre à jour le md5 s'il est vide et que le fichier physique est là
+            if (empty($item->md5) && file_exists($scannedFile->file_path)) {
+                $item->md5 = md5_file($scannedFile->file_path);
+            }
+
+            // Save triggers observers -> processing and saves both file_path and/or md5
+            $item->save();
 
             return true;
         }
@@ -134,11 +139,23 @@ class MediaScanner
                 if ($item = $items->get($code)) {
                     $record->item_id = $item->id;
                     $record->status = ScannedFileStatus::ASSOCIATED;
+                    
+                    $needsItemSave = false;
 
                     // Auto-link Item file_path if empty
                     if (empty($item->file_path) && $rootScanPath) {
                         $relativePath = ltrim(Str::after($path, $rootScanPath . DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
                         $item->file_path = $relativePath;
+                        $needsItemSave = true;
+                    }
+                    
+                    // Calcul du md5 s'il est vide
+                    if (empty($item->md5) && file_exists($path)) {
+                        $item->md5 = md5_file($path);
+                        $needsItemSave = true;
+                    }
+                    
+                    if ($needsItemSave) {
                         $item->save(); // Triggers Observer -> Processing
                     }
                 }
