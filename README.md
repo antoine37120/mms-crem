@@ -55,6 +55,7 @@ php artisan migrate --force
 php artisan storage:link
 
 # Optimisation du cache
+php artisan filament:optimize-clear
 php artisan config:cache
 php artisan route:cache
 php artisan view:cache
