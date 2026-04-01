@@ -251,40 +251,48 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ->label('Chemin du fichier')
                     ->default($this->pending_file_to_item->file_path)
                     ->disabled()
+                    ->saved()
                     ->required(),
                 TextInput::make('file_name')
                     ->label('Nom du fichier')
                     ->disabled()
+                    ->saved()
                     ->default($this->pending_file_to_item->original_name),
                 TextInput::make('file_size')
                     ->label('Taille')
                     ->default($this->pending_file_to_item->file_size)
                     ->disabled()
+                    ->saved()
                     ->required(),
                 TextInput::make('file_type')
                     ->label('Type')
                     ->default($this->pending_file_to_item->file_type)
                     ->disabled()
+                    ->saved()
                     ->required(),
                 TextInput::make('file_extension')
                     ->label('Extension')
                     ->default($this->pending_file_to_item->file_extension)
                     ->disabled()
+                    ->saved()
                     ->required(),
                 TextInput::make('duration')
                     ->label('Durée')
                     ->disabled()
+                    ->saved()
                     ->default(null),
                 TextInput::make('upload_date')
                     ->label('Date de téléchargement')
                     ->default($this->pending_file_to_item->created_at)
                     ->disabled()
+                    ->saved()
                     ->required(),
                 Select::make('uploaded_by')
                     ->label('Téléchargé par')
                     ->relationship('uploader', 'name')
                     ->default($this->pending_file_to_item->user_id)
                     ->disabled()
+                    ->saved()
                     ->dehydrated()
                     ->required(),
                 Select::make('created_by')
@@ -292,6 +300,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ->relationship('creator', 'name')
                     ->default(auth()->user()->id)
                     ->disabled()
+                    ->saved()
                     ->dehydrated()
                     ->required(),
             ])
