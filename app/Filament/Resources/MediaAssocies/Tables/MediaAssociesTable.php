@@ -27,6 +27,18 @@ class MediaAssociesTable
         return $table
             ->defaultPaginationPageOption(25)
             ->columns([
+                TextColumn::make('code')->label('Cote')
+                    ->sortable()
+                    ->copyable()
+                    ->copyMessage('Copié!')
+                    ->copyMessageDuration(1500)
+                    ->searchable(),
+                TextColumn::make('title')
+                    ->wrap()
+                    ->sortable()
+                    ->label('Titre')
+                    ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('itemable.code')
                     ->label('Associé à')
                     ->icon(fn ($record) => match($record->itemable_type) {
@@ -45,12 +57,6 @@ class MediaAssociesTable
                     })
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('code')->label('Cote')
-                    ->sortable()
-                    ->copyable()
-                    ->copyMessage('Copié!')
-                    ->copyMessageDuration(1500)
-                    ->searchable(),
                 TextColumn::make('itemType.name')
                     ->label('Type de média')
                     ->wrapHeader()

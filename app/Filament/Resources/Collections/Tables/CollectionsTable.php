@@ -21,6 +21,14 @@ class CollectionsTable
         return $table
             ->defaultPaginationPageOption(25)
             ->columns([
+                TextColumn::make('code')->label('Cote')
+                    ->sortable()
+                    ->searchable(),
+                TextColumn::make('title')
+                    ->wrap()
+                    ->sortable()
+                    ->label('Titre')
+                    ->searchable(),
                 TextColumn::make('corpuses.code')
                     ->label('Corpuses')
                     ->html()
@@ -31,14 +39,6 @@ class CollectionsTable
                         })->implode('<br>');
                     })
                     ->sortable(),
-                TextColumn::make('code')->label('Cote')
-                    ->sortable()
-                    ->searchable(),
-                TextColumn::make('title')
-                    ->wrap()
-                    ->sortable()
-                    ->label('Titre')
-                    ->searchable(),
                 TextColumn::make('main_items_count')
                     ->sortable()
                     ->counts('mainItems')

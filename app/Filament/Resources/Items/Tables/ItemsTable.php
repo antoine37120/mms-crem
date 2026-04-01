@@ -27,18 +27,6 @@ class ItemsTable
         return $table
             ->defaultPaginationPageOption(25)
             ->columns([
-                TextColumn::make('itemable.code')
-                    ->label('Cote parent')
-                    ->url(fn ($record) => match($record->itemable_type) {
-                        \App\Models\Fond::class => \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $record->itemable_id]),
-                        \App\Models\Corpus::class => \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $record->itemable_id]),
-                        \App\Models\Collection::class => \App\Filament\Resources\Collections\CollectionResource::getUrl('view', ['record' => $record->itemable_id]),
-                        \App\Models\Item::class => \App\Filament\Resources\Items\ItemResource::getUrl('view', ['record' => $record->itemable_id]),
-                        default => null,
-                    })
-                    ->searchable()
-                    ->sortable()
-                    ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('code')->label('Cote')
                     ->sortable()
                     ->copyable()
@@ -50,6 +38,18 @@ class ItemsTable
                     ->sortable()
                     ->label('Titre')
                     ->searchable()
+                    ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('itemable.code')
+                    ->label('Cote parent')
+                    ->url(fn ($record) => match($record->itemable_type) {
+                        \App\Models\Fond::class => \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Corpus::class => \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Collection::class => \App\Filament\Resources\Collections\CollectionResource::getUrl('view', ['record' => $record->itemable_id]),
+                        \App\Models\Item::class => \App\Filament\Resources\Items\ItemResource::getUrl('view', ['record' => $record->itemable_id]),
+                        default => null,
+                    })
+                    ->searchable()
+                    ->sortable()
                     ->toggleable(isToggledHiddenByDefault: false),
                 /*TextColumn::make('itemable_type')
                     ->label('Type de parent')

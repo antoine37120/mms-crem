@@ -20,6 +20,16 @@ class CorpusesTable
         return $table
             ->defaultPaginationPageOption(25)
             ->columns([
+                TextColumn::make('code')->label('Cote')
+                    ->sortable()
+                    ->copyable()
+                    ->copyMessage('Copié!')
+                    ->copyMessageDuration(1500)
+                    ->searchable(),
+                TextColumn::make('title')
+                    ->wrap()
+                    ->sortable()
+                    ->searchable(),
                 TextColumn::make('fonds.code')
                     ->label('Fonds')
                     ->wrap()
@@ -32,16 +42,6 @@ class CorpusesTable
                     })
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: false),
-                TextColumn::make('code')->label('Cote')
-                    ->sortable()
-                    ->copyable()
-                    ->copyMessage('Copié!')
-                    ->copyMessageDuration(1500)
-                    ->searchable(),
-                TextColumn::make('title')
-                    ->wrap()
-                    ->sortable()
-                    ->searchable(),
                 TextColumn::make('collections_count')
                     ->sortable()
                     ->counts('collections')
