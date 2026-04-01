@@ -38,6 +38,7 @@ class MmsAdminPanelProvider extends PanelProvider
             ->id('mms-admin')
             ->path('mms-admin')
             ->login()
+            ->passwordReset()
             ->profile()
             ->colors([
                 'primary' => Color::Blue,
