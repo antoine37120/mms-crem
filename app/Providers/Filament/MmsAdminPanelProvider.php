@@ -112,6 +112,7 @@ class MmsAdminPanelProvider extends PanelProvider
             )
             ->assets([
                 Css::make('plyr-stylesheet', resource_path('css/plyr.css')),
+                Js::make('hls-script', resource_path('js/hls.min.js')),
                 Js::make('plyr-script', resource_path('js/plyr.js')),
                 Js::make('spark-md5', resource_path('js/spark-md5.min.js')),
             ]);

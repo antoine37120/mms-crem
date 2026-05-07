@@ -6,17 +6,19 @@
     $isVideo = str_starts_with($type, 'video/');
     $isImage = str_starts_with($type, 'image/');
     $isPdf = $type === 'application/pdf';
+    $mediaUrl = $code ? route('media.master', ['code' => $code]) : '';
 @endphp
 
 @if($code && ($isAudio || $isVideo || $isImage || $isPdf))
     @if($isAudio || $isVideo)
-        <div 
+        <div
             class="w-full rounded-lg bg-black/5 dark:bg-white/5 p-4"
             x-data="{
                 player: null,
-                init() {
-                    if (typeof Plyr !== 'undefined' && this.$refs.mediaElement) {
-                        this.player = new Plyr(this.$refs.mediaElement, {
+                hls: null,
+                initPlyr() {
+                    if (typeof Plyr !== 'undefined' && this.\$refs.mediaElement) {
+                        this.player = new Plyr(this.\$refs.mediaElement, {
                             speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
                             i18n: {
                                 speed: 'Vitesse',
@@ -24,11 +26,10 @@
                             }
                         });
                     } else {
-                        // Si Plyr n'est pas encore chargé (par ex au premier chargement de la page)
                         let checkInterval = setInterval(() => {
-                            if (typeof Plyr !== 'undefined' && this.$refs.mediaElement) {
+                            if (typeof Plyr !== 'undefined' && this.\$refs.mediaElement) {
                                 clearInterval(checkInterval);
-                                this.player = new Plyr(this.$refs.mediaElement, {
+                                this.player = new Plyr(this.\$refs.mediaElement, {
                                     speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
                                     i18n: {
                                         speed: 'Vitesse',
@@ -37,6 +38,41 @@
                                 });
                             }
                         }, 100);
+                    }
+                },
+                init() {
+                    const mediaEl = this.\$refs.mediaElement;
+                    const src = mediaEl.getAttribute('data-src');
+                    mediaEl.removeAttribute('data-src');
+
+                    if (typeof Hls !== 'undefined' && Hls.isSupported()) {
+                        this.hls = new Hls();
+                        this.hls.loadSource(src);
+                        this.hls.attachMedia(mediaEl);
+                        this.hls.on(Hls.Events.MANIFEST_PARSED, () => {
+                            this.initPlyr();
+                        });
+                        this.hls.on(Hls.Events.ERROR, (event, data) => {
+                            if (data.fatal) {
+                                switch (data.type) {
+                                    case Hls.ErrorTypes.NETWORK_ERROR:
+                                        this.hls.startLoad();
+                                        break;
+                                    case Hls.ErrorTypes.MEDIA_ERROR:
+                                        this.hls.recoverMediaError();
+                                        break;
+                                    default:
+                                        this.hls.destroy();
+                                        break;
+                                }
+                            }
+                        });
+                    } else if (mediaEl.canPlayType('application/vnd.apple.mpegurl')) {
+                        mediaEl.src = src;
+                        this.initPlyr();
+                    } else {
+                        mediaEl.src = src;
+                        this.initPlyr();
                     }
                 }
             }"
@@ -48,7 +84,7 @@
                     crossorigin
                     playsinline
                     class="w-full max-h-[400px] mx-auto rounded"
-                    src="{{ route('media.master', ['code' => $code]) }}"
+                    data-src="{{ $mediaUrl }}"
                 >
                     Votre navigateur ne supporte pas la lecture de vidéos.
                 </video>
@@ -59,14 +95,14 @@
                     crossorigin
                     playsinline
                     class="w-full mt-2"
-                    src="{{ route('media.master', ['code' => $code]) }}"
+                    data-src="{{ $mediaUrl }}"
                 >
                     Votre navigateur ne supporte pas la lecture audio.
                 </audio>
             @endif
         </div>
     @elseif($isImage || $isPdf)
-        <div 
+        <div
             class="w-full rounded-lg bg-black/5 dark:bg-white/5 p-4 relative group"
             x-data="{
                 fullscreen: false,
@@ -89,7 +125,7 @@
                     <x-filament::icon icon="heroicon-o-arrows-pointing-in" class="w-5 h-5" x-show="fullscreen" x-cloak />
                 </button>
             </div>
-            
+
             <div x-ref="previewContainer" class="w-full flex justify-center items-center bg-transparent" :class="{'bg-gray-100 dark:bg-gray-900 h-full': fullscreen}">
                 @if($isImage)
                     <img src="{{ route('media.master', ['code' => $code]) }}" class="max-h-[600px] object-contain w-full rounded" :class="{'max-h-screen h-full': fullscreen}" alt="Aperçu" />
