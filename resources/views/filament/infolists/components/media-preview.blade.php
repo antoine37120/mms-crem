@@ -17,8 +17,8 @@
                 player: null,
                 hls: null,
                 initPlyr() {
-                    if (typeof Plyr !== 'undefined' && this.\$refs.mediaElement) {
-                        this.player = new Plyr(this.\$refs.mediaElement, {
+                    if (typeof Plyr !== 'undefined' && this.$refs.mediaElement) {
+                        this.player = new Plyr(this.$refs.mediaElement, {
                             speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
                             i18n: {
                                 speed: 'Vitesse',
@@ -27,9 +27,9 @@
                         });
                     } else {
                         let checkInterval = setInterval(() => {
-                            if (typeof Plyr !== 'undefined' && this.\$refs.mediaElement) {
+                            if (typeof Plyr !== 'undefined' && this.$refs.mediaElement) {
                                 clearInterval(checkInterval);
-                                this.player = new Plyr(this.\$refs.mediaElement, {
+                                this.player = new Plyr(this.$refs.mediaElement, {
                                     speed: { selected: 1, options: [0.5, 0.75, 1, 1.25, 1.5, 2] },
                                     i18n: {
                                         speed: 'Vitesse',
@@ -41,7 +41,7 @@
                     }
                 },
                 init() {
-                    const mediaEl = this.\$refs.mediaElement;
+                    const mediaEl = this.$refs.mediaElement;
                     const src = mediaEl.getAttribute('data-src');
                     mediaEl.removeAttribute('data-src');
 
