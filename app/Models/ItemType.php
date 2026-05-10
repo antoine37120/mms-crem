@@ -28,6 +28,7 @@ class ItemType extends Model implements Auditable
     protected $casts = [
         'requires_language' => 'boolean',
         'is_active' => 'boolean',
+        'allowed_extensions' => 'array',
         'created_at' => 'datetime',
         'updated_at' => 'datetime',
     ];
@@ -61,20 +62,21 @@ class ItemType extends Model implements Auditable
      */
     public function isExtensionAllowed(string $extension): bool
     {
-        if (empty($this->allowed_extensions)) {
+        $allowed = $this->allowed_extensions;
+
+        if (empty($allowed)) {
             return true; // Si aucune restriction, tout est autorisé
         }
 
-        $extensions = is_string($this->allowed_extensions)
-            ? explode(',', (string) $this->allowed_extensions)
-            : (array) $this->allowed_extensions;
+        // Si c'est encore une chaîne (compatibilité avant migration/cast), on transforme en tableau
+        if (is_string($allowed)) {
+            $allowed = array_filter(array_map('trim', explode(',', $allowed)));
+        }
 
-        $extensions = array_filter(array_map('trim', $extensions));
-
-        if (empty($extensions)) {
+        if (empty($allowed)) {
             return true;
         }
 
-        return in_array(strtolower($extension), array_map('strtolower', $extensions));
+        return in_array(strtolower($extension), array_map('strtolower', $allowed));
     }
 }

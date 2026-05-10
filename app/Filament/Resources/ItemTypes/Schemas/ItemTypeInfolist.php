@@ -2,10 +2,10 @@
 
 namespace App\Filament\Resources\ItemTypes\Schemas;
 
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Group;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Group;
 use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
@@ -33,7 +33,6 @@ class ItemTypeInfolist
                                         TextEntry::make('allowed_extensions')
                                             ->label('Extensions autorisées')
                                             ->badge()
-                                            ->getStateUsing(fn ($record) => !empty($record->allowed_extensions) ? array_filter(array_map('trim', explode(',', $record->allowed_extensions))) : [])
                                             ->columnSpanFull(),
                                     ])
                                     ->columns(2),

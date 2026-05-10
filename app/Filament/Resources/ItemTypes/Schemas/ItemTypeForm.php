@@ -32,7 +32,6 @@ class ItemTypeForm
                     ->label('Extensions autorisées')
                     ->placeholder('Ajouter une extension')
                     ->helperText('Appuyez sur Entrée pour ajouter une extension (ex: pdf, jpg, mp4). Laissez vide pour tout autoriser.')
-                    ->separator(',')
                     ->suggestions([
                         'pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg',
                         'mp4', 'mkv', 'avi', 'mov', 'webm',
