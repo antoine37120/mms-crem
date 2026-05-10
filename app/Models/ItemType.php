@@ -4,15 +4,15 @@ namespace App\Models;
 
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class ItemType extends Model implements Auditable
 {
-    use \OwenIt\Auditing\Auditable;
     use HasFactory;
+    use \OwenIt\Auditing\Auditable;
     use SoftDeletes;
 
     protected $fillable = [
@@ -65,11 +65,15 @@ class ItemType extends Model implements Auditable
             return true; // Si aucune restriction, tout est autorisé
         }
 
-        $extensions = is_string($this->allowed_extensions) 
-            ? explode(',', $this->allowed_extensions) 
-            : $this->allowed_extensions;
+        $extensions = is_string($this->allowed_extensions)
+            ? explode(',', (string) $this->allowed_extensions)
+            : (array) $this->allowed_extensions;
 
-        $extensions = array_map('trim', $extensions);
+        $extensions = array_filter(array_map('trim', $extensions));
+
+        if (empty($extensions)) {
+            return true;
+        }
 
         return in_array(strtolower($extension), array_map('strtolower', $extensions));
     }

@@ -2,10 +2,11 @@
 
 namespace App\Filament\Resources\ItemTypes\Schemas;
 
-use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Textarea;
-use Filament\Forms\Components\Toggle;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TagsInput;
+use Filament\Forms\Components\Textarea;
+use Filament\Forms\Components\TextInput;
+use Filament\Forms\Components\Toggle;
 use Filament\Schemas\Schema;
 
 class ItemTypeForm
@@ -36,17 +37,20 @@ class ItemTypeForm
                         'pdf', 'jpg', 'jpeg', 'png', 'gif', 'svg',
                         'mp4', 'mkv', 'avi', 'mov', 'webm',
                         'mp3', 'wav', 'ogg', 'flac',
-                        'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv'
+                        'doc', 'docx', 'xls', 'xlsx', 'txt', 'csv', 'vtt',
                     ])
                     ->default(null)
                     ->columnSpanFull(),
                 Toggle::make('is_active')
                     ->label('Actif')
                     ->required(),
-                TextInput::make('created_by')
+                Select::make('created_by')
                     ->label('Créé par')
+                    ->relationship('creator', 'name')
+                    ->default(auth()->id())
                     ->required()
-                    ->numeric(),
+                    ->searchable()
+                    ->preload(),
             ]);
     }
 }

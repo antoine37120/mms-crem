@@ -28,9 +28,10 @@ laradumps.yaml
 /test-import/
 /storage/app/geoip/
 
-# Docker (dev)
+# Docker (fichiers spécifiques au déploiement — ne pas exposer)
 /Dockerfile
 /docker-compose.yml
 /.dockerignore
 /.env.docker
+/DOCKER.md
 /deploy-docker.sh
