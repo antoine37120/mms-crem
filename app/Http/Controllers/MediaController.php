@@ -2,12 +2,14 @@
 
 namespace App\Http\Controllers;
 
+use App\Jobs\RecordItemView;
+use App\Models\Collection;
+use App\Models\Corpus;
+use App\Models\Fond;
 use App\Models\Item;
 use App\Models\MediaVariation;
-use App\Jobs\RecordItemView;
 use Illuminate\Http\Request;
 use Illuminate\Support\Facades\Storage;
-use Symfony\Component\HttpFoundation\StreamedResponse;
 
 class MediaController extends Controller
 {
@@ -54,7 +56,7 @@ class MediaController extends Controller
         $disk = 'original_medias';
         $path = $item->file_path;
 
-        if (!$path || !Storage::disk($disk)->exists($path)) {
+        if (! $path || ! Storage::disk($disk)->exists($path)) {
             abort(404, 'File not found');
         }
 
@@ -71,7 +73,7 @@ class MediaController extends Controller
     public function segment(string $code, string $segment)
     {
         // Security check: ensure segment belongs to the code
-        if (!str_starts_with($segment, $code . '_')) {
+        if (! str_starts_with($segment, $code.'_')) {
             abort(403);
         }
 
@@ -85,9 +87,9 @@ class MediaController extends Controller
         $disk = $variation->disk;
         // Construct path: items/CODE/diffusion/SEGMENT
         // Note: The structure in GenerateDiffusionMedia was 'items/CODE/diffusion/CODE_xxx.ts'
-        $path = 'items/' . $code . '/diffusion/' . $segment;
+        $path = 'items/'.$code.'/diffusion/'.$segment;
 
-        if (!Storage::disk($disk)->exists($path)) {
+        if (! Storage::disk($disk)->exists($path)) {
             abort(404);
         }
 
@@ -111,7 +113,7 @@ class MediaController extends Controller
         $disk = $variation->disk;
         $path = $variation->file_path;
 
-        if (!Storage::disk($disk)->exists($path)) {
+        if (! Storage::disk($disk)->exists($path)) {
             abort(404);
         }
 
@@ -119,5 +121,124 @@ class MediaController extends Controller
             'Content-Type' => 'application/json',
             'Access-Control-Allow-Origin' => '*',
         ]);
+    }
+
+    /**
+     * List all media variations for a specific item, filtered by item type suffix.
+     */
+    public function variations(string $code, string $type)
+    {
+        // 0. Find the parent object by code (can be Item, Collection, Corpus or Fond)
+        $parent = Item::where('code', $code)->first()
+            ?? Collection::where('code', $code)->first()
+            ?? Corpus::where('code', $code)->first()
+            ?? Fond::where('code', $code)->first();
+
+        if (! $parent) {
+            abort(404, 'Parent not found with code: '.$code);
+        }
+
+        $variationsList = [];
+
+        // 1. Find all items associated with this parent that match the suffix
+        $matchedItems = Item::with(['itemType', 'creator', 'uploader', 'mediaVariations'])
+            ->where(function ($query) use ($parent) {
+                if ($parent instanceof Item) {
+                    $query->where('id', $parent->id);
+                }
+                $query->orWhere(function ($q) use ($parent) {
+                    $q->where('itemable_id', $parent->id)
+                        ->where('itemable_type', get_class($parent));
+                });
+            })
+            ->whereHas('itemType', function ($query) use ($type) {
+                $query->where('suffix', $type);
+            })
+            ->get();
+
+        foreach ($matchedItems as $item) {
+            // Include the item itself (original)
+            $variationsList[] = $this->formatMediaEntry($item, null);
+
+            // Include its technical variations (HLS, etc.)
+            foreach ($item->mediaVariations as $variation) {
+                if ($variation->status->value === 'ready') {
+                    $variationsList[] = $this->formatMediaEntry($item, $variation);
+                }
+            }
+        }
+
+        return response()->json($variationsList, 200, [
+            'Access-Control-Allow-Origin' => '*',
+        ]);
+    }
+
+    /**
+     * Serve a specific variation file by its profile name.
+     */
+    public function serve(string $code, string $profile)
+    {
+        $item = Item::where('code', $code)->firstOrFail();
+
+        $variation = MediaVariation::where('item_id', $item->id)
+            ->where('profile_name', $profile)
+            ->where('status', 'ready')
+            ->firstOrFail();
+
+        $disk = $variation->disk;
+        $path = $variation->file_path;
+
+        if (! Storage::disk($disk)->exists($path)) {
+            abort(404, 'File not found on disk');
+        }
+
+        return Storage::disk($disk)->response($path, null, [
+            'Access-Control-Allow-Origin' => '*',
+        ]);
+    }
+
+    /**
+     * Format a media entry (original or variation) for JSON response.
+     */
+    protected function formatMediaEntry(Item $item, ?MediaVariation $variation): array
+    {
+        $isOriginal = is_null($variation);
+
+        return [
+            'code' => $item->code,
+            'title' => $item->title,
+            'language_code' => $item->language_code,
+            'language_label' => $item->language_code ? \Locale::getDisplayLanguage($item->language_code, $item->language_code) : null,
+            'file_name' => $isOriginal ? $item->file_name : basename($variation->file_path),
+            'file_size' => $isOriginal ? $item->file_size : $variation->file_size,
+            'file_type' => $isOriginal ? $item->file_type : $variation->mime_type,
+            'file_extension' => $isOriginal ? $item->file_extension : pathinfo($variation->file_path, PATHINFO_EXTENSION),
+            'duration' => $item->duration,
+            'upload_date' => $item->upload_date?->toIso8601String() ?? $item->created_at?->toIso8601String(),
+            'uploaded_by' => $item->uploader?->name,
+            'created_by' => $item->creator?->name,
+            'md5' => $isOriginal ? $item->md5 : null, // MD5 typically for original
+            'url' => $this->determineUrl($item, $variation),
+        ];
+    }
+
+    /**
+     * Determine the URL for a media entry.
+     */
+    protected function determineUrl(Item $item, ?MediaVariation $variation): string
+    {
+        if (is_null($variation)) {
+            return route('media.master', ['code' => $item->code]);
+        }
+
+        if ($variation->is_streaming) {
+            return route('media.master', ['code' => $item->code]);
+        }
+
+        if ($variation->profile_name === 'waveform_json') {
+            return route('media.waveform', ['code' => $item->code]);
+        }
+
+        return route('media.variation', ['code' => $item->code, 'profile' => $variation->profile_name]);
     }
 }

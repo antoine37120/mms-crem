@@ -1,9 +1,9 @@
 <?php
 
+use App\Http\Controllers\MediaController;
 use Illuminate\Support\Facades\Route;
 use Laravel\Fortify\Features;
 use Livewire\Volt\Volt;
-use App\Http\Controllers\MediaController;
 
 // Generic route for accessing media (HLS playlist or direct file)
 Route::get('/media/{code}', [MediaController::class, 'master'])->name('media.master');
@@ -11,6 +11,13 @@ Route::get('/media/{code}', [MediaController::class, 'master'])->name('media.mas
 Route::get('/media/{code}/{segment}', [MediaController::class, 'segment'])->where('segment', '.*\.ts$')->name('media.segment');
 // Waveform data
 Route::get('/media/{code}/waveform.json', [MediaController::class, 'waveform'])->name('media.waveform');
+
+// List media variations by type
+Route::get('/media/{code}/{type}', [MediaController::class, 'variations'])
+    ->name('media.variations');
+
+// Serve a specific variation file by profile name
+Route::get('/media/{code}/variation/{profile}', [MediaController::class, 'serve'])->name('media.variation');
 
 Route::get('/', function () {
     return view('welcome');
