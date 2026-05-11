@@ -22,6 +22,7 @@ class MediaInfoSchema
                     ->columnSpanFull(),
 
                 RepeatableEntry::make('mediaVariations')
+                    ->poll('10s')
                     ->label('Fichiers & Variations')
                     ->hidden(fn ($record) => !$record || $record->mediaVariations->isEmpty())
                     ->schema([

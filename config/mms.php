@@ -11,8 +11,7 @@ return [
     |
     */
 
-    'medias_path' => env('MMS_MEDIAS_PATH', app_path().'medias'),
-
+    'medias_path' => env('MMS_MEDIAS_PATH', app_path().'/medias'),
 
     /*
     |--------------------------------------------------------------------------
@@ -23,8 +22,6 @@ return [
     | Converted originals medias are stored in this folder.
     |
     */
-    'public_medias_path' => env('MMS_PUBLICS_MEDIAS_PATH', storage_path().'medias'),
-
-
+    'public_medias_path' => env('MMS_PUBLICS_MEDIAS_PATH', storage_path().'/medias'),
 
 ];

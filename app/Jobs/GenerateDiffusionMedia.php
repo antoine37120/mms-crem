@@ -15,7 +15,6 @@ use Illuminate\Queue\InteractsWithQueue;
 use Illuminate\Queue\SerializesModels;
 use Illuminate\Support\Facades\Process;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class GenerateDiffusionMedia implements ShouldQueue
 {
@@ -50,19 +49,19 @@ class GenerateDiffusionMedia implements ShouldQueue
             $inputPath = Storage::disk('original_medias')->path($this->item->file_path);
 
             // Check if input exists
-            if (!file_exists($inputPath)) {
-                 throw new \Exception("Source file not found at: {$inputPath}");
+            if (! file_exists($inputPath)) {
+                throw new \Exception("Source file not found at: {$inputPath}");
             }
 
-            $outputDir = 'items/' . $this->item->code . '/diffusion';
-            $outputPathRelative = $outputDir . '/' . $this->item->code; // Base name
+            $outputDir = 'items/'.$this->item->code.'/diffusion';
+            $outputPathRelative = $outputDir.'/'.$this->item->code; // Base name
 
             // Ensure output directory exists
             Storage::disk($diffusionDisk)->makeDirectory($outputDir);
             $outputDirAbsolute = Storage::disk($diffusionDisk)->path($outputDir);
 
             // 2.5 Extract Duration if missing (using ffprobe)
-            if (!$this->item->duration) {
+            if (! $this->item->duration) {
                 try {
                     // Command to get duration in seconds
                     // ffprobe -v error -show_entries format=duration -of default=noprint_wrappers=1:nokey=1 input.mp4
@@ -71,11 +70,11 @@ class GenerateDiffusionMedia implements ShouldQueue
                         '-v', 'error',
                         '-show_entries', 'format=duration',
                         '-of', 'default=noprint_wrappers=1:nokey=1',
-                        $inputPath
+                        $inputPath,
                     ];
 
                     $probeResult = Process::run($probeCommand);
-                    
+
                     if ($probeResult->successful()) {
                         $duration = (float) trim($probeResult->output());
                         if ($duration > 0) {
@@ -83,10 +82,10 @@ class GenerateDiffusionMedia implements ShouldQueue
                             $this->item->saveQuietly(); // Save without triggering observers/events
                         }
                     } else {
-                         \Log::warning("FFprobe failed to extract duration for Item {$this->item->id}: " . $probeResult->errorOutput());
+                        \Log::warning("FFprobe failed to extract duration for Item {$this->item->id}: ".$probeResult->errorOutput());
                     }
                 } catch (\Exception $e) {
-                     \Log::warning("Exception during duration extraction for Item {$this->item->id}: " . $e->getMessage());
+                    \Log::warning("Exception during duration extraction for Item {$this->item->id}: ".$e->getMessage());
                 }
             }
 
@@ -95,8 +94,8 @@ class GenerateDiffusionMedia implements ShouldQueue
                 // HLS Generation
                 // Simple HLS command: 360p, 720p, 1080p
                 // For MVP, single stream HLS
-                $playlistName = $this->item->code . '.m3u8';
-                $outputFileAbsolute = $outputDirAbsolute . '/' . $playlistName;
+                $playlistName = $this->item->code.'.m3u8';
+                $outputFileAbsolute = $outputDirAbsolute.'/'.$playlistName;
 
                 $command = [
                     $ffmpegPath,
@@ -112,20 +111,20 @@ class GenerateDiffusionMedia implements ShouldQueue
                     '-f', 'hls',
                     '-hls_time', '4',
                     '-hls_playlist_type', 'vod',
-                    '-hls_base_url', $this->item->code . '/',
-                    '-hls_segment_filename', $outputDirAbsolute . '/' . $this->item->code . '_%03d.ts',
-                    $outputFileAbsolute
+                    '-hls_base_url', $this->item->code.'/',
+                    '-hls_segment_filename', $outputDirAbsolute.'/'.$this->item->code.'_%03d.ts',
+                    $outputFileAbsolute,
                 ];
 
                 $variationType = MediaVariationType::VIDEO;
                 $mimeType = 'application/x-mpegURL';
-                $finalPath = $outputDir . '/' . $playlistName;
+                $finalPath = $outputDir.'/'.$playlistName;
                 $isStreaming = true;
 
             } else {
                 // Audio - HLS conversion (Streaming)
-                $playlistName = $this->item->code . '.m3u8';
-                $outputFileAbsolute = $outputDirAbsolute . '/' . $playlistName;
+                $playlistName = $this->item->code.'.m3u8';
+                $outputFileAbsolute = $outputDirAbsolute.'/'.$playlistName;
 
                 $command = [
                     $ffmpegPath,
@@ -137,14 +136,14 @@ class GenerateDiffusionMedia implements ShouldQueue
                     '-f', 'hls',
                     '-hls_time', '10', // Segment duration
                     '-hls_playlist_type', 'vod',
-                    '-hls_base_url', $this->item->code . '/',
-                    '-hls_segment_filename', $outputDirAbsolute . '/' . $this->item->code . '_%03d.ts',
-                    $outputFileAbsolute
+                    '-hls_base_url', $this->item->code.'/',
+                    '-hls_segment_filename', $outputDirAbsolute.'/'.$this->item->code.'_%03d.ts',
+                    $outputFileAbsolute,
                 ];
 
                 $variationType = MediaVariationType::AUDIO;
                 $mimeType = 'application/x-mpegURL';
-                $finalPath = $outputDir . '/' . $playlistName;
+                $finalPath = $outputDir.'/'.$playlistName;
                 $isStreaming = true;
             }
 
@@ -152,7 +151,7 @@ class GenerateDiffusionMedia implements ShouldQueue
             $result = Process::run($command);
 
             if ($result->failed()) {
-                throw new \Exception("FFmpeg failed: " . $result->errorOutput());
+                throw new \Exception('FFmpeg failed: '.$result->errorOutput());
             }
 
             // Calculate total size of the generated folder
@@ -162,19 +161,23 @@ class GenerateDiffusionMedia implements ShouldQueue
                 $totalSize += Storage::disk($diffusionDisk)->size($file);
             }
 
-            // 5. Create Variation
-            MediaVariation::create([
-                'item_id' => $this->item->id,
-                'profile_name' => $isStreaming ? 'hls_standard' : 'mp3_standard',
-                'type' => $variationType,
-                'disk' => $diffusionDisk,
-                'file_path' => $finalPath,
-                'file_size' => $totalSize,
-                'mime_type' => $mimeType,
-                'is_streaming' => $isStreaming,
-                'status' => MediaVariationStatus::READY,
-                'generation_params' => ['command' => implode(' ', $command)],
-            ]);
+            // 5. Create or Update Variation
+            MediaVariation::updateOrCreate(
+                [
+                    'item_id' => $this->item->id,
+                    'profile_name' => $isStreaming ? 'hls_standard' : 'mp3_standard',
+                ],
+                [
+                    'type' => $variationType,
+                    'disk' => $diffusionDisk,
+                    'file_path' => $finalPath,
+                    'file_size' => $totalSize,
+                    'mime_type' => $mimeType,
+                    'is_streaming' => $isStreaming,
+                    'status' => MediaVariationStatus::READY,
+                    'generation_params' => ['command' => implode(' ', $command)],
+                ]
+            );
 
             $this->item->updateProcessingState(
                 ItemProcessingType::DIFFUSION,

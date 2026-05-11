@@ -43,53 +43,80 @@ class GenerateAudiowaveform implements ShouldQueue
             }
             // Use configured path or default to system command
             $audiowaveformPath = $settings['audiowaveform_path'] ?? 'audiowaveform';
+            $ffmpegPath = $settings['ffmpeg_path'] ?? 'ffmpeg';
             $diffusionDisk = $settings['diffusion_disk'] ?? 'diffusion_medias';
 
             // 2. Paths
             $inputPath = Storage::disk('original_medias')->path($this->item->file_path);
 
-            if (!file_exists($inputPath)) {
-                 throw new \Exception("Source file not found at: {$inputPath}");
+            if (! file_exists($inputPath)) {
+                throw new \Exception("Source file not found at: {$inputPath}");
             }
 
-            $outputDir = 'items/' . $this->item->code . '/waveform';
-            $fileName = $this->item->code . '.json';
+            $outputDir = 'items/'.$this->item->code.'/waveform';
+            $fileName = $this->item->code.'.json';
 
             Storage::disk($diffusionDisk)->makeDirectory($outputDir);
-            $outputFileAbsolute = Storage::disk($diffusionDisk)->path($outputDir . '/' . $fileName);
+            $outputFileAbsolute = Storage::disk($diffusionDisk)->path($outputDir.'/'.$fileName);
 
             // 3. Command
-            // audiowaveform -i input.mp3 -o output.json
-            $command = [
-                $audiowaveformPath,
-                '-i', $inputPath,
-                '-o', $outputFileAbsolute,
-                '--pixels-per-second', '20',
-                '--bits', '8'
-            ];
-
-            // 4. Execute
-            $result = Process::run($command);
-
-            if ($result->failed()) {
-                throw new \Exception("Audiowaveform failed: " . $result->errorOutput());
+            if ($this->item->isVideo()) {
+                // For video, we extract audio using ffmpeg and pipe it to audiowaveform
+                $result = Process::pipe(function ($pipe) use ($ffmpegPath, $inputPath, $audiowaveformPath, $outputFileAbsolute) {
+                    $pipe->command([
+                        $ffmpegPath,
+                        '-i', $inputPath,
+                        '-vn', // No video
+                        '-ac', '1', // Mono is enough for waveform
+                        '-f', 'wav',
+                        '-',
+                    ]);
+                    $pipe->command([
+                        $audiowaveformPath,
+                        '--input-format', 'wav',
+                        '-o', $outputFileAbsolute,
+                        '--pixels-per-second', '20',
+                        '--bits', '8',
+                    ]);
+                });
+                $commandLog = "{$ffmpegPath} -i {$inputPath} -vn -ac 1 -f wav - | {$audiowaveformPath} --input-format wav -o {$outputFileAbsolute} --pixels-per-second 20 --bits 8";
+            } else {
+                // For audio, audiowaveform can handle it directly (most formats)
+                $command = [
+                    $audiowaveformPath,
+                    '-i', $inputPath,
+                    '-o', $outputFileAbsolute,
+                    '--pixels-per-second', '20',
+                    '--bits', '8',
+                ];
+                $result = Process::run($command);
+                $commandLog = implode(' ', $command);
             }
 
-            $fileSize = Storage::disk($diffusionDisk)->size($outputDir . '/' . $fileName);
+            // 4. Execute (result already obtained above)
+            if ($result->failed()) {
+                throw new \Exception('Audiowaveform failed: '.$result->errorOutput());
+            }
 
-            // 5. Create Variation
-            MediaVariation::create([
-                'item_id' => $this->item->id,
-                'profile_name' => 'waveform_json',
-                'type' => MediaVariationType::DATA, // Data for JSON
-                'disk' => $diffusionDisk,
-                'file_path' => $outputDir . '/' . $fileName,
-                'file_size' => $fileSize,
-                'mime_type' => 'application/json',
-                'is_streaming' => false,
-                'status' => MediaVariationStatus::READY,
-                'generation_params' => ['command' => implode(' ', $command)],
-            ]);
+            $fileSize = Storage::disk($diffusionDisk)->size($outputDir.'/'.$fileName);
+
+            // 5. Create or Update Variation
+            MediaVariation::updateOrCreate(
+                [
+                    'item_id' => $this->item->id,
+                    'profile_name' => 'waveform_json',
+                ],
+                [
+                    'type' => MediaVariationType::DATA, // Data for JSON
+                    'disk' => $diffusionDisk,
+                    'file_path' => $outputDir.'/'.$fileName,
+                    'file_size' => $fileSize,
+                    'mime_type' => 'application/json',
+                    'is_streaming' => false,
+                    'status' => MediaVariationStatus::READY,
+                    'generation_params' => ['command' => $commandLog],
+                ]
+            );
 
             $this->item->updateProcessingState(
                 ItemProcessingType::WAVEFORM,

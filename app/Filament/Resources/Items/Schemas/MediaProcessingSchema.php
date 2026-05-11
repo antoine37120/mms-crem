@@ -3,10 +3,16 @@
 namespace App\Filament\Resources\Items\Schemas;
 
 use App\Enums\ItemProcessingStatus;
-use Filament\Infolists\Components\IconEntry;
+use App\Enums\ItemProcessingType;
+use App\Jobs\GenerateAudiowaveform;
+use App\Jobs\GenerateDiffusionMedia;
+use App\Models\ItemProcessingState;
+use Filament\Actions\Action;
 use Filament\Infolists\Components\RepeatableEntry;
 use Filament\Infolists\Components\RepeatableEntry\TableColumn;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Notifications\Notification;
+use Filament\Schemas\Components\Actions;
 use Filament\Schemas\Components\Section;
 
 class MediaProcessingSchema
@@ -16,6 +22,7 @@ class MediaProcessingSchema
         return Section::make('Traitements & Variations')
             ->schema([
                 RepeatableEntry::make('processingStates')
+                    ->poll('10s')
                     ->label('État des traitements')
                     ->hidden(fn ($record) => $record->processingStates->isEmpty())
                     ->table([
@@ -24,6 +31,7 @@ class MediaProcessingSchema
                         TableColumn::make('Message'),
                         TableColumn::make('Début'),
                         TableColumn::make('Fin'),
+                        TableColumn::make('Actions'),
                     ])
                     ->schema([
                         TextEntry::make('process_type'),
@@ -38,6 +46,33 @@ class MediaProcessingSchema
                         TextEntry::make('message'),
                         TextEntry::make('started_at')->dateTime(),
                         TextEntry::make('finished_at')->dateTime(),
+                        Actions::make([
+                            Action::make('reprocess')
+                                ->label('Relancer')
+                                ->icon('heroicon-m-arrow-path')
+                                ->color('warning')
+                                ->requiresConfirmation()
+                                ->action(function (ItemProcessingState $record) {
+                                    if ($record->process_type === ItemProcessingType::WAVEFORM) {
+                                        GenerateAudiowaveform::dispatch($record->item);
+                                        Notification::make()
+                                            ->title('Génération de la waveform lancée')
+                                            ->success()
+                                            ->send();
+                                    } elseif ($record->process_type === ItemProcessingType::DIFFUSION) {
+                                        GenerateDiffusionMedia::dispatch($record->item);
+                                        Notification::make()
+                                            ->title('Génération du média de diffusion lancée')
+                                            ->success()
+                                            ->send();
+                                    } else {
+                                        Notification::make()
+                                            ->title('Aucun job associé à ce type de traitement')
+                                            ->warning()
+                                            ->send();
+                                    }
+                                }),
+                        ]),
                     ])
                     ->columnSpanFull(),
 
@@ -51,21 +86,15 @@ class MediaProcessingSchema
                     ->label('Fichiers générés')
                     ->hidden(fn ($record) => $record->mediaVariations->isEmpty())
                     ->table([
-                        //TableColumn::make('Profil'),
-                        //TableColumn::make('Type'),
+                        TableColumn::make('Profil'),
                         TableColumn::make('Mime'),
-                        //TableColumn::make('Streaming'),
                         TableColumn::make('Chemin'),
-                        //TableColumn::make('Disque'),
                         TableColumn::make('Créé le'),
                     ])
                     ->schema([
-                        //TextEntry::make('profile_name'),
-                        //TextEntry::make('type'),
+                        TextEntry::make('profile_name')->label('Profil'),
                         TextEntry::make('mime_type'),
-                        //IconEntry::make('is_streaming')->boolean(),
                         TextEntry::make('file_path')->label('Chemin relatif'),
-                        //TextEntry::make('disk'),
                         TextEntry::make('created_at')->dateTime(),
                     ])
                     ->columnSpanFull(),
