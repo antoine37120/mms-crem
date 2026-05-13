@@ -5,7 +5,8 @@ namespace App\Filament\Resources;
 use App\Enums\ScannedFileStatus;
 use App\Filament\Resources\ScannedFileResource\Pages;
 use App\Models\ScannedFile;
-use App\Services\MediaScanner;
+use App\Services\Admin\ScannedFileAdminService;
+use App\Jobs\RunMediaScanJob;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
 use Filament\Actions\Action;
@@ -73,32 +74,26 @@ class ScannedFileResource extends Resource
                 Action::make('rescan')
                     ->label('Rescanner')
                     ->icon('heroicon-o-arrow-path')
-                    ->action(function (ScannedFile $record) {
-                        $file = new \SplFileInfo($record->file_path);
-                        if (!$file->isFile()) {
-                             Notification::make()
-                                ->title('Fichier introuvable')
+                    ->action(function (ScannedFile $record, ScannedFileAdminService $service) {
+                        if ($service->rescan($record)) {
+                            Notification::make()
+                                ->title('Fichier rescanné')
+                                ->success()
+                                ->send();
+                        } else {
+                            Notification::make()
+                                ->title('Erreur lors du rescan (fichier introuvable ?)')
                                 ->danger()
                                 ->send();
-                             return;
                         }
-
-                        $scanner = app(MediaScanner::class);
-                        $scanner->scanFile($file, $record->disk);
-
-                        Notification::make()
-                            ->title('Fichier rescanné')
-                            ->success()
-                            ->send();
                     }),
                 Action::make('try_match')
                     ->label('Associer')
                     ->icon('heroicon-o-link')
                     ->color('warning')
                     ->visible(fn (ScannedFile $record) => $record->status === ScannedFileStatus::ORPHAN)
-                    ->action(function (ScannedFile $record) {
-                         $scanner = app(MediaScanner::class);
-                         $matched = $scanner->matchItem($record);
+                    ->action(function (ScannedFile $record, ScannedFileAdminService $service) {
+                         $matched = $service->tryMatch($record);
 
                          if ($matched) {
                              Notification::make()
@@ -115,16 +110,26 @@ class ScannedFileResource extends Resource
             ])
             ->toolbarActions([
                 Action::make('run_scan')
-                    ->label('Lancer un scan')
+                    ->label('Lancer un scan complet')
                     ->icon('heroicon-o-magnifying-glass')
+                    ->color('primary')
                     ->action(function () {
-                        // Using Artisan directly.
-                        // Ideally this should be queued or run via Process to avoid timeout on large scans.
-                        // But for "Launching" it, we can just run it.
-                        \Illuminate\Support\Facades\Artisan::call('media:scan');
+                        RunMediaScanJob::dispatch(null, auth()->user());
 
                         Notification::make()
-                            ->title('Scan terminé')
+                            ->title('Scan lancé en arrière-plan')
+                            ->info()
+                            ->send();
+                    }),
+                Action::make('process_pending')
+                    ->label('Traiter les médias en attente')
+                    ->icon('heroicon-o-play')
+                    ->color('success')
+                    ->action(function (ScannedFileAdminService $service) {
+                        $service->processPending();
+
+                        Notification::make()
+                            ->title('Traitement lancé en arrière-plan')
                             ->success()
                             ->send();
                     }),
