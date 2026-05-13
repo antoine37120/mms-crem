@@ -69,6 +69,7 @@ class GenerateDiffusionMedia implements ShouldQueue
             $outputPathRelative = $outputDir.'/'.$this->item->code; // Base name
 
             // Ensure output directory exists
+            Storage::disk($diffusionDisk)->deleteDirectory($outputDir);
             Storage::disk($diffusionDisk)->makeDirectory($outputDir);
             $outputDirAbsolute = Storage::disk($diffusionDisk)->path($outputDir);
 

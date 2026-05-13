@@ -60,6 +60,8 @@ class GenerateAudiowaveform implements ShouldQueue
             $outputDir = 'items/'.$this->item->code.'/waveform';
             $fileName = $this->item->code.'.json';
 
+            // Cleanup existing waveform file before generation
+            Storage::disk($diffusionDisk)->delete($outputDir.'/'.$fileName);
             Storage::disk($diffusionDisk)->makeDirectory($outputDir);
             $outputFileAbsolute = Storage::disk($diffusionDisk)->path($outputDir.'/'.$fileName);
 

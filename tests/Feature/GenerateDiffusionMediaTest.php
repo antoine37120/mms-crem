@@ -48,7 +48,15 @@ it('updates existing variation when reprocessed in GenerateDiffusionMedia', func
     Storage::disk('original_medias')->put('test.mp4', 'dummy content');
 
     Process::fake([
-        '*' => Process::result('ok'),
+        '*' => function ($process) {
+            // Simulate creation of output files by ffmpeg
+            if (str_contains(is_array($process->command) ? $process->command[0] : $process->command, 'ffmpeg')) {
+                Storage::disk('diffusion_medias')->put('items/ITEM_DIFF_001/diffusion/ITEM_DIFF_001.m3u8', 'content');
+                Storage::disk('diffusion_medias')->put('items/ITEM_DIFF_001/diffusion/ITEM_DIFF_001_000.ts', 'segment content');
+            }
+
+            return Process::result('ok');
+        },
     ]);
 
     // Pre-create a variation

@@ -45,7 +45,10 @@ it('uses direct audiowaveform for audio items', function () {
     Storage::disk('original_medias')->put('test.mp3', 'dummy content');
 
     Process::fake([
-        'audiowaveform*' => Process::result('ok'),
+        'audiowaveform*' => function ($process) {
+            Storage::disk('diffusion_medias')->put('items/ITEM001/waveform/ITEM001.json', '{}');
+            return Process::result('ok');
+        },
     ]);
 
     // Manually create the output file so size check doesn't fail
@@ -78,7 +81,12 @@ it('uses ffmpeg pipe for video items', function () {
     Storage::disk('original_medias')->put('test.mp4', 'dummy content');
 
     Process::fake([
-        '*' => Process::result('ok'),
+        '*' => function ($process) {
+            if (str_contains(is_array($process->command) ? implode(' ', $process->command) : $process->command, 'audiowaveform')) {
+                Storage::disk('diffusion_medias')->put('items/ITEM002/waveform/ITEM002.json', '{}');
+            }
+            return Process::result('ok');
+        },
     ]);
 
     // Manually create the output file
@@ -119,7 +127,12 @@ it('updates existing variation when reprocessed', function () {
     Storage::disk('original_medias')->put('test.mp3', 'dummy content');
 
     Process::fake([
-        '*' => Process::result('ok'),
+        '*' => function ($process) {
+            if (str_contains(is_array($process->command) ? implode(' ', $process->command) : $process->command, 'audiowaveform')) {
+                Storage::disk('diffusion_medias')->put('items/ITEM003/waveform/ITEM003.json', 'new content');
+            }
+            return Process::result('ok');
+        },
     ]);
 
     // Pre-create a variation
