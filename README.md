@@ -123,3 +123,10 @@ Recalculer le md5 des fichiers :
 ```bash
 php artisan items:calculate-md5 --force
 ```
+
+Traiter les items dont les fichiers médias ont été ajoutés après l'import des métadonnées. :
+```bash
+php artisan items:process-pending-media --help
+```
+
+ 
