@@ -2,20 +2,20 @@
 
 namespace App\Filament\Resources;
 
+use App\Enums\ItemProcessingType;
 use App\Enums\ScannedFileStatus;
 use App\Filament\Resources\ScannedFileResource\Pages;
+use App\Jobs\RunMediaScanJob;
 use App\Models\ScannedFile;
 use App\Services\Admin\ScannedFileAdminService;
-use App\Jobs\RunMediaScanJob;
+use BackedEnum;
+use Filament\Actions\Action;
 use Filament\Notifications\Notification;
 use Filament\Resources\Resource;
-use Filament\Actions\Action;
 use Filament\Schemas\Schema;
-use Filament\Tables\Table;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\SelectFilter;
-use Filament\Support\Icons\Heroicon;
-use BackedEnum;
+use Filament\Tables\Table;
 use UnitEnum;
 
 class ScannedFileResource extends Resource
@@ -23,7 +23,9 @@ class ScannedFileResource extends Resource
     protected static ?string $model = ScannedFile::class;
 
     protected static string|BackedEnum|null $navigationIcon = 'heroicon-o-eye';
+
     protected static string|UnitEnum|null $navigationGroup = 'Administration';
+
     protected static ?string $navigationLabel = 'Fichiers Scannés';
 
     public static function form(Schema $schema): Schema
@@ -47,7 +49,7 @@ class ScannedFileResource extends Resource
                     ->toggleable(isToggledHiddenByDefault: true),
                 TextColumn::make('size')
                     ->label('Taille')
-                    ->formatStateUsing(fn ($state) => number_format($state / 1024 / 1024, 2) . ' MB')
+                    ->formatStateUsing(fn ($state) => number_format($state / 1024 / 1024, 2).' MB')
                     ->sortable(),
                 TextColumn::make('status')
                     ->badge()
@@ -56,6 +58,23 @@ class ScannedFileResource extends Resource
                         ScannedFileStatus::ASSOCIATED => 'success',
                     })
                     ->sortable(),
+                TextColumn::make('item.processingStates')
+                    ->label('Statut diffusion')
+                    ->formatStateUsing(function ($record) {
+                        $state = $record->item?->processingStates()
+                            ->where('process_type', ItemProcessingType::DIFFUSION)
+                            ->first();
+
+                        return $state?->status->value ?? '—';
+                    })
+                    ->badge()
+                    ->color(fn (?string $state) => match ($state) {
+                        'completed' => 'success',
+                        'processing' => 'warning',
+                        'failed' => 'danger',
+                        'pending' => 'gray',
+                        default => 'gray',
+                    }),
                 TextColumn::make('item.code')
                     ->label('Item lié')
                     ->searchable()
@@ -82,7 +101,7 @@ class ScannedFileResource extends Resource
                                 ->send();
                         } else {
                             Notification::make()
-                                ->title('Erreur lors du rescan (fichier introuvable ?)')
+                                ->title('Fichier introuvable')
                                 ->danger()
                                 ->send();
                         }
@@ -93,19 +112,19 @@ class ScannedFileResource extends Resource
                     ->color('warning')
                     ->visible(fn (ScannedFile $record) => $record->status === ScannedFileStatus::ORPHAN)
                     ->action(function (ScannedFile $record, ScannedFileAdminService $service) {
-                         $matched = $service->tryMatch($record);
+                        $matched = $service->tryMatch($record);
 
-                         if ($matched) {
-                             Notification::make()
+                        if ($matched) {
+                            Notification::make()
                                 ->title('Item associé avec succès')
                                 ->success()
                                 ->send();
-                         } else {
-                             Notification::make()
+                        } else {
+                            Notification::make()
                                 ->title('Aucun item correspondant trouvé')
                                 ->warning()
                                 ->send();
-                         }
+                        }
                     }),
             ])
             ->toolbarActions([
@@ -114,23 +133,11 @@ class ScannedFileResource extends Resource
                     ->icon('heroicon-o-magnifying-glass')
                     ->color('primary')
                     ->action(function () {
-                        RunMediaScanJob::dispatch(null, auth()->user());
+                        RunMediaScanJob::dispatch(user: auth()->user());
 
                         Notification::make()
-                            ->title('Scan lancé en arrière-plan')
+                            ->title('Scan lancé en arrière-plan. Vous recevrez une notification à la fin.')
                             ->info()
-                            ->send();
-                    }),
-                Action::make('process_pending')
-                    ->label('Traiter les médias en attente')
-                    ->icon('heroicon-o-play')
-                    ->color('success')
-                    ->action(function (ScannedFileAdminService $service) {
-                        $service->processPending();
-
-                        Notification::make()
-                            ->title('Traitement lancé en arrière-plan')
-                            ->success()
                             ->send();
                     }),
             ]);
