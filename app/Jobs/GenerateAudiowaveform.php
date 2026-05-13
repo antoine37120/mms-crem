@@ -46,6 +46,10 @@ class GenerateAudiowaveform implements ShouldQueue
             $ffmpegPath = $settings['ffmpeg_path'] ?? 'ffmpeg';
             $diffusionDisk = $settings['diffusion_disk'] ?? 'diffusion_medias';
 
+            // Encoding Settings
+            $pixelsPerSecond = $settings['waveform_pixels_per_second'] ?? config('mms.encoding.waveform.pixels_per_second.default', 20);
+            $bits = $settings['waveform_bits'] ?? config('mms.encoding.waveform.bits.default', 8);
+
             // 2. Paths
             $inputPath = Storage::disk('original_medias')->path($this->item->file_path);
 
@@ -62,7 +66,7 @@ class GenerateAudiowaveform implements ShouldQueue
             // 3. Command
             if ($this->item->isVideo()) {
                 // For video, we extract audio using ffmpeg and pipe it to audiowaveform
-                $result = Process::pipe(function ($pipe) use ($ffmpegPath, $inputPath, $audiowaveformPath, $outputFileAbsolute) {
+                $result = Process::pipe(function ($pipe) use ($ffmpegPath, $inputPath, $audiowaveformPath, $outputFileAbsolute, $pixelsPerSecond, $bits) {
                     $pipe->command([
                         $ffmpegPath,
                         '-i', $inputPath,
@@ -75,19 +79,19 @@ class GenerateAudiowaveform implements ShouldQueue
                         $audiowaveformPath,
                         '--input-format', 'wav',
                         '-o', $outputFileAbsolute,
-                        '--pixels-per-second', '20',
-                        '--bits', '8',
+                        '--pixels-per-second', (string) $pixelsPerSecond,
+                        '--bits', (string) $bits,
                     ]);
                 });
-                $commandLog = "{$ffmpegPath} -i {$inputPath} -vn -ac 1 -f wav - | {$audiowaveformPath} --input-format wav -o {$outputFileAbsolute} --pixels-per-second 20 --bits 8";
+                $commandLog = "{$ffmpegPath} -i {$inputPath} -vn -ac 1 -f wav - | {$audiowaveformPath} --input-format wav -o {$outputFileAbsolute} --pixels-per-second {$pixelsPerSecond} --bits {$bits}";
             } else {
                 // For audio, audiowaveform can handle it directly (most formats)
                 $command = [
                     $audiowaveformPath,
                     '-i', $inputPath,
                     '-o', $outputFileAbsolute,
-                    '--pixels-per-second', '20',
-                    '--bits', '8',
+                    '--pixels-per-second', (string) $pixelsPerSecond,
+                    '--bits', (string) $bits,
                 ];
                 $result = Process::run($command);
                 $commandLog = implode(' ', $command);

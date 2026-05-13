@@ -3,6 +3,7 @@
 namespace App\Filament\Pages;
 
 use BackedEnum;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
@@ -70,6 +71,76 @@ class MediaSettings extends Page implements HasForms
                             ->default('diffusion_medias')
                             ->required()
                             ->helperText('Nom du disque dans config/filesystems.php pour stocker les fichiers générés.'),
+                    ])->columns(2),
+
+                Section::make('Encodage Vidéo')
+                    ->schema([
+                        Select::make('video_codec')
+                            ->label('Codec Vidéo')
+                            ->options(config('mms.encoding.video.codec.options'))
+                            ->default(config('mms.encoding.video.codec.default'))
+                            ->required(),
+                        Select::make('video_preset')
+                            ->label('Preset FFMpeg')
+                            ->options(config('mms.encoding.video.preset.options'))
+                            ->default(config('mms.encoding.video.preset.default'))
+                            ->required(),
+                        TextInput::make('video_crf')
+                            ->label('Qualité (CRF)')
+                            ->numeric()
+                            ->minValue(config('mms.encoding.video.crf.min'))
+                            ->maxValue(config('mms.encoding.video.crf.max'))
+                            ->default(config('mms.encoding.video.crf.default'))
+                            ->helperText('Plus la valeur est basse, meilleure est la qualité vidéo (0-51).')
+                            ->required(),
+                        Select::make('video_audio_bitrate')
+                            ->label('Bitrate Audio (Vidéo)')
+                            ->options(config('mms.encoding.video.audio_bitrate.options'))
+                            ->default(config('mms.encoding.video.audio_bitrate.default'))
+                            ->required(),
+                        Select::make('video_hls_time')
+                            ->label('Segment HLS (s)')
+                            ->options(config('mms.encoding.video.hls_time.options'))
+                            ->default(config('mms.encoding.video.hls_time.default'))
+                            ->required(),
+                    ])->columns(2),
+
+                Section::make('Encodage Audio')
+                    ->schema([
+                        Select::make('audio_codec')
+                            ->label('Codec Audio')
+                            ->options(config('mms.encoding.audio.codec.options'))
+                            ->default(config('mms.encoding.audio.codec.default'))
+                            ->required(),
+                        Select::make('audio_bitrate')
+                            ->label('Bitrate Audio')
+                            ->options(config('mms.encoding.audio.bitrate.options'))
+                            ->default(config('mms.encoding.audio.bitrate.default'))
+                            ->required(),
+                        Select::make('audio_channels')
+                            ->label('Canaux')
+                            ->options(config('mms.encoding.audio.channels.options'))
+                            ->default(config('mms.encoding.audio.channels.default'))
+                            ->required(),
+                        Select::make('audio_hls_time')
+                            ->label('Segment HLS (s)')
+                            ->options(config('mms.encoding.audio.hls_time.options'))
+                            ->default(config('mms.encoding.audio.hls_time.default'))
+                            ->required(),
+                    ])->columns(2),
+
+                Section::make('Waveform')
+                    ->schema([
+                        Select::make('waveform_pixels_per_second')
+                            ->label('Pixels par seconde')
+                            ->options(config('mms.encoding.waveform.pixels_per_second.options'))
+                            ->default(config('mms.encoding.waveform.pixels_per_second.default'))
+                            ->required(),
+                        Select::make('waveform_bits')
+                            ->label('Bits par échantillon')
+                            ->options(config('mms.encoding.waveform.bits.options'))
+                            ->default(config('mms.encoding.waveform.bits.default'))
+                            ->required(),
                     ])->columns(2),
             ])
             ->statePath('data');

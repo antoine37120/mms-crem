@@ -45,6 +45,18 @@ class GenerateDiffusionMedia implements ShouldQueue
             $ffprobePath = $settings['ffprobe_path'] ?? 'ffprobe';
             $diffusionDisk = $settings['diffusion_disk'] ?? 'diffusion_medias';
 
+            // Encoding Settings
+            $videoCodec = $settings['video_codec'] ?? config('mms.encoding.video.codec.default', 'libx264');
+            $videoPreset = $settings['video_preset'] ?? config('mms.encoding.video.preset.default', 'veryfast');
+            $videoCrf = $settings['video_crf'] ?? config('mms.encoding.video.crf.default', 23);
+            $videoAudioBitrate = $settings['video_audio_bitrate'] ?? config('mms.encoding.video.audio_bitrate.default', '128k');
+            $videoHlsTime = $settings['video_hls_time'] ?? config('mms.encoding.video.hls_time.default', 4);
+
+            $audioCodec = $settings['audio_codec'] ?? config('mms.encoding.audio.codec.default', 'aac');
+            $audioBitrate = $settings['audio_bitrate'] ?? config('mms.encoding.audio.bitrate.default', '128k');
+            $audioChannels = $settings['audio_channels'] ?? config('mms.encoding.audio.channels.default', 2);
+            $audioHlsTime = $settings['audio_hls_time'] ?? config('mms.encoding.audio.hls_time.default', 10);
+
             // 2. Input/Output Paths
             $inputPath = Storage::disk('original_medias')->path($this->item->file_path);
 
@@ -101,15 +113,16 @@ class GenerateDiffusionMedia implements ShouldQueue
                     $ffmpegPath,
                     '-y',
                     '-i', $inputPath,
-                    '-c:v', 'libx264',
-                    '-preset', 'veryfast',
+                    '-c:v', $videoCodec,
+                    '-preset', $videoPreset,
+                    '-crf', (string) $videoCrf,
                     '-g', '48', // Keyframe interval (GOP)
                     '-sc_threshold', '0',
                     '-c:a', 'aac',
-                    '-b:a', '128k',
-                    '-ac', '2',
+                    '-b:a', $videoAudioBitrate,
+                    '-ac', (string) $audioChannels,
                     '-f', 'hls',
-                    '-hls_time', '4',
+                    '-hls_time', (string) $videoHlsTime,
                     '-hls_playlist_type', 'vod',
                     '-hls_base_url', $this->item->code.'/',
                     '-hls_segment_filename', $outputDirAbsolute.'/'.$this->item->code.'_%03d.ts',
@@ -130,11 +143,11 @@ class GenerateDiffusionMedia implements ShouldQueue
                     $ffmpegPath,
                     '-y',
                     '-i', $inputPath,
-                    '-c:a', 'aac',
-                    '-b:a', '128k', // Bitrate
-                    '-ac', '2',     // Channels
+                    '-c:a', $audioCodec,
+                    '-b:a', $audioBitrate, // Bitrate
+                    '-ac', (string) $audioChannels,     // Channels
                     '-f', 'hls',
-                    '-hls_time', '10', // Segment duration
+                    '-hls_time', (string) $audioHlsTime, // Segment duration
                     '-hls_playlist_type', 'vod',
                     '-hls_base_url', $this->item->code.'/',
                     '-hls_segment_filename', $outputDirAbsolute.'/'.$this->item->code.'_%03d.ts',
