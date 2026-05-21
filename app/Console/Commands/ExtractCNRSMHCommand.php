@@ -1,4 +1,5 @@
 <?php
+
 namespace App\Console\Commands;
 
 use Illuminate\Console\Command;
@@ -6,7 +7,7 @@ use Illuminate\Support\Facades\File;
 
 class ExtractCNRSMHCommand extends Command
 {
-// php artisan extract:cnrsmh C:\laragon\www\mms-crem\public\all_items_path.txt
+    // php artisan extract:cnrsmh C:\laragon\www\mms-crem\public\all_items_path.txt
     /**
      * The name and signature of the console command.
      */
@@ -31,8 +32,9 @@ class ExtractCNRSMHCommand extends Command
         $outputRejected = $this->option('output-rejected') ?: storage_path('app/cnrsmh_rejected.txt');
 
         // Vérification que le fichier source existe
-        if (!File::exists($sourceFile)) {
+        if (! File::exists($sourceFile)) {
             $this->error("Le fichier source '{$sourceFile}' n'existe pas.");
+
             return Command::FAILURE;
         }
 
@@ -41,9 +43,8 @@ class ExtractCNRSMHCommand extends Command
         $this->info("Fichier des rejets : {$outputRejected}");
 
         // Pattern pour CNRSMH_I_ suivi d'une année (4 chiffres) et de 3 chiffres
-        //$pattern = '/CNRSMH_I_\d{4}_\d{3}/';
+        // $pattern = '/CNRSMH_I_\d{4}_\d{3}/';
         $pattern = '/CNRSMH_E_\d{4}_\d{3}_\d{3}_/';
-
 
         try {
             // Lecture du fichier source
@@ -60,7 +61,9 @@ class ExtractCNRSMHCommand extends Command
 
             foreach ($lines as $line) {
                 $line = trim($line);
-                if (empty($line)) continue; // Ignorer les lignes vides
+                if (empty($line)) {
+                    continue;
+                } // Ignorer les lignes vides
 
                 $totalLines++;
 
@@ -81,7 +84,7 @@ class ExtractCNRSMHCommand extends Command
             // Statistiques
             $rejectedCount = count($rejectedLines);
 
-            $this->info("=== Résultats ===");
+            $this->info('=== Résultats ===');
             $this->info("Total de lignes traitées : {$totalLines}");
             $this->info("Lignes avec pattern trouvé : {$matchedCount}");
             $this->info("Lignes rejetées : {$rejectedCount}");
@@ -91,7 +94,8 @@ class ExtractCNRSMHCommand extends Command
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error("Erreur lors du traitement : " . $e->getMessage());
+            $this->error('Erreur lors du traitement : '.$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -103,7 +107,7 @@ class ExtractCNRSMHCommand extends Command
     {
         // Créer le répertoire si nécessaire
         $directory = dirname($filePath);
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
 
@@ -126,7 +130,7 @@ class ExtractCNRSMHCommand extends Command
     {
         // Créer le répertoire si nécessaire
         $directory = dirname($filePath);
-        if (!File::exists($directory)) {
+        if (! File::exists($directory)) {
             File::makeDirectory($directory, 0755, true);
         }
 

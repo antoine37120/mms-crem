@@ -5,7 +5,6 @@ namespace App\Services;
 use App\Enums\ScannedFileStatus;
 use App\Models\Item;
 use App\Models\ScannedFile;
-use Illuminate\Support\Collection;
 use Illuminate\Support\Str;
 use SplFileInfo;
 
@@ -30,7 +29,7 @@ class MediaScanner
         $scannedFile->last_scanned_at = now();
 
         // If new, set default status
-        if (!$scannedFile->exists) {
+        if (! $scannedFile->exists) {
             $scannedFile->status = ScannedFileStatus::ORPHAN;
         }
 
@@ -63,11 +62,11 @@ class MediaScanner
             // Auto-link Item file_path if empty
             if (empty($item->file_path) && $rootScanPath) {
                 // Calculate relative path
-                $relativePath = ltrim(Str::after($scannedFile->file_path, $rootScanPath . DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
+                $relativePath = ltrim(Str::after($scannedFile->file_path, $rootScanPath.DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
 
                 $item->file_path = $relativePath;
             }
-            
+
             // Calculer et mettre à jour le md5 s'il est vide et que le fichier physique est là
             if (empty($item->md5) && file_exists($scannedFile->file_path)) {
                 $item->md5 = md5_file($scannedFile->file_path);
@@ -85,7 +84,7 @@ class MediaScanner
     /**
      * Optimized batch scanning.
      *
-     * @param SplFileInfo[] $files
+     * @param  SplFileInfo[]  $files
      */
     public function scanBatch(array $files, string $disk = 'local', ?string $rootScanPath = null): void
     {
@@ -124,8 +123,8 @@ class MediaScanner
 
             $record = $existingRecords->get($path);
 
-            if (!$record) {
-                $record = new ScannedFile();
+            if (! $record) {
+                $record = new ScannedFile;
                 $record->file_path = $path;
                 $record->disk = $disk;
                 $record->status = ScannedFileStatus::ORPHAN;
@@ -139,22 +138,22 @@ class MediaScanner
                 if ($item = $items->get($code)) {
                     $record->item_id = $item->id;
                     $record->status = ScannedFileStatus::ASSOCIATED;
-                    
+
                     $needsItemSave = false;
 
                     // Auto-link Item file_path if empty
                     if (empty($item->file_path) && $rootScanPath) {
-                        $relativePath = ltrim(Str::after($path, $rootScanPath . DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
+                        $relativePath = ltrim(Str::after($path, $rootScanPath.DIRECTORY_SEPARATOR), DIRECTORY_SEPARATOR);
                         $item->file_path = $relativePath;
                         $needsItemSave = true;
                     }
-                    
+
                     // Calcul du md5 s'il est vide
                     if (empty($item->md5) && file_exists($path)) {
                         $item->md5 = md5_file($path);
                         $needsItemSave = true;
                     }
-                    
+
                     if ($needsItemSave) {
                         $item->save(); // Triggers Observer -> Processing
                     }

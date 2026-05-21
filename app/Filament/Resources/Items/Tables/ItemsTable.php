@@ -2,23 +2,20 @@
 
 namespace App\Filament\Resources\Items\Tables;
 
+use App\Models\Collection;
+use App\Models\Corpus;
+use App\Models\Fond;
+use App\Models\Item;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\ActionGroup;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
-use Filament\Tables\Filters\SelectFilter;
 use Filament\Tables\Table;
-use Filament\Tables\Filters\TernaryFilter;
-use App\Models\Item;
-use App\Models\Fond;
-use App\Models\Corpus;
-use App\Models\Collection;
 
 class ItemsTable
 {
@@ -41,7 +38,7 @@ class ItemsTable
                     ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('itemable.code')
                     ->label('Cote parent')
-                    ->url(fn ($record) => match($record->itemable_type) {
+                    ->url(fn ($record) => match ($record->itemable_type) {
                         \App\Models\Fond::class => \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $record->itemable_id]),
                         \App\Models\Corpus::class => \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $record->itemable_id]),
                         \App\Models\Collection::class => \App\Filament\Resources\Collections\CollectionResource::getUrl('view', ['record' => $record->itemable_id]),
@@ -67,8 +64,8 @@ class ItemsTable
                     ->wrapHeader()
                     ->label('Médias associés')
                     ->toggleable(isToggledHiddenByDefault: false),
-                    // Hidden is_sub since we filter it via resource query
-                    /*TextColumn::make('itemType.name')
+                // Hidden is_sub since we filter it via resource query
+                /*TextColumn::make('itemType.name')
                     ->label('Type')
                     ->searchable(),
                 TextColumn::make('language_code')
@@ -147,7 +144,7 @@ class ItemsTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

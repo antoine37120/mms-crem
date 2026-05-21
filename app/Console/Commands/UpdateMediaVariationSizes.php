@@ -67,6 +67,6 @@ class UpdateMediaVariationSizes extends Command
 
         $bar->finish();
         $this->newLine();
-        $this->info("Done! Media Variation sizes updated.");
+        $this->info('Done! Media Variation sizes updated.');
     }
 }

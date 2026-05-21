@@ -35,6 +35,8 @@ class GenerateAudiowaveform implements ShouldQueue
         );
 
         try {
+            $resolver = app(\App\Services\MediaVariationPathResolver::class);
+
             // 1. Get Settings
             $settingsPath = 'mms_settings.json';
             $settings = [];
@@ -57,7 +59,7 @@ class GenerateAudiowaveform implements ShouldQueue
                 throw new \Exception("Source file not found at: {$inputPath}");
             }
 
-            $outputDir = 'items/'.$this->item->code.'/waveform';
+            $outputDir = $resolver->variationDir($this->item, 'waveform');
             $fileName = $this->item->code.'.json';
 
             // Cleanup existing waveform file before generation
@@ -115,7 +117,7 @@ class GenerateAudiowaveform implements ShouldQueue
                 [
                     'type' => MediaVariationType::DATA, // Data for JSON
                     'disk' => $diffusionDisk,
-                    'file_path' => $outputDir.'/'.$fileName,
+                    'file_path' => $resolver->variationPath($this->item, 'waveform', $fileName),
                     'file_size' => $fileSize,
                     'mime_type' => 'application/json',
                     'is_streaming' => false,

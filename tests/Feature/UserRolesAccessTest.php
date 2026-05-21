@@ -31,7 +31,7 @@ test('chercheur has access only to own creations', function () {
 test('documentaliste has access via fond', function () {
     $doc = User::factory()->create(['role' => UserRole::DOCUMENTALISTE]);
     $creator = User::factory()->create();
-    
+
     $fondA = Fond::create(['code' => 'TEST_FOND_A', 'created_by' => $creator->id]);
     $fondB = Fond::create(['code' => 'TEST_FOND_B', 'created_by' => $creator->id]);
 
@@ -60,10 +60,10 @@ test('documentaliste has access via fond', function () {
 test('documentaliste has access via multiple parents', function () {
     $doc = User::factory()->create(['role' => UserRole::DOCUMENTALISTE]);
     $creator = User::factory()->create();
-    
+
     $fondA = Fond::create(['code' => 'TEST_FOND_MA', 'created_by' => $creator->id]);
     $fondB = Fond::create(['code' => 'TEST_FOND_MB', 'created_by' => $creator->id]);
-    
+
     // Scope only on Fond A
     $doc->scopedFonds()->attach($fondA);
 
@@ -83,7 +83,7 @@ test('documentaliste has access via multiple parents', function () {
 test('documentaliste has access to item', function () {
     $doc = User::factory()->create(['role' => UserRole::DOCUMENTALISTE]);
     $creator = User::factory()->create();
-    
+
     $fondA = Fond::create(['code' => 'TEST_FOND_IA', 'created_by' => $creator->id]);
     $doc->scopedFonds()->attach($fondA);
 
@@ -98,7 +98,7 @@ test('documentaliste has access to item', function () {
         'file_extension' => 'txt',
         'upload_date' => now(),
         'uploaded_by' => $creator->id,
-        'created_by' => $creator->id
+        'created_by' => $creator->id,
     ]);
 
     $fondB = Fond::create(['code' => 'TEST_FOND_IB', 'created_by' => $creator->id]);
@@ -113,7 +113,7 @@ test('documentaliste has access to item', function () {
         'file_extension' => 'txt',
         'upload_date' => now(),
         'uploaded_by' => $creator->id,
-        'created_by' => $creator->id
+        'created_by' => $creator->id,
     ]);
 
     expect($doc->hasAccessToModel($itemInFondA))->toBeTrue();

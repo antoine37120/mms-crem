@@ -2,12 +2,11 @@
 
 namespace App\Filament\Resources\Users\Schemas;
 
-
-use Filament\Schemas\Components\Section;
+use App\Models\User;
 use Filament\Infolists\Components\IconEntry;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use App\Models\User;
 use Illuminate\Support\Number;
 
 class UserInfolist

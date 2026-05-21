@@ -19,23 +19,27 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use UnitEnum;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+use UnitEnum;
 
 class CorpusResource extends Resource
 {
     protected static ?string $model = Corpus::class;
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedBookOpen;
-    protected static string | UnitEnum | null $navigationGroup = 'Gestion des Archives';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Gestion des Archives';
+
     protected static ?int $navigationSort = 2;
 
     protected static ?string $navigationLabel = 'Corpus';
+
     protected static ?string $pluralModelLabel = 'Corpus';
 
     protected static ?string $recordTitleAttribute = 'code';
+
     // Configuration des permissions par défaut
     protected static bool $shouldRegisterNavigation = true;
-
 
     public static function form(Schema $schema): Schema
     {
@@ -109,5 +113,4 @@ class CorpusResource extends Resource
     {
         return HierarchyExplorer::getUrl(['focus' => 'corpus', 'id' => $record->id]);
     }
-
 }

@@ -6,7 +6,6 @@ use App\Models\ItemView;
 use Filament\Tables;
 use Filament\Tables\Table;
 use Filament\Widgets\TableWidget as BaseWidget;
-use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Support\Facades\DB;
 
 class CountryRankingWidget extends BaseWidget
@@ -15,7 +14,7 @@ class CountryRankingWidget extends BaseWidget
 
     protected static ?int $sort = 2;
 
-    protected int | string | array $columnSpan = 1;
+    protected int|string|array $columnSpan = 1;
 
     public function table(Table $table): Table
     {

@@ -2,11 +2,8 @@
 
 namespace App\Filament\Resources\Fonds\Schemas;
 
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Hidden;
-use Filament\Schemas\Components\Tabs;
-use Filament\Schemas\Components\Tabs\Tab;
-use Filament\Forms\Components\Repeater;
+use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Schema;
 
 class FondForm
@@ -23,8 +20,6 @@ class FondForm
                 Hidden::make('created_by')
                     ->default(auth()->id()),
 
-
             ]);
     }
 }
-

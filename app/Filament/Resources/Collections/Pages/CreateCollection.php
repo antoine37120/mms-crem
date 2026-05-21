@@ -9,8 +9,6 @@ class CreateCollection extends CreateRecord
 {
     protected static string $resource = CollectionResource::class;
 
-
-
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');

@@ -3,7 +3,8 @@
 namespace App\Filament\Resources\Fonds\RelationManagers;
 
 use App\Filament\Resources\Corpuses\CorpusResource;
-use App\Models\ItemType;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -16,17 +17,11 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
-use Filament\Schemas\Components\FusedGroup;
 use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
@@ -39,14 +34,13 @@ class CorpusesRelationManager extends RelationManager
 {
     protected static string $relationship = 'corpuses';
 
-    //protected static ?string $relatedResource = CorpusResource::class;
+    // protected static ?string $relatedResource = CorpusResource::class;
 
     // Activer l'édition dans les pages de vue
     public function isReadOnly(): bool
     {
         return false;
     }
-
 
     public function form(Schema $schema): Schema
     {
@@ -56,10 +50,10 @@ class CorpusesRelationManager extends RelationManager
                     ->label('Cote')
                     ->autofocus(false)
                     ->default(function (RelationManager $livewire): string {
-                        return $livewire->getOwnerRecord()->full_code ;
+                        return $livewire->getOwnerRecord()->full_code;
                     })
                     ->required()
-                    //->unique(ignoreRecord: true)
+                    // ->unique(ignoreRecord: true)
                     ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
                         return $rule->where('code', $get('code'));
                     })
@@ -110,7 +104,7 @@ class CorpusesRelationManager extends RelationManager
                         ->color('info')
                         ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
                             'focus' => 'corpus',
-                            'id' => $record->id
+                            'id' => $record->id,
                         ])),
                     EditAction::make(),
                     DetachAction::make(),

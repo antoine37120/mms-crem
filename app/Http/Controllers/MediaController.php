@@ -86,8 +86,8 @@ class MediaController extends Controller
 
         $disk = $variation->disk;
         // Construct path: items/CODE/diffusion/SEGMENT
-        // Note: The structure in GenerateDiffusionMedia was 'items/CODE/diffusion/CODE_xxx.ts'
-        $path = 'items/'.$code.'/diffusion/'.$segment;
+        $resolver = app(\App\Services\MediaVariationPathResolver::class);
+        $path = $resolver->segmentDir($item).'/'.$segment;
 
         if (! Storage::disk($disk)->exists($path)) {
             abort(404);

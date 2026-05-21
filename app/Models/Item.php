@@ -2,30 +2,27 @@
 
 namespace App\Models;
 
+use App\Observers\ItemObserver;
 use App\Traits\HasHierarchicalItems;
 use App\Traits\HasProcessingState;
-use Carbon\Carbon;
+use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\HasMany;
-use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\MorphTo;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use Illuminate\Http\File;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\UploadedFile;
 use Illuminate\Support\Facades\Process;
+use Illuminate\Support\Facades\Storage;
 use OwenIt\Auditing\Contracts\Auditable;
-use App\Observers\ItemObserver;
-use Illuminate\Database\Eloquent\Attributes\ObservedBy;
 
 #[ObservedBy([ItemObserver::class])]
 class Item extends Model implements Auditable
 {
+    use HasFactory, HasHierarchicalItems, HasProcessingState, SoftDeletes;
     use \OwenIt\Auditing\Auditable;
-    use HasFactory, SoftDeletes, HasHierarchicalItems, HasProcessingState;
-
 
     protected $fillable = [
         'itemable_type',
@@ -68,11 +65,9 @@ class Item extends Model implements Auditable
      * @var array
      */
     protected $auditExclude = [
-       /* 'code_prefix',
+        /* 'code_prefix',
         'code_suffix',*/
     ];
-
-
 
     /**
      * Code complet assemblé selon l'entité parente
@@ -90,7 +85,6 @@ class Item extends Model implements Auditable
         return $this->full_code;
     }
 
-
     /**
      * Boot du modèle - événements automatiques
      */
@@ -99,34 +93,34 @@ class Item extends Model implements Auditable
         parent::boot();
 
         static::creating(function ($item) {
-            $item->code = $item->code_prefix ;
+            $item->code = $item->code_prefix;
             if (isset($item->code_suffix) && $item->code_suffix != '') {
-                $item->code = $item->code.'_'.$item->code_suffix ;
+                $item->code = $item->code.'_'.$item->code_suffix;
             }
             $item->processFileUpload();
-            //$item->generateCodeIfEmpty();
+            // $item->generateCodeIfEmpty();
             $item->setDefaultUploadDate();
             $item->setDefaultUsers();
 
         });
 
         static::updating(function ($item) {
-            $item->code = $item->code_prefix ;
+            $item->code = $item->code_prefix;
             if (isset($item->code_suffix) && $item->code_suffix != '') {
-                $item->code = $item->code.'_'.$item->code_suffix ;
+                $item->code = $item->code.'_'.$item->code_suffix;
             }
             // Si le fichier a changé, retraiter les métadonnées
             if ($item->isDirty('file_path')) {
                 $item->processFileUpload();
             } else {
-                if($item->isDirty('code_suffix')) {
-                    $old_code =  $item->getOriginal('code') ;
-                    $actual_file_path = $item->file_path ;
+                if ($item->isDirty('code_suffix')) {
+                    $old_code = $item->getOriginal('code');
+                    $actual_file_path = $item->file_path;
                     $item->file_path = str_replace($old_code, $item->code, $item->file_path);
 
-                    \Log::info("Search file path: " . $old_code);
-                    \Log::info("New file code: " . $item->code);
-                    \Log::info("New file path: " . $item->file_path);
+                    \Log::info('Search file path: '.$old_code);
+                    \Log::info('New file code: '.$item->code);
+                    \Log::info('New file path: '.$item->file_path);
                     Storage::disk('original_medias')->move($actual_file_path, $item->file_path);
                 }
             }
@@ -144,8 +138,6 @@ class Item extends Model implements Auditable
         static::deleted(function ($item) {
             $item->invalidateParentsCache();
         });
-
-
 
     }
 
@@ -166,16 +158,14 @@ class Item extends Model implements Auditable
      */
     public function processFileUpload(): void
     {
-        if (!$this->file_path) {
+        if (! $this->file_path) {
             return;
         }
-
-
 
         // Déterminer le chemin complet du fichier
         $fullPath = Storage::disk('original_medias')->path($this->file_path);
 
-        if (!file_exists($fullPath)) {
+        if (! file_exists($fullPath)) {
             return;
         }
 
@@ -189,25 +179,24 @@ class Item extends Model implements Auditable
         $this->file_name = "nnnnnn";*/
         $this->file_extension = strtolower($pathInfo['extension'] ?? '');
 
-
         $createdAt = now();
-        $datePath = 'items/' . $createdAt->format('Y/m/d') . '';
-        $fileName = $this->code  . '.' . $this->file_extension ;
-        $newFilePath = $datePath .'/'. $fileName;
+        $datePath = 'items/'.$createdAt->format('Y/m/d').'';
+        $fileName = $this->code.'.'.$this->file_extension;
+        $newFilePath = $datePath.'/'.$fileName;
         // Créer le répertoire de destination s'il n'existe pas
         Storage::disk('original_medias')->makeDirectory($datePath);
         Storage::disk('original_medias')->putFileAs($datePath, new File($fullPath), $fileName);
 
         $old_file = $this->getOriginal('file_path');
-        if($old_file !== null) {
+        if ($old_file !== null) {
             $old_file_path = Storage::disk('original_medias')->path($old_file);
             if (file_exists($old_file_path)) {
                 Storage::disk('original_medias')->delete($old_file);
             }
         }
 
-        //Possible que le fichier soit déjà au bon endroit mais qu'il ai été réécrit
-        if($this->file_path != $newFilePath) {
+        // Possible que le fichier soit déjà au bon endroit mais qu'il ai été réécrit
+        if ($this->file_path != $newFilePath) {
             Storage::disk('original_medias')->delete($this->file_path);
         }
         // Mettre à jour le chemin du fichier dans les données
@@ -232,7 +221,7 @@ class Item extends Model implements Auditable
      */
     public function setDefaultUploadDate(): void
     {
-        if (!$this->upload_date) {
+        if (! $this->upload_date) {
             $this->upload_date = now()->toDateString();
         }
     }
@@ -244,15 +233,14 @@ class Item extends Model implements Auditable
     {
         $currentUserId = auth()->id();
 
-        if (!$this->created_by && $currentUserId) {
+        if (! $this->created_by && $currentUserId) {
             $this->created_by = $currentUserId;
         }
 
-        if (!$this->uploaded_by && $currentUserId) {
+        if (! $this->uploaded_by && $currentUserId) {
             $this->uploaded_by = $currentUserId;
         }
     }
-
 
     /**
      * Extraire la durée des fichiers audio/vidéo
@@ -265,22 +253,23 @@ class Item extends Model implements Auditable
             if (function_exists('exec')) {
                 $ffprobePath = env('FFPROBE_BINARIES', 'ffprobe');
 
-                $command = '"' . $ffprobePath . '" -v quiet -show_entries format=duration -hide_banner -of csv="p=0" "' . $fullPath . '"';
+                $command = '"'.$ffprobePath.'" -v quiet -show_entries format=duration -hide_banner -of csv="p=0" "'.$fullPath.'"';
                 // log de la commande
-                \Log::info("Executing command: " . $command);
+                \Log::info('Executing command: '.$command);
                 exec($command, $output, $returnCode);
                 $result = Process::run($command);
                 $output = $result->output();
                 $returnCode = $result->exitCode();
                 // log de la sortie
-                \Log::info("FFProbe Output: " .  $output);
-                \Log::info("FFProbe Return Code: " . $returnCode);
-                if ($result->successful() && !empty($output)) {
+                \Log::info('FFProbe Output: '.$output);
+                \Log::info('FFProbe Return Code: '.$returnCode);
+                if ($result->successful() && ! empty($output)) {
                     $this->duration = (int) round((float) $output);
+
                     return;
                 }
-                if($result->errorOutput()) {
-                    \Log::error("FFProbe Error: " . $result->errorOutput());
+                if ($result->errorOutput()) {
+                    \Log::error('FFProbe Error: '.$result->errorOutput());
                 }
             }
 
@@ -290,13 +279,14 @@ class Item extends Model implements Auditable
                 if ($exif && isset($exif['Duration'])) {
                     // Parser le format de durée d'EXIF si nécessaire
                     $this->duration = $this->parseExifDuration($exif['Duration']);
+
                     return;
                 }
             }
 
         } catch (\Exception $e) {
             // Log l'erreur mais ne bloque pas la création
-            \Log::warning("Impossible d'extraire la durée du fichier {$fullPath}: " . $e->getMessage());
+            \Log::warning("Impossible d'extraire la durée du fichier {$fullPath}: ".$e->getMessage());
         }
     }
 
@@ -422,7 +412,7 @@ class Item extends Model implements Auditable
      */
     public function scopeByFileType($query, string $fileType)
     {
-        return $query->where('file_type', 'like', $fileType . '%');
+        return $query->where('file_type', 'like', $fileType.'%');
     }
 
     /**
@@ -470,7 +460,7 @@ class Item extends Model implements Auditable
      */
     public function getFormattedFileSizeAttribute(): string
     {
-        if (!$this->file_size) {
+        if (! $this->file_size) {
             return '0 B';
         }
 
@@ -481,7 +471,7 @@ class Item extends Model implements Auditable
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**
@@ -489,7 +479,7 @@ class Item extends Model implements Auditable
      */
     public function getFormattedDurationAttribute(): ?string
     {
-        if (!$this->duration) {
+        if (! $this->duration) {
             return null;
         }
 

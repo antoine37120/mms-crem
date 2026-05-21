@@ -17,17 +17,21 @@ use Filament\Support\Icons\Heroicon;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use UnitEnum;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+use UnitEnum;
 
 class ItemTypeResource extends Resource
 {
     protected static ?string $model = ItemType::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::Document;
-    protected static string | UnitEnum | null $navigationGroup = 'Médias associés';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Médias associés';
+
     protected static ?int $navigationSort = 6;
+
     protected static ?string $modelLabel = 'Type de média associé';
+
     protected static ?string $pluralModelLabel = 'Types de médias associés';
 
     protected static ?string $recordTitleAttribute = 'name';
@@ -51,7 +55,7 @@ class ItemTypeResource extends Resource
     {
         return [
             //
-            //AuditsRelationManager::class,
+            // AuditsRelationManager::class,
         ];
     }
 

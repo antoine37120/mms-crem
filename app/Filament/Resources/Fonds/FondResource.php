@@ -13,8 +13,8 @@ use App\Filament\Resources\Fonds\Tables\FondsTable;
 use App\Models\Fond;
 use Filament\Resources\Resource;
 use Filament\Schemas\Schema;
-use Filament\Tables\Table;
 use Filament\Support\Icons\Heroicon;
+use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
@@ -29,8 +29,11 @@ class FondResource extends Resource
 
     // Navigation groupée et triée selon la documentation
     protected static string|null|\UnitEnum $navigationGroup = 'Gestion des Archives';
+
     protected static ?int $navigationSort = 1;
+
     protected static ?string $navigationLabel = 'Fonds';
+
     protected static ?string $pluralModelLabel = 'Fonds';
 
     // Configuration des breadcrumbs
@@ -65,7 +68,6 @@ class FondResource extends Resource
 
         ];
     }
-
 
     public static function getPages(): array
     {
@@ -111,7 +113,6 @@ class FondResource extends Resource
     {
         return auth()->user()->hasRole(['administrateur']);
     }
-
 
     public static function getGlobalSearchResultUrl(Model $record): string
     {

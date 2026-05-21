@@ -14,7 +14,7 @@ class MediaProcessor
     public function processItem(Item $item): void
     {
         // Check if item has a file
-        if (!$item->file_path) {
+        if (! $item->file_path) {
             return;
         }
 

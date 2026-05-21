@@ -30,34 +30,37 @@ class MediaScan extends Command
     {
         $scanPath = $this->argument('path');
 
-        if (!$scanPath) {
+        if (! $scanPath) {
             // Load from settings
             $settingsPath = 'mms_settings.json';
             if (Storage::disk('local')->exists($settingsPath)) {
                 $settings = json_decode(Storage::disk('local')->get($settingsPath), true);
-                $scanPath = $settings['scan_path'] ?? null;
+                $scanPath = $settings['scan_path'] ?? config('mms.medias_path');
             }
         }
 
-        if (!$scanPath) {
+        if (! $scanPath) {
             $this->error('No scan path configured. Please configure it in the Media Settings or provide it as an argument.');
+
             return 1;
         }
 
-        if (!is_dir($scanPath)) {
+        if (! is_dir($scanPath)) {
             $this->error("The directory [{$scanPath}] does not exist.");
+
             return 1;
         }
 
         $this->info("Scanning directory: {$scanPath}");
 
         // Initialize Finder
-        $finder = new Finder();
+        $finder = new Finder;
         $finder->files()->in($scanPath)->ignoreDotFiles(true);
         // Add more filters if needed (e.g. valid extensions)
 
-        if (!$finder->hasResults()) {
-            $this->info("No files found.");
+        if (! $finder->hasResults()) {
+            $this->info('No files found.');
+
             return 0;
         }
 
@@ -86,7 +89,7 @@ class MediaScan extends Command
         }
 
         $this->output->progressFinish();
-        $this->info("Scan completed.");
+        $this->info('Scan completed.');
 
         return 0;
     }

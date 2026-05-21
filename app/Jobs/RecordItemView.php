@@ -40,7 +40,7 @@ class RecordItemView implements ShouldQueue
         if ($this->userId) {
             $existingViewQuery->where(function ($query) {
                 $query->where('user_id', $this->userId)
-                      ->orWhere('ip_address', $this->ip);
+                    ->orWhere('ip_address', $this->ip);
             });
         } else {
             $existingViewQuery->where('ip_address', $this->ip);

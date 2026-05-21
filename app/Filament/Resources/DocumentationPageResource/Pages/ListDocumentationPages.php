@@ -3,8 +3,8 @@
 namespace App\Filament\Resources\DocumentationPageResource\Pages;
 
 use App\Filament\Resources\DocumentationPageResource;
-use Openplain\FilamentTreeView\Resources\Pages\TreePage;
 use Filament\Actions;
+use Openplain\FilamentTreeView\Resources\Pages\TreePage;
 
 class ListDocumentationPages extends TreePage
 {

@@ -47,6 +47,7 @@ it('uses direct audiowaveform for audio items', function () {
     Process::fake([
         'audiowaveform*' => function ($process) {
             Storage::disk('diffusion_medias')->put('items/ITEM001/waveform/ITEM001.json', '{}');
+
             return Process::result('ok');
         },
     ]);
@@ -85,6 +86,7 @@ it('uses ffmpeg pipe for video items', function () {
             if (str_contains(is_array($process->command) ? implode(' ', $process->command) : $process->command, 'audiowaveform')) {
                 Storage::disk('diffusion_medias')->put('items/ITEM002/waveform/ITEM002.json', '{}');
             }
+
             return Process::result('ok');
         },
     ]);
@@ -131,6 +133,7 @@ it('updates existing variation when reprocessed', function () {
             if (str_contains(is_array($process->command) ? implode(' ', $process->command) : $process->command, 'audiowaveform')) {
                 Storage::disk('diffusion_medias')->put('items/ITEM003/waveform/ITEM003.json', 'new content');
             }
+
             return Process::result('ok');
         },
     ]);

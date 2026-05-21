@@ -2,13 +2,13 @@
 
 namespace App\Filament\Resources\Corpuses\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
@@ -37,6 +37,7 @@ class CorpusesTable
                     ->getStateUsing(function ($record) {
                         return $record->fonds->map(function ($fond) {
                             $url = \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $fond->id]);
+
                             return "<a href='{$url}'>{$fond->code}</a>";
                         })->implode('<br>');
                     })
@@ -78,7 +79,7 @@ class CorpusesTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

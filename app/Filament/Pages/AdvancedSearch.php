@@ -2,45 +2,43 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Corpus;
 use App\Models\Collection;
+use App\Models\Corpus;
 use App\Models\Fond;
 use App\Models\Item;
 use App\Models\ItemType;
 use App\Models\User;
 use Filament\Actions\Action;
+use Filament\Actions\BulkActionGroup;
+use Filament\Actions\DeleteBulkAction;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
-use Filament\Infolists\Components\TextEntry;
 use Filament\Pages\Page;
-use Filament\Tables;
-use Filament\Actions\BulkActionGroup;
-use Filament\Actions\DeleteBulkAction;
-use Filament\Tables\Columns\BadgeColumn;
+use Filament\Support\Enums\Width;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Contracts\HasTable;
-use Filament\Tables\Filters\Filter;
-use Filament\Tables\Filters\SelectFilter;
-use Filament\Tables\Table;
-use Filament\Tables\Enums\FiltersLayout;
-use Illuminate\Contracts\View\View;
-use Illuminate\Database\Eloquent\Builder;
 use Filament\Tables\Concerns\InteractsWithTable;
-use Filament\Support\Enums\Width;
-use Filament\Actions\CreateAction;
+use Filament\Tables\Contracts\HasTable;
+use Filament\Tables\Enums\FiltersLayout;
+use Filament\Tables\Filters\Filter;
+use Filament\Tables\Table;
+use Illuminate\Database\Eloquent\Builder;
 
 class AdvancedSearch extends Page implements HasTable
 {
     use InteractsWithTable;
 
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-magnifying-glass';
+
     protected string $view = 'filament.pages.advanced-search';
+
     protected static string|null|\UnitEnum $navigationGroup = 'Recherche & Exploration';
+
     protected static ?string $navigationLabel = 'Recherche Avancée';
+
     protected static ?string $title = 'Recherche Avancée';
+
     protected static ?int $navigationSort = 1;
 
     protected ?string $heading = 'Recherche Avancée dans les Médias';
@@ -65,13 +63,13 @@ class AdvancedSearch extends Page implements HasTable
                     ->formatStateUsing(function ($record) {
                         return $record->code;
                     }),
-                    //->description(fn ($record) => $record->title),
+                // ->description(fn ($record) => $record->title),
 
                 // Parent hiérarchique
                 TextColumn::make('itemable_type')
                     ->label('Parent')
                     ->formatStateUsing(function ($record) {
-                        $type = match($record->itemable_type) {
+                        $type = match ($record->itemable_type) {
                             'App\Models\Fond' => 'Fonds',
                             'App\Models\Corpus' => 'Corpus',
                             'App\Models\Collection' => 'Collection',
@@ -79,7 +77,7 @@ class AdvancedSearch extends Page implements HasTable
                             default => ''
                         };
 
-                        return $type . ': ' . ($record->itemable->code ?? 'N/A');
+                        return $type.': '.($record->itemable->code ?? 'N/A');
                     })
                     /*->color(fn ($record) => match($record->itemable_type) {
                         'App\Models\Fond' => 'primary',
@@ -104,7 +102,7 @@ class AdvancedSearch extends Page implements HasTable
                     ->label('Format')
                     ->formatStateUsing(fn ($state) => strtoupper($state ?? 'N/A'))
                     ->badge()
-                    ->color(fn ($state) => match(strtolower($state ?? '')) {
+                    ->color(fn ($state) => match (strtolower($state ?? '')) {
                         'wav', 'mp3', 'flac' => 'success',
                         'mp4', 'avi', 'mov' => 'info',
                         'pdf' => 'danger',
@@ -116,13 +114,15 @@ class AdvancedSearch extends Page implements HasTable
                 TextColumn::make('file_size')
                     ->label('Taille')
                     ->formatStateUsing(function ($state) {
-                        if (!$state) return 'N/A';
+                        if (! $state) {
+                            return 'N/A';
+                        }
 
                         $units = ['B', 'KB', 'MB', 'GB'];
                         $power = floor(log($state, 1024));
                         $power = min($power, count($units) - 1);
 
-                        return round($state / pow(1024, $power), 2) . ' ' . $units[$power];
+                        return round($state / pow(1024, $power), 2).' '.$units[$power];
                     })
                     ->sortable()
                     ->alignEnd()
@@ -132,10 +132,13 @@ class AdvancedSearch extends Page implements HasTable
                 TextColumn::make('duration')
                     ->label('Durée')
                     ->formatStateUsing(function ($state) {
-                        if (!$state) return '-';
+                        if (! $state) {
+                            return '-';
+                        }
 
                         $minutes = floor($state / 60);
                         $seconds = $state % 60;
+
                         return sprintf('%d:%02d', $minutes, $seconds);
                     })
                     ->placeholder('-')
@@ -186,7 +189,7 @@ class AdvancedSearch extends Page implements HasTable
                         TextInput::make('search')
                             ->label('Recherche globale')
                             ->placeholder('Code, titre, nom de fichier...')
-                            ->suffixIcon('heroicon-o-magnifying-glass')
+                            ->suffixIcon('heroicon-o-magnifying-glass'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
@@ -200,8 +203,9 @@ class AdvancedSearch extends Page implements HasTable
                     })
                     ->indicateUsing(function (array $data): ?string {
                         if ($data['search'] ?? null) {
-                            return 'Recherche: ' . $data['search'];
+                            return 'Recherche: '.$data['search'];
                         }
+
                         return null;
                     }),
 
@@ -211,7 +215,7 @@ class AdvancedSearch extends Page implements HasTable
                     ->form([
                         \Filament\Forms\Components\ViewField::make('md5_hash')
                             ->view('filament.filters.file-md5-search')
-                            ->label('Fichier similaire à')
+                            ->label('Fichier similaire à'),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query->when(
@@ -223,6 +227,7 @@ class AdvancedSearch extends Page implements HasTable
                         if ($data['md5_hash'] ?? null) {
                             return 'Fichier avec même MD5';
                         }
+
                         return null;
                     }),
 
@@ -240,7 +245,7 @@ class AdvancedSearch extends Page implements HasTable
                                         $set('corpus_ids', null);
                                         $set('collection_ids', null);
                                     }),
-                                
+
                                 Select::make('corpus_ids')
                                     ->label('Corpus')
                                     ->placeholder('Tous les corpus')
@@ -248,15 +253,16 @@ class AdvancedSearch extends Page implements HasTable
                                     ->options(function ($get) {
                                         $fondId = $get('fond_id');
                                         if ($fondId) {
-                                            return Corpus::whereHas('fonds', fn($q) => $q->where('fonds.id', $fondId))->pluck('code', 'id');
+                                            return Corpus::whereHas('fonds', fn ($q) => $q->where('fonds.id', $fondId))->pluck('code', 'id');
                                         }
+
                                         return Corpus::pluck('code', 'id');
                                     })
                                     ->live()
                                     ->afterStateUpdated(function ($set) {
                                         $set('collection_ids', null);
                                     }),
-                                    
+
                                 Select::make('collection_ids')
                                     ->label('Collections')
                                     ->placeholder('Toutes les collections')
@@ -264,15 +270,15 @@ class AdvancedSearch extends Page implements HasTable
                                     ->options(function ($get) {
                                         $corpusIds = $get('corpus_ids') ?? [];
                                         $fondId = $get('fond_id');
-                                        
+
                                         $query = Collection::query();
-                                        
-                                        if (!empty($corpusIds)) {
-                                            $query->whereHas('corpuses', fn($q) => $q->whereIn('corpuses.id', $corpusIds));
+
+                                        if (! empty($corpusIds)) {
+                                            $query->whereHas('corpuses', fn ($q) => $q->whereIn('corpuses.id', $corpusIds));
                                         } elseif ($fondId) {
-                                            $query->whereHas('corpuses', fn($q) => $q->whereHas('fonds', fn($f) => $f->where('fonds.id', $fondId)));
+                                            $query->whereHas('corpuses', fn ($q) => $q->whereHas('fonds', fn ($f) => $f->where('fonds.id', $fondId)));
                                         }
-                                        
+
                                         return $query->pluck('code', 'id');
                                     }),
                             ])
@@ -290,40 +296,40 @@ class AdvancedSearch extends Page implements HasTable
 
                         return $query->where(function (Builder $q) use ($fondId, $corpusIds, $collectionIds) {
                             // Niveau le plus profond : Collections sélectionnées
-                            if (!empty($collectionIds)) {
+                            if (! empty($collectionIds)) {
                                 $q->where('itemable_type', 'App\Models\Collection')
-                                  ->whereIn('itemable_id', $collectionIds);
+                                    ->whereIn('itemable_id', $collectionIds);
                             }
                             // Niveau intermédiaire : Corpus sélectionnés (sans collections)
-                            elseif (!empty($corpusIds)) {
-                                $collectionSubquery = \App\Models\Collection::whereHas('corpuses', fn($q) => $q->whereIn('corpuses.id', $corpusIds))->select('collections.id');
-                                
+                            elseif (! empty($corpusIds)) {
+                                $collectionSubquery = \App\Models\Collection::whereHas('corpuses', fn ($q) => $q->whereIn('corpuses.id', $corpusIds))->select('collections.id');
+
                                 $q->where(function ($sub) use ($corpusIds, $collectionSubquery) {
                                     $sub->where('itemable_type', 'App\Models\Corpus')
                                         ->whereIn('itemable_id', $corpusIds)
                                         ->orWhere(function ($sub2) use ($collectionSubquery) {
                                             $sub2->where('itemable_type', 'App\Models\Collection')
-                                                 ->whereIn('itemable_id', $collectionSubquery);
+                                                ->whereIn('itemable_id', $collectionSubquery);
                                         });
                                 });
                             }
                             // Niveau le plus haut : Fond sélectionné (sans corpus, sans collections)
                             elseif ($fondId) {
-                                $corpusSubquery = \App\Models\Corpus::whereHas('fonds', fn($q) => $q->where('fonds.id', $fondId))->select('corpuses.id');
-                                $collectionSubquery = \App\Models\Collection::whereHas('corpuses', fn($q) => $q->whereHas('fonds', fn($f) => $f->where('fonds.id', $fondId)))->select('collections.id');
-                                
+                                $corpusSubquery = \App\Models\Corpus::whereHas('fonds', fn ($q) => $q->where('fonds.id', $fondId))->select('corpuses.id');
+                                $collectionSubquery = \App\Models\Collection::whereHas('corpuses', fn ($q) => $q->whereHas('fonds', fn ($f) => $f->where('fonds.id', $fondId)))->select('collections.id');
+
                                 $q->where(function ($sub) use ($fondId, $corpusSubquery, $collectionSubquery) {
                                     $sub->where(function ($sub2) use ($fondId) {
-                                            $sub2->where('itemable_type', 'App\Models\Fond')
-                                                 ->where('itemable_id', $fondId);
-                                        })
+                                        $sub2->where('itemable_type', 'App\Models\Fond')
+                                            ->where('itemable_id', $fondId);
+                                    })
                                         ->orWhere(function ($sub2) use ($corpusSubquery) {
                                             $sub2->where('itemable_type', 'App\Models\Corpus')
-                                                 ->whereIn('itemable_id', $corpusSubquery);
+                                                ->whereIn('itemable_id', $corpusSubquery);
                                         })
                                         ->orWhere(function ($sub2) use ($collectionSubquery) {
                                             $sub2->where('itemable_type', 'App\Models\Collection')
-                                                 ->whereIn('itemable_id', $collectionSubquery);
+                                                ->whereIn('itemable_id', $collectionSubquery);
                                         });
                                 });
                             }
@@ -331,16 +337,19 @@ class AdvancedSearch extends Page implements HasTable
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-                        if (!empty($data['fond_id'])) {
+                        if (! empty($data['fond_id'])) {
                             $fond = Fond::find($data['fond_id']);
-                            if ($fond) $indicators['fond_id'] = 'Fonds: ' . $fond->code;
+                            if ($fond) {
+                                $indicators['fond_id'] = 'Fonds: '.$fond->code;
+                            }
                         }
-                        if (!empty($data['corpus_ids'])) {
-                            $indicators['corpus_ids'] = count($data['corpus_ids']) . ' Corpus sélectionné(s)';
+                        if (! empty($data['corpus_ids'])) {
+                            $indicators['corpus_ids'] = count($data['corpus_ids']).' Corpus sélectionné(s)';
                         }
-                        if (!empty($data['collection_ids'])) {
-                            $indicators['collection_ids'] = count($data['collection_ids']) . ' Collection(s) sélectionnée(s)';
+                        if (! empty($data['collection_ids'])) {
+                            $indicators['collection_ids'] = count($data['collection_ids']).' Collection(s) sélectionnée(s)';
                         }
+
                         return $indicators;
                     }),
 
@@ -357,47 +366,58 @@ class AdvancedSearch extends Page implements HasTable
                                     ->grouped()
                                     ->default('all')
                                     ->columnSpan('full'),
-                                    
+
                                 Select::make('item_type_id')
                                     ->label('Type de média associé')
                                     ->placeholder('Tous les types')
-                                    ->options(ItemType::pluck('name', 'id')->mapWithKeys(fn($n, $id) => [$id => "📄 $n"])->toArray())
+                                    ->options(ItemType::pluck('name', 'id')->mapWithKeys(fn ($n, $id) => [$id => "📄 $n"])->toArray())
                                     ->columnSpan('full'),
-                                    
+
                                 Select::make('file_extension')
                                     ->label('Format')
                                     ->placeholder('Tous les formats')
-                                    ->options(fn() => Item::whereNotNull('file_extension')->distinct()->pluck('file_extension')->mapWithKeys(fn($e) => [$e => strtoupper($e)])->sort())
+                                    ->options(fn () => Item::whereNotNull('file_extension')->distinct()->pluck('file_extension')->mapWithKeys(fn ($e) => [$e => strtoupper($e)])->sort())
                                     ->columnSpan('full'),
 
                                 Select::make('language_code')
                                     ->label('Langue')
                                     ->placeholder('Toutes')
-                                    ->options(fn() => Item::whereNotNull('language_code')->distinct()->pluck('language_code')->mapWithKeys(fn($l) => [$l => strtoupper($l)])->sort())
+                                    ->options(fn () => Item::whereNotNull('language_code')->distinct()->pluck('language_code')->mapWithKeys(fn ($l) => [$l => strtoupper($l)])->sort())
                                     ->columnSpan('full'),
                             ])
                             ->columns(2),
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when(isset($data['is_sub']) && $data['is_sub'] === 'items', fn($q) => $q->where('is_sub', false))
-                            ->when(isset($data['is_sub']) && $data['is_sub'] === 'medias', fn($q) => $q->where('is_sub', true))
-                            ->when($data['item_type_id'] ?? null, fn($q, $v) => $q->where('item_type_id', $v))
-                            ->when($data['file_extension'] ?? null, fn($q, $v) => $q->where('file_extension', $v))
-                            ->when($data['language_code'] ?? null, fn($q, $v) => $q->where('language_code', $v));
+                            ->when(isset($data['is_sub']) && $data['is_sub'] === 'items', fn ($q) => $q->where('is_sub', false))
+                            ->when(isset($data['is_sub']) && $data['is_sub'] === 'medias', fn ($q) => $q->where('is_sub', true))
+                            ->when($data['item_type_id'] ?? null, fn ($q, $v) => $q->where('item_type_id', $v))
+                            ->when($data['file_extension'] ?? null, fn ($q, $v) => $q->where('file_extension', $v))
+                            ->when($data['language_code'] ?? null, fn ($q, $v) => $q->where('language_code', $v));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
                         if (isset($data['is_sub'])) {
-                            if ($data['is_sub'] === 'items') $indicators['is_sub'] = 'Items principaux';
-                            if ($data['is_sub'] === 'medias') $indicators['is_sub'] = 'Médias associés';
+                            if ($data['is_sub'] === 'items') {
+                                $indicators['is_sub'] = 'Items principaux';
+                            }
+                            if ($data['is_sub'] === 'medias') {
+                                $indicators['is_sub'] = 'Médias associés';
+                            }
                         }
-                        if (!empty($data['item_type_id'])) $indicators['item_type_id'] = 'Type média: ' . ItemType::find($data['item_type_id'])?->name;
-                        if (!empty($data['file_extension'])) $indicators['file_extension'] = 'Format: ' . strtoupper($data['file_extension']);
-                        if (!empty($data['language_code'])) $indicators['language_code'] = 'Langue: ' . strtoupper($data['language_code']);
+                        if (! empty($data['item_type_id'])) {
+                            $indicators['item_type_id'] = 'Type média: '.ItemType::find($data['item_type_id'])?->name;
+                        }
+                        if (! empty($data['file_extension'])) {
+                            $indicators['file_extension'] = 'Format: '.strtoupper($data['file_extension']);
+                        }
+                        if (! empty($data['language_code'])) {
+                            $indicators['language_code'] = 'Langue: '.strtoupper($data['language_code']);
+                        }
+
                         return $indicators;
                     }),
-                    
+
                 // Groupe 3: Propriétés Physiques
                 Filter::make('properties')
                     ->columnSpan(1)
@@ -413,22 +433,33 @@ class AdvancedSearch extends Page implements HasTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['size_min'] ?? null, fn($q, $v) => $q->where('file_size', '>=', $v * 1024 * 1024))
-                            ->when($data['size_max'] ?? null, fn($q, $v) => $q->where('file_size', '<=', $v * 1024 * 1024))
-                            ->when($data['duration_min'] ?? null, fn($q, $v) => $q->where('duration', '>=', $v))
-                            ->when($data['duration_max'] ?? null, fn($q, $v) => $q->where('duration', '<=', $v))
-                            ->when($data['language_code'] ?? null, fn($q, $v) => $q->where('language_code', $v));
+                            ->when($data['size_min'] ?? null, fn ($q, $v) => $q->where('file_size', '>=', $v * 1024 * 1024))
+                            ->when($data['size_max'] ?? null, fn ($q, $v) => $q->where('file_size', '<=', $v * 1024 * 1024))
+                            ->when($data['duration_min'] ?? null, fn ($q, $v) => $q->where('duration', '>=', $v))
+                            ->when($data['duration_max'] ?? null, fn ($q, $v) => $q->where('duration', '<=', $v))
+                            ->when($data['language_code'] ?? null, fn ($q, $v) => $q->where('language_code', $v));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-                        if (!empty($data['size_min'])) $indicators['size_min'] = 'Taille > ' . $data['size_min'] . ' MB';
-                        if (!empty($data['size_max'])) $indicators['size_max'] = 'Taille < ' . $data['size_max'] . ' MB';
-                        if (!empty($data['duration_min'])) $indicators['duration_min'] = 'Durée > ' . $data['duration_min'] . 's';
-                        if (!empty($data['duration_max'])) $indicators['duration_max'] = 'Durée < ' . $data['duration_max'] . 's';
-                        if (!empty($data['language_code'])) $indicators['language_code'] = 'Langue: ' . strtoupper($data['language_code']);
+                        if (! empty($data['size_min'])) {
+                            $indicators['size_min'] = 'Taille > '.$data['size_min'].' MB';
+                        }
+                        if (! empty($data['size_max'])) {
+                            $indicators['size_max'] = 'Taille < '.$data['size_max'].' MB';
+                        }
+                        if (! empty($data['duration_min'])) {
+                            $indicators['duration_min'] = 'Durée > '.$data['duration_min'].'s';
+                        }
+                        if (! empty($data['duration_max'])) {
+                            $indicators['duration_max'] = 'Durée < '.$data['duration_max'].'s';
+                        }
+                        if (! empty($data['language_code'])) {
+                            $indicators['language_code'] = 'Langue: '.strtoupper($data['language_code']);
+                        }
+
                         return $indicators;
                     }),
-                    
+
                 // Groupe 4: Traçabilité
                 Filter::make('traceability')
                     ->columnSpan(1)
@@ -444,17 +475,26 @@ class AdvancedSearch extends Page implements HasTable
                     ])
                     ->query(function (Builder $query, array $data): Builder {
                         return $query
-                            ->when($data['uploaded_by'] ?? null, fn($q, $v) => $q->where('uploaded_by', $v))
-                            ->when($data['created_by'] ?? null, fn($q, $v) => $q->where('created_by', $v))
-                            ->when($data['upload_from'] ?? null, fn($q, $v) => $q->whereDate('upload_date', '>=', $v))
-                            ->when($data['upload_until'] ?? null, fn($q, $v) => $q->whereDate('upload_date', '<=', $v));
+                            ->when($data['uploaded_by'] ?? null, fn ($q, $v) => $q->where('uploaded_by', $v))
+                            ->when($data['created_by'] ?? null, fn ($q, $v) => $q->where('created_by', $v))
+                            ->when($data['upload_from'] ?? null, fn ($q, $v) => $q->whereDate('upload_date', '>=', $v))
+                            ->when($data['upload_until'] ?? null, fn ($q, $v) => $q->whereDate('upload_date', '<=', $v));
                     })
                     ->indicateUsing(function (array $data): array {
                         $indicators = [];
-                        if (!empty($data['uploaded_by'])) $indicators['uploaded_by'] = 'Uploadé par: ' . User::find($data['uploaded_by'])?->name;
-                        if (!empty($data['created_by'])) $indicators['created_by'] = 'Créé par: ' . User::find($data['created_by'])?->name;
-                        if (!empty($data['upload_from'])) $indicators['upload_from'] = 'Depuis le: ' . \Carbon\Carbon::parse($data['upload_from'])->format('d/m/Y');
-                        if (!empty($data['upload_until'])) $indicators['upload_until'] = 'Jusqu\'au: ' . \Carbon\Carbon::parse($data['upload_until'])->format('d/m/Y');
+                        if (! empty($data['uploaded_by'])) {
+                            $indicators['uploaded_by'] = 'Uploadé par: '.User::find($data['uploaded_by'])?->name;
+                        }
+                        if (! empty($data['created_by'])) {
+                            $indicators['created_by'] = 'Créé par: '.User::find($data['created_by'])?->name;
+                        }
+                        if (! empty($data['upload_from'])) {
+                            $indicators['upload_from'] = 'Depuis le: '.\Carbon\Carbon::parse($data['upload_from'])->format('d/m/Y');
+                        }
+                        if (! empty($data['upload_until'])) {
+                            $indicators['upload_until'] = 'Jusqu\'au: '.\Carbon\Carbon::parse($data['upload_until'])->format('d/m/Y');
+                        }
+
                         return $indicators;
                     }),
 
@@ -464,7 +504,7 @@ class AdvancedSearch extends Page implements HasTable
                 Action::make('view')
                     ->label('Voir')
                     ->icon('heroicon-o-eye')
-                    ->url(fn ($record) => $record->is_sub 
+                    ->url(fn ($record) => $record->is_sub
                         ? route('filament.mms-admin.resources.media-associes.view', ['record' => $record])
                         : route('filament.mms-admin.resources.items.view', ['record' => $record])
                     ),
@@ -482,7 +522,7 @@ class AdvancedSearch extends Page implements HasTable
                     ->color('info')
                     ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
                         'focus' => 'item',
-                        'id' => $record->id
+                        'id' => $record->id,
                     ]))
                     ->openUrlInNewTab(),
 
@@ -520,12 +560,12 @@ class AdvancedSearch extends Page implements HasTable
 
                             return response()->streamDownload(function () use ($csvContent) {
                                 echo $csvContent;
-                            }, 'items-export-' . date('Y-m-d') . '.csv');
+                            }, 'items-export-'.date('Y-m-d').'.csv');
                         }),
 
                     DeleteBulkAction::make()
                         ->requiresConfirmation()
-                        ->modalDescription('Êtes-vous sûr de vouloir supprimer ces items ? Cette action est irréversible.')
+                        ->modalDescription('Êtes-vous sûr de vouloir supprimer ces items ? Cette action est irréversible.'),
                 ]),
             ])
             ->emptyStateIcon('heroicon-o-magnifying-glass')
@@ -570,7 +610,7 @@ class AdvancedSearch extends Page implements HasTable
 
                     return response()->streamDownload(function () use ($csvContent) {
                         echo $csvContent;
-                    }, 'items-complet-export-' . date('Y-m-d') . '.csv');
+                    }, 'items-complet-export-'.date('Y-m-d').'.csv');
                 })
                 ->requiresConfirmation()
                 ->modalDescription('Exporter tous les résultats de la recherche actuelle en CSV ?'),

@@ -8,8 +8,8 @@ use App\Models\ScannedFile;
 use Illuminate\Support\Facades\Artisan;
 use Illuminate\Support\Facades\File;
 use Illuminate\Support\Str;
-use Symfony\Component\Finder\Finder;
 use SplFileInfo;
+use Symfony\Component\Finder\Finder;
 
 class ScannedFileAdminService
 {
@@ -25,7 +25,7 @@ class ScannedFileAdminService
      */
     protected function getSettings(): array
     {
-        if (!File::exists($this->settingsPath)) {
+        if (! File::exists($this->settingsPath)) {
             return [];
         }
 
@@ -38,13 +38,13 @@ class ScannedFileAdminService
     public function runScan(?string $scanPath = null): array
     {
         $settings = $this->getSettings();
-        $rootScanPath = $scanPath ?? $settings['scan_path'] ?? null;
+        $rootScanPath = $scanPath ?? $settings['scan_path'] ?? config('mms.medias_path');
 
-        if (!$rootScanPath || !File::isDirectory($rootScanPath)) {
+        if (! $rootScanPath || ! File::isDirectory($rootScanPath)) {
             return ['found' => 0, 'matched' => 0, 'orphaned' => 0];
         }
 
-        $finder = new Finder();
+        $finder = new Finder;
         $finder->files()->in($rootScanPath);
 
         $stats = ['found' => 0, 'matched' => 0, 'orphaned' => 0];
@@ -79,12 +79,12 @@ class ScannedFileAdminService
         $scannedFile->last_scanned_at = now();
         $scannedFile->disk = 'original_medias'; // Les fichiers sont dans MMS_MEDIAS_PATH, donc disque original_medias
 
-        if (!$scannedFile->exists) {
+        if (! $scannedFile->exists) {
             $scannedFile->status = ScannedFileStatus::ORPHAN;
         }
 
         $matched = $this->performMatch($scannedFile, $rootScanPath);
-        
+
         $scannedFile->save();
 
         return $matched;
@@ -139,9 +139,9 @@ class ScannedFileAdminService
     public function tryMatch(ScannedFile $record): bool
     {
         $settings = $this->getSettings();
-        $rootScanPath = $settings['scan_path'] ?? null;
+        $rootScanPath = $settings['scan_path'] ?? config('mms.medias_path');
 
-        if (!$rootScanPath) {
+        if (! $rootScanPath) {
             return false;
         }
 
@@ -158,7 +158,7 @@ class ScannedFileAdminService
      */
     public function rescan(ScannedFile $record): bool
     {
-        if (!File::exists($record->file_path)) {
+        if (! File::exists($record->file_path)) {
             return false;
         }
 

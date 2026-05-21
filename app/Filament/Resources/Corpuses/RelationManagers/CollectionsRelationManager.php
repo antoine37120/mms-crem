@@ -2,8 +2,8 @@
 
 namespace App\Filament\Resources\Corpuses\RelationManagers;
 
-use App\Models\Collection;
-use Filament\Forms;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\AttachAction;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
@@ -16,15 +16,12 @@ use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
-use Filament\Forms\Components\TextInput;
 use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Columns\BadgeColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
@@ -32,13 +29,15 @@ use Illuminate\Database\Eloquent\SoftDeletingScope;
 
 class CollectionsRelationManager extends RelationManager
 {
-    protected static string $relationship = "collections";
+    protected static string $relationship = 'collections';
 
-    protected static ?string $title = "Collections";
-    protected static ?string $modelLabel = "collection";
-    protected static ?string $pluralModelLabel = "collections";
+    protected static ?string $title = 'Collections';
 
-    protected static ?string $recordTitleAttribute = "code";
+    protected static ?string $modelLabel = 'collection';
+
+    protected static ?string $pluralModelLabel = 'collections';
+
+    protected static ?string $recordTitleAttribute = 'code';
 
     // Activer l'édition dans les pages de vue
     public function isReadOnly(): bool
@@ -50,25 +49,26 @@ class CollectionsRelationManager extends RelationManager
     {
         return $schema
             ->components([
-                TextInput::make("code")
-                    ->label("Code de la Collection")
+                TextInput::make('code')
+                    ->label('Code de la Collection')
                     ->autofocus(false)
                     ->default(function (RelationManager $livewire): string {
                         $corpus = $livewire->getOwnerRecord();
+
                         // Suggestion basée sur le corpus parent
-                        return $corpus->code . "_";
+                        return $corpus->code.'_';
                     })
                     ->required()
                     ->unique(ignoreRecord: true)
-                    ->placeholder("Ex: CNRSMH_I_2024_001"),
+                    ->placeholder('Ex: CNRSMH_I_2024_001'),
 
-                TextInput::make("title")
-                    ->label("Titre")
-                    ->placeholder("Ex: Cérémonies de mariage")
+                TextInput::make('title')
+                    ->label('Titre')
+                    ->placeholder('Ex: Cérémonies de mariage')
                     ->columnSpan(2),
 
                 // Champs cachés auto-remplis
-                Hidden::make("created_by")
+                Hidden::make('created_by')
                     ->default(auth()->id()),
             ])
             ->columns(2);
@@ -77,31 +77,31 @@ class CollectionsRelationManager extends RelationManager
     public function table(Table $table): Table
     {
         return $table
-            ->recordTitleAttribute("code")
+            ->recordTitleAttribute('code')
             ->columns([
-                TextColumn::make("code")
+                TextColumn::make('code')
                     ->searchable()
                     ->sortable()
                     ->copyable(),
 
-                TextColumn::make("title")
+                TextColumn::make('title')
                     ->searchable()
-                    ->placeholder("Sans titre")
+                    ->placeholder('Sans titre')
                     ->limit(50),
 
-                TextColumn::make("items_count")
-                    ->label("Items")
-                    ->counts("items")
-                    ->color("success"),
+                TextColumn::make('items_count')
+                    ->label('Items')
+                    ->counts('items')
+                    ->color('success'),
 
-                TextColumn::make("created_at")
-                    ->label("Créé le")
-                    ->dateTime("d/m/Y H:i")
+                TextColumn::make('created_at')
+                    ->label('Créé le')
+                    ->dateTime('d/m/Y H:i')
                     ->sortable()
                     ->toggleable(isToggledHiddenByDefault: false),
 
-                TextColumn::make("creator.name")
-                    ->label("Créé par")
+                TextColumn::make('creator.name')
+                    ->label('Créé par')
                     ->toggleable(isToggledHiddenByDefault: true),
             ])
             ->filters([
@@ -110,7 +110,7 @@ class CollectionsRelationManager extends RelationManager
             ->headerActions([
                 CreateAction::make()
                     ->modalAutofocus(false)
-                    ->successNotificationTitle("Collection créée avec succès"),
+                    ->successNotificationTitle('Collection créée avec succès'),
 
                 AttachAction::make()
                     ->preloadRecordSelect(),
@@ -125,7 +125,7 @@ class CollectionsRelationManager extends RelationManager
                         ->color('info')
                         ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
                             'focus' => 'collection',
-                            'id' => $record->id
+                            'id' => $record->id,
                         ])),
                     EditAction::make(),
                     DetachAction::make(),
@@ -146,6 +146,6 @@ class CollectionsRelationManager extends RelationManager
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,
                 ])
-                ->withCount("items"));
+                ->withCount('items'));
     }
 }

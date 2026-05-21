@@ -2,17 +2,16 @@
 
 namespace App\Filament\Resources\Collections\Tables;
 
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\ActionGroup;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Filament\Support\Enums\TextSize;
 
 class CollectionsTable
 {
@@ -35,6 +34,7 @@ class CollectionsTable
                     ->getStateUsing(function ($record) {
                         return $record->corpuses->map(function ($corpus) {
                             $url = \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $corpus->id]);
+
                             return "<a href='{$url}'>{$corpus->code}</a>";
                         })->implode('<br>');
                     })
@@ -74,7 +74,7 @@ class CollectionsTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

@@ -22,7 +22,6 @@ trait HasHierarchicalItems
         };
     }
 
-
     /**
      * Relation polymorphique vers les items directement associés
      */
@@ -52,7 +51,7 @@ trait HasHierarchicalItems
      */
     public function allItems(): Builder
     {
-        return Item::where('code', 'LIKE', $this->getHierarchyPrefix() . '%')
+        return Item::where('code', 'LIKE', $this->getHierarchyPrefix().'%')
             ->orderBy('code');
     }
 
@@ -87,7 +86,7 @@ trait HasHierarchicalItems
                     'is_sub',
                     'file_size',
                     'file_type',
-                    'duration'
+                    'duration',
                 ]);
 
             $stats = \DB::query()
@@ -118,7 +117,6 @@ trait HasHierarchicalItems
             ];
         });
     }
-
 
     /**
      * Taille totale des fichiers (formatée)
@@ -184,7 +182,7 @@ trait HasHierarchicalItems
         $builder = $this->allItems();
 
         // Recherche textuelle
-        if (!empty($query)) {
+        if (! empty($query)) {
             $builder->where(function ($q) use ($query) {
                 $q->where('code', 'LIKE', "%{$query}%")
                     ->orWhere('title', 'LIKE', "%{$query}%")
@@ -193,23 +191,23 @@ trait HasHierarchicalItems
         }
 
         // Filtres additionnels
-        if (!empty($filters['file_type'])) {
-            $builder->where('file_type', 'LIKE', $filters['file_type'] . '%');
+        if (! empty($filters['file_type'])) {
+            $builder->where('file_type', 'LIKE', $filters['file_type'].'%');
         }
 
-        if (!empty($filters['is_sub'])) {
+        if (! empty($filters['is_sub'])) {
             $builder->where('is_sub', $filters['is_sub']);
         }
 
-        if (!empty($filters['uploaded_by'])) {
+        if (! empty($filters['uploaded_by'])) {
             $builder->where('uploaded_by', $filters['uploaded_by']);
         }
 
-        if (!empty($filters['date_from'])) {
+        if (! empty($filters['date_from'])) {
             $builder->whereDate('upload_date', '>=', $filters['date_from']);
         }
 
-        if (!empty($filters['date_to'])) {
+        if (! empty($filters['date_to'])) {
             $builder->whereDate('upload_date', '<=', $filters['date_to']);
         }
 
@@ -224,7 +222,7 @@ trait HasHierarchicalItems
         // Invalider son propre cache
         $cacheKeys = [
             $this->getStatsCacheKey(),
-            $this->getStatsCacheKey() . '_simple'
+            $this->getStatsCacheKey().'_simple',
         ];
 
         foreach ($cacheKeys as $key) {
@@ -234,7 +232,6 @@ trait HasHierarchicalItems
         // Invalider le cache de tous les parents automatiquement
         $this->getParentModel()?->clearStatsCache();
     }
-
 
     /**
      * Observer pour invalider le cache quand des items changent
@@ -262,7 +259,7 @@ trait HasHierarchicalItems
             },
             'items as secondary_items_count' => function ($q) {
                 $q->where('is_sub', true);
-            }
+            },
         ]);
     }
 
@@ -290,7 +287,7 @@ trait HasHierarchicalItems
      */
     protected function formatFileSize(?int $bytes): string
     {
-        if (!$bytes || $bytes <= 0) {
+        if (! $bytes || $bytes <= 0) {
             return '0 B';
         }
 
@@ -299,6 +296,7 @@ trait HasHierarchicalItems
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
+
+        return round($size, 2).' '.$units[$power];
     }
 }

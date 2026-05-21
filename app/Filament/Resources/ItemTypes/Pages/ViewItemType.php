@@ -17,6 +17,7 @@ class ViewItemType extends ViewRecord
             AuditsRelationManager::class,
         ];
     }
+
     protected function getHeaderActions(): array
     {
         return [

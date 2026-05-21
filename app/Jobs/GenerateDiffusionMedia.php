@@ -59,14 +59,15 @@ class GenerateDiffusionMedia implements ShouldQueue
 
             // 2. Input/Output Paths
             $inputPath = Storage::disk('original_medias')->path($this->item->file_path);
+            $resolver = app(\App\Services\MediaVariationPathResolver::class);
 
             // Check if input exists
             if (! file_exists($inputPath)) {
                 throw new \Exception("Source file not found at: {$inputPath}");
             }
 
-            $outputDir = 'items/'.$this->item->code.'/diffusion';
-            $outputPathRelative = $outputDir.'/'.$this->item->code; // Base name
+            $outputDir = $resolver->variationDir($this->item, 'diffusion');
+            $outputPathRelative = $resolver->variationPath($this->item, 'diffusion', $this->item->code);
 
             // Ensure output directory exists
             Storage::disk($diffusionDisk)->deleteDirectory($outputDir);
@@ -132,7 +133,7 @@ class GenerateDiffusionMedia implements ShouldQueue
 
                 $variationType = MediaVariationType::VIDEO;
                 $mimeType = 'application/x-mpegURL';
-                $finalPath = $outputDir.'/'.$playlistName;
+                $finalPath = $resolver->variationPath($this->item, 'diffusion', $playlistName);
                 $isStreaming = true;
 
             } else {
@@ -157,7 +158,7 @@ class GenerateDiffusionMedia implements ShouldQueue
 
                 $variationType = MediaVariationType::AUDIO;
                 $mimeType = 'application/x-mpegURL';
-                $finalPath = $outputDir.'/'.$playlistName;
+                $finalPath = $resolver->variationPath($this->item, 'diffusion', $playlistName);
                 $isStreaming = true;
             }
 

@@ -2,20 +2,17 @@
 
 namespace App\Filament\Pages;
 
-use App\Models\Fond;
-use App\Models\Corpus;
-use App\Models\Collection;
-use App\Models\Item;
 use App\Filament\Resources\Items\Schemas\MediaInfoSchema;
+use App\Models\Collection;
+use App\Models\Corpus;
+use App\Models\Fond;
+use App\Models\Item;
 use Filament\Forms\Components\TextInput;
 use Filament\Forms\Concerns\InteractsWithForms;
 use Filament\Forms\Contracts\HasForms;
-use Filament\Infolists\Concerns\InteractsWithInfolists;
-use Filament\Infolists\Contracts\HasInfolists;
-use Filament\Schemas\Schema;
 use Filament\Pages\Page;
+use Filament\Schemas\Schema;
 use Filament\Support\Icons\Heroicon;
-use Illuminate\Contracts\Support\Htmlable;
 
 class HierarchyExplorer extends Page implements HasForms
 {
@@ -23,10 +20,15 @@ class HierarchyExplorer extends Page implements HasForms
 
     // Configuration de base
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-folder';
+
     protected static string|null|\UnitEnum $navigationGroup = 'Recherche & Exploration';
+
     protected static ?string $navigationLabel = 'Vue Hiérarchique';
+
     protected static ?string $title = '';
+
     protected static ?int $navigationSort = 2;
+
     protected static ?string $slug = 'hierarchy-explorer';
 
     protected string $view = 'filament.pages.hierarchy-explorer';
@@ -39,33 +41,46 @@ class HierarchyExplorer extends Page implements HasForms
 
     // États de sélection
     public ?string $selectedType = null; // 'fond', 'corpus', 'collection', 'item'
+
     public ?int $selectedId = null;
+
     public ?array $selectedElement = null;
 
     // État de sélection item (colonne 2)
     public ?int $selectedItemId = null;
+
     public ?array $selectedItem = null;
 
     // États d'expansion dans les arbres
     public array $expandedFonds = [];
+
     public array $expandedCorpuses = [];
+
     public array $expandedCollections = []; // Pour le mode Collections (expand mainItems)
+
     public array $expandedItems = [];
+
     public array $expandedColumn2Items = [];
 
     // Pagination pour le mode Collections
     public int $collectionsPerPage = 100;
+
     public int $collectionsPage = 1;
+
     public bool $loadingMoreCollections = false;
+
     public bool $hasMoreCollections = true;
 
     // Scroll bidirectionnel
     public int $collectionsStartIndex = 0;
+
     public bool $hasMoreCollectionsBefore = false;
+
     public bool $loadingMoreCollectionsBefore = false;
 
     // Propriétés pour les paramètres URL
     public ?string $focus = null;
+
     public ?int $id = null;
 
     protected $queryString = [
@@ -117,7 +132,6 @@ class HierarchyExplorer extends Page implements HasForms
             $this->selectedItem = null;
             $this->expandedColumn2Items = [];
 
-
             // Réinitialiser la pagination des collections
             $this->collectionsPage = 1;
             $this->collectionsStartIndex = 0;
@@ -140,11 +154,15 @@ class HierarchyExplorer extends Page implements HasForms
                 switch (strtolower($this->focus)) {
                     case 'fond':
                     case 'fonds':
-                        if ($this->mode !== 'fonds') $this->mode = 'fonds';
+                        if ($this->mode !== 'fonds') {
+                            $this->mode = 'fonds';
+                        }
                         $this->initializeFocusOnFond($this->id);
                         break;
                     case 'corpus':
-                        if ($this->mode !== 'fonds') $this->mode = 'fonds';
+                        if ($this->mode !== 'fonds') {
+                            $this->mode = 'fonds';
+                        }
                         $this->initializeFocusOnCorpus($this->id);
                         break;
                     case 'collection':
@@ -229,7 +247,7 @@ class HierarchyExplorer extends Page implements HasForms
     protected function initializeFocusOnItem(int $itemId): void
     {
         $item = Item::with(['itemable'])->find($itemId);
-        if (!$item || !$item->itemable) {
+        if (! $item || ! $item->itemable) {
             return;
         }
 
@@ -237,11 +255,12 @@ class HierarchyExplorer extends Page implements HasForms
         // Pour simplifier, on se concentre sur l'affichage de l'item
 
         // Si c'est un item principal (parent = Collection), on peut le sélectionner en Col 1 (Mode Collections)
-        if ($item->itemable_type === 'App\Models\Collection' && !$item->is_sub) {
+        if ($item->itemable_type === 'App\Models\Collection' && ! $item->is_sub) {
             if ($this->mode === 'collections') {
                 $this->initializeFocusOnCollection($item->itemable_id);
                 // On sélectionne l'item comme élément principal (Col 1)
                 $this->selectElement('item', $item->id);
+
                 return;
             }
         }
@@ -274,13 +293,15 @@ class HierarchyExplorer extends Page implements HasForms
      */
     protected function findVisibleParent($item)
     {
-        if (!$item->itemable) return null;
+        if (! $item->itemable) {
+            return null;
+        }
 
         // Si le parent est une Collection/Corpus/Fond, c'est bon
         if (in_array($item->itemable_type, [
             'App\Models\Collection',
             'App\Models\Corpus',
-            'App\Models\Fond'
+            'App\Models\Fond',
         ])) {
             return $item->itemable;
         }
@@ -288,9 +309,10 @@ class HierarchyExplorer extends Page implements HasForms
         // Si le parent est un Item
         if ($item->itemable_type === 'App\Models\Item') {
             // Si Mode Collections et parent est Item Principal, c'est bon
-            if ($this->mode === 'collections' && !$item->itemable->is_sub) {
+            if ($this->mode === 'collections' && ! $item->itemable->is_sub) {
                 return $item->itemable;
             }
+
             // Sinon récursion
             return $this->findVisibleParent($item->itemable);
         }
@@ -307,7 +329,6 @@ class HierarchyExplorer extends Page implements HasForms
         $this->selectedItem = null;
         $this->expandedColumn2Items = [];
 
-
         // Mise à jour URL
         $this->focus = $type;
         $this->id = $id;
@@ -315,35 +336,35 @@ class HierarchyExplorer extends Page implements HasForms
         switch ($type) {
             case 'fond':
                 $element = Fond::with(['corpuses', 'items'])
-                            ->withCount(['corpuses', 'secondaryItems'])
-                            ->find($id);
-                if (!in_array($id, $this->expandedFonds)) {
+                    ->withCount(['corpuses', 'secondaryItems'])
+                    ->find($id);
+                if (! in_array($id, $this->expandedFonds)) {
                     $this->expandedFonds[] = $id;
                 }
                 break;
             case 'corpus':
                 $element = Corpus::with(['collections', 'items', 'fonds'])
-                            ->withCount(['collections', 'secondaryItems'])
-                            ->find($id);
-                if (!in_array($id, $this->expandedCorpuses)) {
+                    ->withCount(['collections', 'secondaryItems'])
+                    ->find($id);
+                if (! in_array($id, $this->expandedCorpuses)) {
                     $this->expandedCorpuses[] = $id;
                 }
                 break;
             case 'collection':
                 $element = Collection::with(['items', 'corpuses.fonds'])
-                            ->withCount(['mainItems', 'secondaryItems'])
-                            ->find($id);
+                    ->withCount(['mainItems', 'secondaryItems'])
+                    ->find($id);
                 // En mode Collections, on expand pour voir les mainItems
-                if ($this->mode === 'collections' && !in_array($id, $this->expandedCollections)) {
+                if ($this->mode === 'collections' && ! in_array($id, $this->expandedCollections)) {
                     $this->expandedCollections[] = $id;
                 }
                 break;
             case 'item': // Item (Mode Collections)
                 $element = Item::with(['childItems', 'itemType', 'itemable'])
-                            ->withCount(['childItems as secondary_items_count' => function($q) {
-                                $q->where('is_sub', true);
-                            }])
-                            ->find($id);
+                    ->withCount(['childItems as secondary_items_count' => function ($q) {
+                        $q->where('is_sub', true);
+                    }])
+                    ->find($id);
                 // Expand si nécessaire
                 break;
             default:
@@ -361,7 +382,7 @@ class HierarchyExplorer extends Page implements HasForms
         $this->selectedItem = $item ? $item->toArray() : null;
 
         // Auto-déplier l'item s'il a des médias
-        if (!in_array($itemId, $this->expandedColumn2Items)) {
+        if (! in_array($itemId, $this->expandedColumn2Items)) {
             $this->expandedColumn2Items[] = $itemId;
         }
     }
@@ -421,7 +442,7 @@ class HierarchyExplorer extends Page implements HasForms
             $query->where(function ($q) {
                 $q->where('code', 'like', "%{$this->searchTerm}%")
                     ->orWhere('title', 'like', "%{$this->searchTerm}%")
-                    ->orWhere(function($subQuery) {
+                    ->orWhere(function ($subQuery) {
                         $subQuery->whereRaw("? LIKE CONCAT(code, '%')", [$this->searchTerm]);
                     });
             });
@@ -432,11 +453,15 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function getCorpusesForFond(?int $fondId)
     {
-        if (!$fondId) return collect();
+        if (! $fondId) {
+            return collect();
+        }
 
         // Many-to-Many: passer par la relation
         $fond = Fond::find($fondId);
-        if (!$fond) return collect();
+        if (! $fond) {
+            return collect();
+        }
 
         $query = $fond->corpuses()->withCount(['collections', 'items']);
 
@@ -445,13 +470,17 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function getCollectionsForCorpus(?int $corpusId)
     {
-        if (!$corpusId) return collect();
+        if (! $corpusId) {
+            return collect();
+        }
 
         // Many-to-Many: passer par la relation
         $corpus = Corpus::find($corpusId);
-        if (!$corpus) return collect();
+        if (! $corpus) {
+            return collect();
+        }
 
-        //$query = $corpus->collections()->withCount('items');
+        // $query = $corpus->collections()->withCount('items');
         $query = $corpus->collections();
 
         return $query->orderBy('collections.code')->get();
@@ -466,7 +495,7 @@ class HierarchyExplorer extends Page implements HasForms
             $query->where(function ($q) {
                 $q->where('code', 'like', "%{$this->searchTerm}%")
                     ->orWhere('title', 'like', "%{$this->searchTerm}%")
-                    ->orWhere(function($subQuery) {
+                    ->orWhere(function ($subQuery) {
                         $subQuery->whereRaw("? LIKE CONCAT(code, '%')", [$this->searchTerm]);
                     });
             });
@@ -510,7 +539,7 @@ class HierarchyExplorer extends Page implements HasForms
     protected function calculateCollectionRank(int $collectionId): int
     {
         $collection = Collection::find($collectionId);
-        if (!$collection) {
+        if (! $collection) {
             return 0;
         }
 
@@ -526,7 +555,7 @@ class HierarchyExplorer extends Page implements HasForms
     protected function initializeCollectionWindow(int $collectionId): void
     {
         $collection = Collection::find($collectionId);
-        if (!$collection) {
+        if (! $collection) {
             return;
         }
 
@@ -551,13 +580,12 @@ class HierarchyExplorer extends Page implements HasForms
 
     }
 
-
     /**
      * Charge plus de collections vers le bas (infinite scroll)
      */
     public function loadMoreCollections(): void
     {
-        if (!$this->hasMoreCollections || $this->loadingMoreCollections) {
+        if (! $this->hasMoreCollections || $this->loadingMoreCollections) {
             return;
         }
 
@@ -571,7 +599,7 @@ class HierarchyExplorer extends Page implements HasForms
      */
     public function loadMoreCollectionsBefore(): void
     {
-        if (!$this->hasMoreCollectionsBefore || $this->loadingMoreCollectionsBefore) {
+        if (! $this->hasMoreCollectionsBefore || $this->loadingMoreCollectionsBefore) {
             return;
         }
 
@@ -586,13 +614,16 @@ class HierarchyExplorer extends Page implements HasForms
         $this->loadingMoreCollectionsBefore = false;
     }
 
-
     public function getMainItemsForCollection(?int $collectionId)
     {
-        if (!$collectionId) return collect();
+        if (! $collectionId) {
+            return collect();
+        }
 
         $collection = Collection::find($collectionId);
-        if (!$collection) return collect();
+        if (! $collection) {
+            return collect();
+        }
 
         $query = $collection->mainItems()->withCount('childItems');
 
@@ -602,26 +633,32 @@ class HierarchyExplorer extends Page implements HasForms
     // Propriétés computed pour la colonne 2
     public function getDirectMediaAssociatesProperty()
     {
-        if (!$this->selectedType || !$this->selectedId) {
+        if (! $this->selectedType || ! $this->selectedId) {
             return collect();
         }
 
         if ($this->selectedType === 'item') {
             $item = Item::find($this->selectedId);
-            if (!$item) return collect();
+            if (! $item) {
+                return collect();
+            }
             $query = $item->childItems()->where('is_sub', true)->with(['itemType']);
         } else {
-            $modelClass = match($this->selectedType) {
+            $modelClass = match ($this->selectedType) {
                 'fond' => Fond::class,
                 'corpus' => Corpus::class,
                 'collection' => Collection::class,
                 default => null
             };
 
-            if (!$modelClass) return collect();
+            if (! $modelClass) {
+                return collect();
+            }
 
             $instance = $modelClass::find($this->selectedId);
-            if (!$instance) return collect();
+            if (! $instance) {
+                return collect();
+            }
 
             // On ne veut QUE les médias associés (is_sub = true) attachés directement
             $query = $instance->items()->where('is_sub', true)->with(['itemType']);
@@ -632,7 +669,7 @@ class HierarchyExplorer extends Page implements HasForms
                 $q->where('code', 'like', "%{$this->searchTerm}%")
                     ->orWhere('title', 'like', "%{$this->searchTerm}%")
                     ->orWhere('file_name', 'like', "%{$this->searchTerm}%")
-                    ->orWhere(function($subQuery) {
+                    ->orWhere(function ($subQuery) {
                         $subQuery->whereRaw("? LIKE CONCAT(code, '%')", [$this->searchTerm]);
                     });
             });
@@ -643,15 +680,17 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function getCollectionItemsProperty()
     {
-        if ($this->selectedType !== 'collection' || !$this->selectedId) {
+        if ($this->selectedType !== 'collection' || ! $this->selectedId) {
             return collect();
         }
 
         $collection = Collection::find($this->selectedId);
-        if (!$collection) return collect();
+        if (! $collection) {
+            return collect();
+        }
 
         // On ne veut QUE les items standards (is_sub = false) attachés directement
-        $query = $collection->items()->where('is_sub', false)->with(['childItems' => function($q) {
+        $query = $collection->items()->where('is_sub', false)->with(['childItems' => function ($q) {
             $q->where('is_sub', true)->with('itemType');
         }, 'itemType']);
 
@@ -661,7 +700,7 @@ class HierarchyExplorer extends Page implements HasForms
     // Méthodes utilitaires
     public function formatFileSize(?int $bytes): string
     {
-        if (!$bytes || $bytes <= 0) {
+        if (! $bytes || $bytes <= 0) {
             return '0 B';
         }
 
@@ -670,21 +709,25 @@ class HierarchyExplorer extends Page implements HasForms
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
+
+        return round($size, 2).' '.$units[$power];
     }
 
     public function formatDuration(?int $seconds): string
     {
-        if (!$seconds) return '-';
+        if (! $seconds) {
+            return '-';
+        }
 
         $minutes = floor($seconds / 60);
         $remainingSeconds = $seconds % 60;
+
         return sprintf('%d:%02d', $minutes, $remainingSeconds);
     }
 
     public function getSelectedElementTypeLabel(): string
     {
-        return match($this->selectedType) {
+        return match ($this->selectedType) {
             'fond' => 'Fond',
             'corpus' => 'Corpus',
             'collection' => 'Collection',
@@ -695,7 +738,7 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function getSelectedElementTypeIcon(): Heroicon
     {
-        return match($this->selectedType) {
+        return match ($this->selectedType) {
             'fond' => Heroicon::OutlinedBuildingLibrary,
             'corpus' => Heroicon::OutlinedBookOpen,
             'collection' => Heroicon::OutlinedArchiveBoxArrowDown,
@@ -706,11 +749,11 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function getSelectedElementResourceRoute(string $action = 'view'): ?string
     {
-        if (!$this->selectedType || !$this->selectedId) {
+        if (! $this->selectedType || ! $this->selectedId) {
             return null;
         }
 
-        $resourceName = match($this->selectedType) {
+        $resourceName = match ($this->selectedType) {
             'fond' => 'fonds',
             'corpus' => 'corpuses',
             'collection' => 'collections',
@@ -718,7 +761,7 @@ class HierarchyExplorer extends Page implements HasForms
             default => null
         };
 
-        if (!$resourceName) {
+        if (! $resourceName) {
             return null;
         }
 
@@ -727,11 +770,11 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function getSelectedItemResourceRoute(string $action = 'view'): ?string
     {
-        if (!$this->selectedItemId || !$this->selectedItem) {
+        if (! $this->selectedItemId || ! $this->selectedItem) {
             return null;
         }
 
-        $resourceName = !empty($this->selectedItem['is_sub']) ? 'media-associes' : 'items';
+        $resourceName = ! empty($this->selectedItem['is_sub']) ? 'media-associes' : 'items';
 
         return route("filament.mms-admin.resources.{$resourceName}.{$action}", ['record' => $this->selectedItemId]);
     }
@@ -741,7 +784,7 @@ class HierarchyExplorer extends Page implements HasForms
     {
         $url = route('filament.mms-admin.resources.corpuses.create');
         if ($this->selectedType === 'fond' && $this->selectedId) {
-            $url .= '?fond_id=' . $this->selectedId;
+            $url .= '?fond_id='.$this->selectedId;
         }
         $this->redirect($url);
     }
@@ -750,7 +793,7 @@ class HierarchyExplorer extends Page implements HasForms
     {
         $url = route('filament.mms-admin.resources.collections.create');
         if ($this->selectedType === 'corpus' && $this->selectedId) {
-            $url .= '?corpus_id=' . $this->selectedId;
+            $url .= '?corpus_id='.$this->selectedId;
         }
         $this->redirect($url);
     }
@@ -759,7 +802,7 @@ class HierarchyExplorer extends Page implements HasForms
     {
         $url = route('filament.mms-admin.resources.items.create');
         if ($this->selectedId) {
-            $paramName = match($this->selectedType) {
+            $paramName = match ($this->selectedType) {
                 'fond' => 'fond_id',
                 'corpus' => 'corpus_id',
                 'collection' => 'collection_id',
@@ -767,7 +810,7 @@ class HierarchyExplorer extends Page implements HasForms
                 default => null
             };
             if ($paramName) {
-                $url .= "?{$paramName}=" . $this->selectedId;
+                $url .= "?{$paramName}=".$this->selectedId;
             }
         }
         $this->redirect($url);
@@ -777,19 +820,20 @@ class HierarchyExplorer extends Page implements HasForms
     {
         $url = route('filament.mms-admin.resources.items.create');
         if ($this->selectedItemId) {
-            $url .= '?parent_item_id=' . $this->selectedItemId . '&item_type=translation';
+            $url .= '?parent_item_id='.$this->selectedItemId.'&item_type=translation';
         }
         $this->redirect($url);
     }
 
     public function mediaInfolist(Schema $schema): Schema
     {
-        if($this->getSelectedItemRecordProperty() === null){
-           return $schema
-            ->components([
-                MediaInfoSchema::make(),
-            ]);
+        if ($this->getSelectedItemRecordProperty() === null) {
+            return $schema
+                ->components([
+                    MediaInfoSchema::make(),
+                ]);
         }
+
         return $schema
             ->record($this->getSelectedItemRecordProperty())
             ->components([
@@ -812,7 +856,7 @@ class HierarchyExplorer extends Page implements HasForms
 
     public function hasChildren(string $type, $model): bool
     {
-        return match($type) {
+        return match ($type) {
             'fond' => ($model->corpuses_count ?? $model->corpuses()->count()) > 0,
             'corpus' => ($model->collections_count ?? $model->collections()->count()) > 0,
             'collection' => $this->mode === 'collections' ? ($model->items_count ?? $model->mainItems()->count()) > 0 : false,

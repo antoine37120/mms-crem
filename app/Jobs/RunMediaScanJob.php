@@ -39,11 +39,11 @@ class RunMediaScanJob implements ShouldQueue
      */
     public function handle(ScannedFileAdminService $service): void
     {
-        Log::info("Début du scan média asynchrone...");
+        Log::info('Début du scan média asynchrone...');
 
         $stats = $service->runScan($this->scanPath);
 
-        Log::info("Scan média terminé", $stats);
+        Log::info('Scan média terminé', $stats);
 
         // Dispatch automatiquement items:process-pending-media pour traiter les items nouvellement associés
         Artisan::queue('items:process-pending-media');
@@ -52,7 +52,7 @@ class RunMediaScanJob implements ShouldQueue
             $notification = Notification::make()
                 ->title('Scan média terminé')
                 ->body(sprintf(
-                    "Le scan est terminé. %d fichiers trouvés, %d associés, %d orphelins. Le traitement des médias a été lancé.",
+                    'Le scan est terminé. %d fichiers trouvés, %d associés, %d orphelins. Le traitement des médias a été lancé.',
                     $stats['found'],
                     $stats['matched'],
                     $stats['orphaned']
@@ -63,7 +63,7 @@ class RunMediaScanJob implements ShouldQueue
             try {
                 $notification->sendToDatabase($this->user);
             } catch (\Exception $e) {
-                Log::warning("Notification de scan média non envoyée à l'utilisateur : " . $e->getMessage());
+                Log::warning("Notification de scan média non envoyée à l'utilisateur : ".$e->getMessage());
             }
         }
     }

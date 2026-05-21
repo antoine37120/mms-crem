@@ -76,11 +76,13 @@ class ProcessPendingMedia extends Command
                 $disk = Storage::disk('original_medias');
 
                 if (! $disk->exists($item->file_path)) {
-                    $this->warn("\nFichier introuvable pour l'item #{$item->id} : {$item->file_path}");
+                    //$this->warn("\nFichier introuvable pour l'item #{$item->id} : {$item->file_path}");
                     $missingFileCount++;
                     $bar->advance();
 
                     continue;
+                } else {
+                    $this->warn("\nFichier trouvé pour l'item #{$item->id} : {$item->file_path}");
                 }
 
                 $fullPath = $disk->path($item->file_path);

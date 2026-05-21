@@ -3,10 +3,10 @@
 namespace App\Filament\Widgets;
 
 use App\Models\ItemView;
+use Carbon\Carbon;
 use Filament\Widgets\ChartWidget;
 use Flowframe\Trend\Trend;
 use Flowframe\Trend\TrendValue;
-use Carbon\Carbon;
 
 class ViewsOverTimeChart extends ChartWidget
 {
@@ -15,7 +15,7 @@ class ViewsOverTimeChart extends ChartWidget
     protected static ?int $sort = 1;
 
     // Make it span full width if needed, or stick to default
-    protected int | string | array $columnSpan = 1;
+    protected int|string|array $columnSpan = 1;
 
     protected function getData(): array
     {

@@ -44,15 +44,14 @@ class ItemTypePolicy
     {
         return true;
     }
+
     public function audit(User $user, ItemType $item): bool
     {
         return true;
     }
+
     public function restoreAudit(User $user, ItemType $item): bool
     {
         return false;
     }
-
-
-
 }

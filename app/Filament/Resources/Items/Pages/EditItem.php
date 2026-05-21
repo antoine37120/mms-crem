@@ -17,6 +17,7 @@ class EditItem extends EditRecord
     {
         return $this->getResource()::getUrl('view', ['record' => $this->getRecord()]);
     }
+
     protected function getHeaderActions(): array
     {
         return [

@@ -2,8 +2,8 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
 use App\Models\DocumentationPage;
+use Illuminate\Console\Command;
 use Illuminate\Support\Facades\File;
 
 class ImportDocumentation extends Command
@@ -29,8 +29,9 @@ class ImportDocumentation extends Command
     {
         $docsPath = resource_path('docs');
 
-        if (!File::exists($docsPath)) {
+        if (! File::exists($docsPath)) {
             $this->error("The directory {$docsPath} does not exist.");
+
             return;
         }
 
@@ -40,11 +41,11 @@ class ImportDocumentation extends Command
         foreach ($files as $file) {
             if ($file->getExtension() === 'md') {
                 $filename = $file->getFilenameWithoutExtension();
-                
+
                 // Parse order and title from filename (e.g. 05-administration)
                 $order = 0;
                 $titleStr = $filename;
-                
+
                 if (preg_match('/^(\d+)-(.*)$/', $filename, $matches)) {
                     $order = (int) $matches[1];
                     $titleStr = str_replace('-', ' ', $matches[2]);

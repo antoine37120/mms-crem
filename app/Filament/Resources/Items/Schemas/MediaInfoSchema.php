@@ -4,10 +4,10 @@ namespace App\Filament\Resources\Items\Schemas;
 
 use App\Models\MediaVariation;
 use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Illuminate\Support\Facades\Storage;
 
 class MediaInfoSchema
@@ -24,7 +24,7 @@ class MediaInfoSchema
                 RepeatableEntry::make('mediaVariations')
                     ->poll('10s')
                     ->label('Fichiers & Variations')
-                    ->hidden(fn ($record) => !$record || $record->mediaVariations->isEmpty())
+                    ->hidden(fn ($record) => ! $record || $record->mediaVariations->isEmpty())
                     ->schema([
                         Grid::make(3)
                             ->schema([
@@ -48,13 +48,13 @@ class MediaInfoSchema
                                     ->state('Ouvrir/Télécharger')
                                     ->badge()
                                     ->color('primary')
-                                    ->url(fn (MediaVariation $record): ?string => match(true) {
+                                    ->url(fn (MediaVariation $record): ?string => match (true) {
                                         $record->is_streaming => route('media.master', ['code' => $record->item->code]),
                                         $record->profile_name === 'original' => route('media.master', ['code' => $record->item->code]),
                                         $record->profile_name === 'waveform_json' => route('media.waveform', ['code' => $record->item->code]),
                                         default => null,
                                     })
-                                    ->visible(fn (MediaVariation $record): bool => match(true) {
+                                    ->visible(fn (MediaVariation $record): bool => match (true) {
                                         $record->is_streaming => true,
                                         $record->profile_name === 'original' => true,
                                         $record->profile_name === 'waveform_json' => true,
@@ -68,7 +68,7 @@ class MediaInfoSchema
                 TextEntry::make('no_mediaVariations')
                     ->label('Fichiers & Variations')
                     ->default('Aucune variation disponible.')
-                    ->visible(fn ($record) => !$record || $record->mediaVariations->isEmpty())
+                    ->visible(fn ($record) => ! $record || $record->mediaVariations->isEmpty())
                     ->columnSpanFull(),
             ]);
     }

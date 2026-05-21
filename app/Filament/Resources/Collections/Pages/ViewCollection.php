@@ -18,8 +18,8 @@ use Filament\Support\Enums\IconPosition;
 use Filament\Support\Enums\TextSize;
 use Filament\Support\Icons\Heroicon;
 use Illuminate\Support\HtmlString;
-
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+
 class ViewCollection extends ViewRecord
 {
     protected static string $resource = CollectionResource::class;
@@ -32,7 +32,6 @@ class ViewCollection extends ViewRecord
             AuditsRelationManager::class,
         ];
     }
-
 
     protected function getHeaderActions(): array
     {
@@ -47,7 +46,7 @@ class ViewCollection extends ViewRecord
                 ->color('info')
                 ->url(fn () => route('filament.mms-admin.pages.hierarchy-explorer', [
                     'focus' => 'collection',
-                    'id' => $this->record->id
+                    'id' => $this->record->id,
                 ])),
         ];
     }
@@ -92,7 +91,7 @@ class ViewCollection extends ViewRecord
                                     TextEntry::make('title')
                                         ->label('Titre')
                                         ->placeholder('Aucun titre défini')
-                                        //->icon('heroicon-o-tag')
+                                        // ->icon('heroicon-o-tag')
                                         ->size(TextSize::Large),
                                 ]),
 
@@ -100,9 +99,9 @@ class ViewCollection extends ViewRecord
                                 ->schema([
                                     TextEntry::make('id')
                                         ->label('Corpus associés')
-                                        ///->icon('heroicon-o-book-open')
-                                        //->badge()
-                                        //->iconColor('primary')
+                                        // /->icon('heroicon-o-book-open')
+                                        // ->badge()
+                                        // ->iconColor('primary')
                                         ->formatStateUsing(function ($record) {
                                             if ($record->corpuses->isEmpty()) {
                                                 return 'Aucun corpus associé';
@@ -110,10 +109,10 @@ class ViewCollection extends ViewRecord
 
                                             $corpuses = $record->corpuses->map(function ($corpus) {
                                                 return '
-                                                <a href="' . CorpusResource::getUrl('view', ['record' => $corpus->id]) . '" class="text-primary-600 hover:text-primary-800 underline">
+                                                <a href="'.CorpusResource::getUrl('view', ['record' => $corpus->id]).'" class="text-primary-600 hover:text-primary-800 underline">
                                                 <div class="fi-in-text-item  fi-in-text-has-badges fi-wrapped  fi-in-text">
-                                                <span class="fi-color fi-color-primary fi-text-color-600 dark:fi-text-color-200 fi-badge fi-size-sm">' .
-                                                    $corpus->code . '</span></div></a>';
+                                                <span class="fi-color fi-color-primary fi-text-color-600 dark:fi-text-color-200 fi-badge fi-size-sm">'.
+                                                    $corpus->code.'</span></div></a>';
                                             })->implode('');
 
                                             return new HtmlString($corpuses);
@@ -132,7 +131,7 @@ class ViewCollection extends ViewRecord
                                         ->since()
                                         ->tooltip(fn ($state) => $state?->format('d/m/Y à H:i:s')),
                                 ]),
-                        ])
+                        ]),
                     ])
                     ->compact()
                     ->columnSpanFull(),
@@ -145,8 +144,8 @@ class ViewCollection extends ViewRecord
                             ->schema([
                                 CollectionStatsAndLogs::make('id')
                                     ->hiddenLabel()
-                                    ->columnSpanFull()
-                            ])
+                                    ->columnSpanFull(),
+                            ]),
                     ])
                     ->collapsible()
                     ->columnSpanFull(),
@@ -155,14 +154,17 @@ class ViewCollection extends ViewRecord
 
     protected function formatFileSize(?int $bytes): string
     {
-        if (!$bytes) return '0 B';
+        if (! $bytes) {
+            return '0 B';
+        }
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $power = floor(log($bytes, 1024));
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
+
+        return round($size, 2).' '.$units[$power];
     }
 
     protected function getStatusColor(): string

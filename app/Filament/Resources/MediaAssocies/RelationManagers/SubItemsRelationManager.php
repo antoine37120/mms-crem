@@ -3,50 +3,42 @@
 namespace App\Filament\Resources\MediaAssocies\RelationManagers;
 
 use App\Models\ItemType;
-use App\Models\Item;
-use Filament\Forms;
-
-use Filament\Actions\AttachAction;
+use Filament\Actions\Action;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\CreateAction;
 use Filament\Actions\DeleteAction;
 use Filament\Actions\DeleteBulkAction;
-use Filament\Actions\DetachAction;
-use Filament\Actions\DetachBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreAction;
 use Filament\Actions\RestoreBulkAction;
-use Filament\Actions\ActionGroup;
 use Filament\Actions\ViewAction;
-use Filament\Actions\Action;
+use Filament\Forms\Components\Hidden;
+use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
 use Filament\Resources\RelationManagers\RelationManager;
+use Filament\Schemas\Components\FusedGroup;
+use Filament\Schemas\Components\Text;
+use Filament\Schemas\Components\Utilities\Get;
+use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use Filament\Forms\Components\Select;
-use Filament\Forms\Components\FileUpload;
-use Filament\Forms\Components\Hidden;
-use Filament\Schemas\Components\Utilities\Get;
-use Filament\Schemas\Components\Utilities\Set;
-use Filament\Schemas\Components\FusedGroup;
 use Illuminate\Validation\Rules\Unique;
-
-use Filament\Schemas\Components\Text;
-
-use Filament\Infolists\Components\TextEntry;
 
 class SubItemsRelationManager extends RelationManager
 {
     protected static string $relationship = 'items';
 
     protected static ?string $title = 'Médias associés';
+
     protected static ?string $modelLabel = 'médias associé';
+
     protected static ?string $pluralModelLabel = 'médias associés';
 
     protected static ?string $recordTitleAttribute = 'code';
@@ -70,13 +62,13 @@ class SubItemsRelationManager extends RelationManager
                     ->live() // ← IMPORTANT : remplace "reactive()"
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         // Réinitialiser le champ langue si le type change
-                        if (!$state) {
+                        if (! $state) {
                             $set('language_code', null);
                         }
-                        if (!$state) {
-                            return ;
+                        if (! $state) {
+                            return;
                         }
-                        $suffix = ItemType::find($state)->suffix ;
+                        $suffix = ItemType::find($state)->suffix;
                         $itemLang = $get('language_code');
                         if ($suffix) {
                             $set('code_suffix', '_'.$suffix);
@@ -91,29 +83,31 @@ class SubItemsRelationManager extends RelationManager
                     ->live()
                     ->visible(function (Get $get): bool {
                         $itemTypeId = $get('item_type_id');
-                        if (!$itemTypeId) {
+                        if (! $itemTypeId) {
                             return false;
                         }
                         $itemType = ItemType::find($itemTypeId);
+
                         return $itemType && $itemType->requires_language;
                     })
                     ->required(function (Get $get): bool {
                         $itemTypeId = $get('item_type_id');
-                        if (!$itemTypeId) {
+                        if (! $itemTypeId) {
                             return false;
                         }
                         $itemType = ItemType::find($itemTypeId);
+
                         return $itemType && $itemType->requires_language;
                     })
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         // Réinitialiser le champ langue si le type change
                         $itemTypeId = $get('item_type_id');
-                        $itemType = ItemType::find($itemTypeId)->suffix ;
-                        if($itemType) {
-                            if (!$state) {
+                        $itemType = ItemType::find($itemTypeId)->suffix;
+                        if ($itemType) {
+                            if (! $state) {
                                 $set('code_suffix', $itemType);
                             } else {
-                                $set('code_suffix', $itemType . '_' . $state);
+                                $set('code_suffix', $itemType.'_'.$state);
                             }
                         }
                     }),
@@ -122,16 +116,17 @@ class SubItemsRelationManager extends RelationManager
                         ->label('Code de l\'Item')
                         ->autofocus(false)
                         ->default(function (RelationManager $livewire): string {
-                            return $livewire->getOwnerRecord()->code ;
+                            return $livewire->getOwnerRecord()->code;
                         })
                         ->disabled()
                         ->dehydrated()
                         ->required()
-                        //->unique(ignoreRecord: true)
+                        // ->unique(ignoreRecord: true)
                         ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
-                            if($get('code_suffix') != '') {
+                            if ($get('code_suffix') != '') {
                                 return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'));
                             }
+
                             return $rule->where('code', $get('code_prefix'));
                         })
                         ->placeholder('Ex: CNRSMH_Arnaud_001'),
@@ -150,16 +145,17 @@ class SubItemsRelationManager extends RelationManager
                         ->required(function (Get $get): bool {
                             $itemTypeId = $get('item_type_id');
 
-                            if (!$itemTypeId) {
+                            if (! $itemTypeId) {
                                 return false;
                             }
+
                             return true;
                         })
                         ->placeholder('Ex: TRA_en ou 02'),
-                        Text::make(<<<'JS'
+                    Text::make(<<<'JS'
                             $get('code_suffix') ? `Cote enregistrée : ${$get('code_prefix')}_${$get('code_suffix')}` : `Cote enregistrée : ${$get('code_prefix')}`
                             JS)
-                        ->js()
+                        ->js(),
                 ])->label('Cote')
 
                     /*->afterLabel(function (Get $get): string {
@@ -218,7 +214,7 @@ class SubItemsRelationManager extends RelationManager
             ->recordActions([
                 ActionGroup::make([
                     ViewAction::make()
-                        ->url(fn ($record) => $record->is_sub 
+                        ->url(fn ($record) => $record->is_sub
                             ? route('filament.mms-admin.resources.media-associes.view', ['record' => $record])
                             : route('filament.mms-admin.resources.items.view', ['record' => $record])),
                     Action::make('viewInHierarchy')
@@ -227,7 +223,7 @@ class SubItemsRelationManager extends RelationManager
                         ->color('info')
                         ->url(fn ($record) => route('filament.mms-admin.pages.hierarchy-explorer', [
                             'focus' => 'item',
-                            'id' => $record->id
+                            'id' => $record->id,
                         ])),
                     EditAction::make(),
                     DeleteAction::make(),
@@ -243,7 +239,7 @@ class SubItemsRelationManager extends RelationManager
                 ]),
             ])
             ->modifyQueryUsing(fn (Builder $query) => $query
-                ->where('is_sub', true) 
+                ->where('is_sub', true)
                 ->withoutGlobalScopes([
                     SoftDeletingScope::class,
                 ]));
@@ -251,14 +247,16 @@ class SubItemsRelationManager extends RelationManager
 
     private function formatFileSize(?int $bytes): string
     {
-        if (!$bytes) return '0 B';
+        if (! $bytes) {
+            return '0 B';
+        }
 
         $units = ['B', 'KB', 'MB', 'GB'];
         $power = floor(log($bytes, 1024));
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
-    }
 
+        return round($size, 2).' '.$units[$power];
+    }
 }

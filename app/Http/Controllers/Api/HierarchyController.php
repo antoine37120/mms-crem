@@ -12,7 +12,6 @@ use Illuminate\Http\Request;
 
 class HierarchyController extends Controller
 {
-
     public function getFonds(): JsonResponse
     {
         $fonds = Fond::withCount(['corpuses'])
@@ -61,7 +60,6 @@ class HierarchyController extends Controller
 
         return response()->json($corpuses);
     }
-
 
     public function getCollections(Corpus $corpus): JsonResponse
     {
@@ -182,7 +180,7 @@ class HierarchyController extends Controller
                         'id' => $fond->id,
                         'code' => $fond->code,
                         'title' => $fond->title,
-                        'label' => "{$fond->code}" . ($fond->title ? " - {$fond->title}" : ''),
+                        'label' => "{$fond->code}".($fond->title ? " - {$fond->title}" : ''),
                     ];
                 });
             $results = array_merge($results, $fonds->toArray());
@@ -201,7 +199,7 @@ class HierarchyController extends Controller
                         'code' => $corpus->code,
                         'title' => $corpus->title,
                         'parent' => $corpus->fond->code,
-                        'label' => "{$corpus->fond->code}/{$corpus->code}" . ($corpus->title ? " - {$corpus->title}" : ''),
+                        'label' => "{$corpus->fond->code}/{$corpus->code}".($corpus->title ? " - {$corpus->title}" : ''),
                     ];
                 });
             $results = array_merge($results, $corpuses->toArray());
@@ -220,7 +218,7 @@ class HierarchyController extends Controller
                         'code' => $collection->code,
                         'title' => $collection->title,
                         'parent' => $collection->corpus->code,
-                        'label' => "{$collection->corpus->fond->code}/{$collection->corpus->code}/{$collection->code}" . ($collection->title ? " - {$collection->title}" : ''),
+                        'label' => "{$collection->corpus->fond->code}/{$collection->corpus->code}/{$collection->code}".($collection->title ? " - {$collection->title}" : ''),
                     ];
                 });
             $results = array_merge($results, $collections->toArray());
@@ -239,7 +237,7 @@ class HierarchyController extends Controller
                         'code' => $item->code,
                         'title' => $item->title,
                         'file_name' => $item->file_name,
-                        'label' => "{$item->code}" . ($item->title ? " - {$item->title}" : " - {$item->file_name}"),
+                        'label' => "{$item->code}".($item->title ? " - {$item->title}" : " - {$item->file_name}"),
                     ];
                 });
             $results = array_merge($results, $items->toArray());

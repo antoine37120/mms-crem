@@ -4,13 +4,15 @@ namespace App\Filament\Pages;
 
 use Filament\Pages\Page;
 use Illuminate\Support\Str;
-use Illuminate\Support\Facades\File;
 
 class Documentation extends Page
 {
     protected static string|null|\BackedEnum $navigationIcon = 'heroicon-o-book-open';
+
     protected static string|null|\UnitEnum $navigationGroup = 'Aide';
+
     protected static ?string $title = 'Guide Utilisateur';
+
     protected static ?int $navigationSort = 100;
 
     protected string $view = 'filament.pages.documentation';
@@ -24,7 +26,7 @@ class Documentation extends Page
 
     public function mount()
     {
-        if (!$this->currentPageId) {
+        if (! $this->currentPageId) {
             $firstPage = \App\Models\DocumentationPage::orderBy('order')->first();
             $this->currentPageId = $firstPage?->id;
         }
@@ -34,7 +36,7 @@ class Documentation extends Page
     {
         return \App\Models\DocumentationPage::whereNull('parent_id')
             ->orderBy('order')
-            ->with(['children' => fn($q) => $q->orderBy('order')])
+            ->with(['children' => fn ($q) => $q->orderBy('order')])
             ->get();
     }
 
@@ -47,8 +49,8 @@ class Documentation extends Page
     {
         $page = $this->currentPage;
 
-        if (!$page) {
-            return "Sélectionnez une page pour commencer.";
+        if (! $page) {
+            return 'Sélectionnez une page pour commencer.';
         }
 
         $content = $page->content;
@@ -61,6 +63,7 @@ class Documentation extends Page
                 $routeName = $matches[2];
                 try {
                     $url = route($routeName);
+
                     return "<a href=\"{$url}\" wire:navigate class=\"text-primary-600 hover:text-primary-500 underline\">{$label}</a>";
                 } catch (\Exception $e) {
                     return "$label (Route introuvable)";

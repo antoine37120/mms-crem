@@ -16,10 +16,15 @@ class ImportMediaItemsCommand extends Command
     protected $description = 'Importer les items depuis la table media_items';
 
     protected int $imported = 0;
+
     protected int $imported_sub = 0;
+
     protected int $imported_duplicate = 0;
+
     protected int $skipped = 0;
+
     protected int $errors = 0;
+
     protected array $errorMessages = [];
 
     public function handle(): int
@@ -37,7 +42,7 @@ class ImportMediaItemsCommand extends Command
                 'code',
                 'mimetype',
                 'summary',
-                'comment'
+                'comment',
             ])
             ->whereNotNull('collection_id')
             ->where('collection_id', '!=', 0);
@@ -50,6 +55,7 @@ class ImportMediaItemsCommand extends Command
 
         if ($mediaItems->isEmpty()) {
             $this->warn('Aucun élément trouvé dans media_items avec collection_id valide');
+
             return Command::SUCCESS;
         }
 
@@ -66,7 +72,7 @@ class ImportMediaItemsCommand extends Command
             } catch (\Exception $e) {
                 $this->errors++;
                 $this->errorMessages[] = sprintf(
-                    "ID %d (code: %s): %s",
+                    'ID %d (code: %s): %s',
                     $mediaItem->id,
                     $mediaItem->code,
                     $e->getMessage()
@@ -85,7 +91,6 @@ class ImportMediaItemsCommand extends Command
         return Command::SUCCESS;
     }
 
-
     protected function processMediaItem($mediaItem): void
     {
         // 1. Récupérer le code de collection depuis media_collections via collection_id
@@ -93,23 +98,25 @@ class ImportMediaItemsCommand extends Command
             ->where('id', $mediaItem->collection_id)
             ->first();
 
-        if (!$mediaCollection) {
+        if (! $mediaCollection) {
             $this->skipped++;
             $this->errorMessages[] = "ID {$mediaItem->id}: media_collections introuvable pour collection_id {$mediaItem->collection_id}";
+
             return;
         }
 
         // 2. Trouver la collection correspondante dans notre base via le code
         $collection = Collection::where('code', $mediaCollection->code)->first();
 
-        if (!$collection) {
+        if (! $collection) {
             $this->skipped++;
             $this->errorMessages[] = "ID {$mediaItem->id}: Collection introuvable avec code {$mediaCollection->code}";
+
             return;
         }
 
         // 3. Vérifier si l'item a un fichier principal ou des fichiers liés
-        $hasMainFile = !empty($mediaItem->filename);
+        $hasMainFile = ! empty($mediaItem->filename);
         $hasRelatedFiles = DB::table('media_item_related')
             ->where('item_id', $mediaItem->id)
             ->whereNotNull('filename')
@@ -117,9 +124,10 @@ class ImportMediaItemsCommand extends Command
             ->exists();
 
         // Si ni fichier principal ni fichiers liés, on saute
-        if (!$hasMainFile && !$hasRelatedFiles) {
+        if (! $hasMainFile && ! $hasRelatedFiles) {
             $this->skipped++;
             $this->errorMessages[] = "ID {$mediaItem->id}: Aucun fichier principal ou lié trouvé";
+
             return;
         }
 
@@ -138,7 +146,7 @@ class ImportMediaItemsCommand extends Command
 
         // 5. Logique complexe de détermination du code
         $originalCode = null;
-        if (!empty($mediaItem->code)) {
+        if (! empty($mediaItem->code)) {
             $collectionCode = $collection->code;
 
             // Vérifier si le code de l'item commence par le code de la collection
@@ -155,9 +163,9 @@ class ImportMediaItemsCommand extends Command
                 }
 
                 // Le reste devient le code_suffix
-                if (!empty($remainingCode)) {
+                if (! empty($remainingCode)) {
                     $codeSuffix = $remainingCode;
-                    $itemCode = $collectionCode . '_' . $remainingCode;
+                    $itemCode = $collectionCode.'_'.$remainingCode;
                 } else {
                     // Pas de suffix, le code est juste le code de collection
                     $itemCode = $collectionCode;
@@ -177,7 +185,7 @@ class ImportMediaItemsCommand extends Command
                 $codeSuffix = null;
             } else {
                 // Générer un code temporaire basé sur l'ID
-                $itemCode = "TEMP_" . $mediaItem->id;
+                $itemCode = 'TEMP_'.$mediaItem->id;
                 $codePrefix = $itemCode;
                 $codeSuffix = null;
             }
@@ -185,7 +193,7 @@ class ImportMediaItemsCommand extends Command
 
         // 6. Déterminer le type MIME
         $mimeType = null;
-        if  ($hasMainFile) {
+        if ($hasMainFile) {
             $mimeType = $this->getMimeTypeFromExtension($extension);
         }
 
@@ -198,22 +206,23 @@ class ImportMediaItemsCommand extends Command
             if ($increment >= $maxAttempts) {
                 $this->skipped++;
                 $this->errorMessages[] = "ID {$mediaItem->id}: Impossible de trouver un code unique pour {$originalItemCode} (trop de tentatives)";
+
                 return;
             }
 
             // Ajouter un incrément au code
-            $itemCode = $originalItemCode . '_DUPLICATE_' . $increment;
+            $itemCode = $originalItemCode.'_DUPLICATE_'.$increment;
 
             // Si on a un code_suffix, on l'incrémente aussi
             if ($codeSuffix) {
-                $codeSuffix = $originalCode . '_DUPLICATE_' . $increment;
-                $itemCode = $codePrefix . '_' . $codeSuffix;
+                $codeSuffix = $originalCode.'_DUPLICATE_'.$increment;
+                $itemCode = $codePrefix.'_'.$codeSuffix;
             }
 
             $increment++;
         }
 
-        if( $increment > 1 ) {
+        if ($increment > 1) {
             $this->imported_duplicate++;
         }
 
@@ -225,10 +234,11 @@ class ImportMediaItemsCommand extends Command
 
             $fileInfo = $hasMainFile
                 ? "fichier principal: {$filename}"
-                : "pas de fichier principal, mais fichiers liés";
+                : 'pas de fichier principal, mais fichiers liés';
 
             $this->imported++;
             $this->line("  [DRY-RUN] Créerait l'item : {$debugInfo} ({$fileInfo}) pour la collection {$collection->code}");
+
             return;
         }
 
@@ -279,7 +289,7 @@ class ImportMediaItemsCommand extends Command
                     continue;
                 }
 
-                $relatedMimeType = !empty($relatedFile->mime_type)
+                $relatedMimeType = ! empty($relatedFile->mime_type)
                     ? $relatedFile->mime_type
                     : $this->getMimeTypeFromExtension($relatedExtension);
 
@@ -325,7 +335,7 @@ class ImportMediaItemsCommand extends Command
             ]
         );
 
-        if (!empty($this->errorMessages) && $this->errors > 0) {
+        if (! empty($this->errorMessages) && $this->errors > 0) {
             $this->newLine();
             $this->error('Détails des erreurs :');
             foreach (array_slice($this->errorMessages, 0, 20) as $message) {
@@ -333,7 +343,7 @@ class ImportMediaItemsCommand extends Command
             }
 
             if (count($this->errorMessages) > 20) {
-                $this->line("  ... et " . (count($this->errorMessages) - 20) . " autres erreurs");
+                $this->line('  ... et '.(count($this->errorMessages) - 20).' autres erreurs');
             }
         }
     }

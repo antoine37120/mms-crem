@@ -25,7 +25,7 @@ class GeneralStatsOverview extends BaseWidget
                 ->descriptionIcon('heroicon-m-eye')
                 ->chart([
                     ItemView::where('created_at', '>=', now()->subDays(7))->count(),
-                    ItemView::count()
+                    ItemView::count(),
                 ])
                 ->color('info'),
 

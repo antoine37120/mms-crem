@@ -2,29 +2,24 @@
 
 namespace App\Filament\Resources\Fonds\Pages;
 
+use App\Filament\Infolists\Components\FondsStatsAndLogs;
 use App\Filament\Resources\Fonds\FondResource;
-use Filament\Actions\EditAction;
 use Filament\Actions\Action;
-use Filament\Resources\Pages\ViewRecord;
-use Filament\Support\Enums\Width;
-use Filament\Schemas\Components\Section;
+use Filament\Actions\EditAction;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Grid;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists;
-use Illuminate\Support\HtmlString;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Support\Enums\IconPosition;
-use App\Filament\Infolists\Components\FondsStatsAndLogs;
 use Filament\Support\Enums\TextSize;
+use Filament\Support\Icons\Heroicon;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ViewFond extends ViewRecord
 {
     protected static string $resource = FondResource::class;
-
 
     public function getRelationManagers(): array
     {
@@ -34,6 +29,7 @@ class ViewFond extends ViewRecord
             AuditsRelationManager::class,
         ];
     }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -47,7 +43,7 @@ class ViewFond extends ViewRecord
                 ->color('info')
                 ->url(fn () => route('filament.mms-admin.pages.hierarchy-explorer', [
                     'focus' => 'fond',
-                    'id' => $this->record->id
+                    'id' => $this->record->id,
                 ])),
         ];
     }
@@ -64,7 +60,7 @@ class ViewFond extends ViewRecord
                                 ->schema([
                                     TextEntry::make('code')
                                         ->label('Cote')
-                                        //->icon('heroicon-o-archive-box-arrow-down')
+                                        // ->icon('heroicon-o-archive-box-arrow-down')
                                         ->iconColor('gray')
                                         ->icon(Heroicon::OutlinedClipboardDocument)
                                         ->iconPosition(IconPosition::After)
@@ -76,7 +72,7 @@ class ViewFond extends ViewRecord
                                     TextEntry::make('title')
                                         ->label('Titre')
                                         ->placeholder('Aucun titre défini')
-                                        //->icon('heroicon-o-tag')
+                                        // ->icon('heroicon-o-tag')
                                         ->size(TextSize::Large),
                                 ]),
 
@@ -94,7 +90,7 @@ class ViewFond extends ViewRecord
                                         ->since()
                                         ->tooltip(fn ($state) => $state?->format('d/m/Y à H:i:s')),
                                 ]),
-                        ])
+                        ]),
                     ])
                     ->compact()
                     ->columnSpanFull(),
@@ -107,8 +103,8 @@ class ViewFond extends ViewRecord
                             ->schema([
                                 FondsStatsAndLogs::make('id')
                                     ->hiddenLabel()
-                                    ->columnSpanFull()
-                            ])
+                                    ->columnSpanFull(),
+                            ]),
                     ])
                     ->collapsible()
                     ->columnSpanFull(),
@@ -117,14 +113,17 @@ class ViewFond extends ViewRecord
 
     protected function formatFileSize(?int $bytes): string
     {
-        if (!$bytes) return '0 B';
+        if (! $bytes) {
+            return '0 B';
+        }
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $power = floor(log($bytes, 1024));
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
+
+        return round($size, 2).' '.$units[$power];
     }
 
     protected function getStatusColor(): string

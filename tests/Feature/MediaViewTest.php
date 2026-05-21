@@ -2,10 +2,9 @@
 
 namespace Tests\Feature;
 
-use App\Models\Item;
-use App\Models\ItemView;
-use App\Models\User;
 use App\Jobs\RecordItemView;
+use App\Models\Item;
+use App\Models\User;
 use Illuminate\Foundation\Testing\RefreshDatabase;
 use Illuminate\Support\Facades\Queue;
 use Tests\TestCase;
@@ -69,7 +68,7 @@ class MediaViewTest extends TestCase
             'is_authenticated' => true,
             'ip_address' => '127.0.0.1',
             'user_agent' => 'TestAgent',
-            'referer' => 'http://example.com'
+            'referer' => 'http://example.com',
         ]);
     }
 }

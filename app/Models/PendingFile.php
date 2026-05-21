@@ -2,13 +2,13 @@
 
 namespace App\Models;
 
+use Illuminate\Database\Eloquent\Attributes\Scope;
+use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Support\Facades\Storage;
 use Illuminate\Support\Str;
-use Illuminate\Database\Eloquent\Attributes\Scope;
-use Illuminate\Database\Eloquent\Builder;
 
 class PendingFile extends Model
 {
@@ -35,7 +35,9 @@ class PendingFile extends Model
      * Statuts possibles pour l'upload
      */
     public const STATUS_UPLOADING = 'uploading';
+
     public const STATUS_COMPLETED = 'completed';
+
     public const STATUS_FAILED = 'failed';
 
     public const STATUSES = [
@@ -98,7 +100,7 @@ class PendingFile extends Model
      */
     public function hasSuggestedCode(): bool
     {
-        return !empty($this->suggested_code);
+        return ! empty($this->suggested_code);
     }
 
     /**
@@ -129,7 +131,7 @@ class PendingFile extends Model
             $bytes /= 1024;
         }
 
-        return round($bytes, 2) . ' ' . $units[$i];
+        return round($bytes, 2).' '.$units[$i];
     }
 
     /**
@@ -181,7 +183,7 @@ class PendingFile extends Model
             $escapedCode = preg_quote($fondsCode, '/');
 
             // Pattern : le code du fonds suivi de caractères jusqu'à un espace ou tiret (ou fin de chaîne)
-            $pattern = '/(' . $escapedCode . '[^\\s\\-]*)/i';
+            $pattern = '/('.$escapedCode.'[^\\s\\-]*)/i';
 
             if (preg_match($pattern, $fileName, $matches)) {
                 // Nettoyer la cote trouvée (enlever les caractères indésirables à la fin)
@@ -196,7 +198,6 @@ class PendingFile extends Model
 
         return null;
     }
-
 
     /**
      * Met à jour la cote suggérée basée sur le nom du fichier
@@ -217,7 +218,7 @@ class PendingFile extends Model
     {
         $metadata = [];
 
-        if (!$this->fileExists()) {
+        if (! $this->fileExists()) {
             return $metadata;
         }
 
@@ -291,7 +292,7 @@ class PendingFile extends Model
 
         // Lors de la création, suggérer automatiquement une cote
         static::creating(function ($pendingFile) {
-            if (!$pendingFile->suggested_code) {
+            if (! $pendingFile->suggested_code) {
                 $pendingFile->suggested_code = $pendingFile->suggestCodeFromFileName();
             }
         });

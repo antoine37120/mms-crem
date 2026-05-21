@@ -118,5 +118,4 @@ return new class extends Migration
         Schema::dropIfExists('corpuses');
         Schema::dropIfExists('fonds');
     }
-
 };

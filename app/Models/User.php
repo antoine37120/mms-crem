@@ -3,24 +3,23 @@
 namespace App\Models;
 
 // use Illuminate\Contracts\Auth\MustVerifyEmail;
+use App\Enums\UserRole;
+use Filament\Models\Contracts\FilamentUser;
+use Filament\Panel;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
+use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Foundation\Auth\User as Authenticatable;
 use Illuminate\Notifications\Notifiable;
 use Illuminate\Support\Str;
 use Laravel\Fortify\TwoFactorAuthenticatable;
-use Filament\Models\Contracts\FilamentUser;
-use Filament\Panel;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use OwenIt\Auditing\Contracts\Auditable;
 
-use App\Enums\UserRole;
-
-
-class User extends Authenticatable implements FilamentUser, Auditable
+class User extends Authenticatable implements Auditable, FilamentUser
 {
-    use \OwenIt\Auditing\Auditable;
     /** @use HasFactory<\Database\Factories\UserFactory> */
     use HasFactory, Notifiable, TwoFactorAuthenticatable;
+
+    use \OwenIt\Auditing\Auditable;
 
     /**
      * The attributes that are mass assignable.
@@ -58,16 +57,15 @@ class User extends Authenticatable implements FilamentUser, Auditable
         'admin_access' => 'boolean',
     ];
 
-        /**
+    /**
      * Attributes to exclude from the Audit.
      *
      * @var array
      */
     protected $auditExclude = [
-       /* 'code_prefix',*/
+        /* 'code_prefix', */
         'password',
     ];
-
 
     /**
      * Get the user's initials
@@ -101,7 +99,6 @@ class User extends Authenticatable implements FilamentUser, Auditable
     {
         return $this->hasMany(Corpus::class, 'created_by');
     }
-
 
     /**
      * Les collections créées par cet utilisateur
@@ -218,26 +215,33 @@ class User extends Authenticatable implements FilamentUser, Auditable
 
             if ($model instanceof Corpus) {
                 $hasDirect = $this->scopedCorpuses()->where('corpuses.id', $model->id)->exists();
-                if ($hasDirect) return true;
-                
+                if ($hasDirect) {
+                    return true;
+                }
+
                 // Un corpus appartient à plusieurs fonds
                 $fondsIds = $model->fonds()->pluck('fonds.id');
                 if ($fondsIds->isNotEmpty()) {
                     return $this->scopedFonds()->whereIn('fonds.id', $fondsIds)->exists();
                 }
+
                 return false;
             }
 
             if ($model instanceof Collection) {
                 $hasDirect = $this->scopedCollections()->where('collections.id', $model->id)->exists();
-                if ($hasDirect) return true;
-                
+                if ($hasDirect) {
+                    return true;
+                }
+
                 // Une collection appartient à plusieurs corpus
                 $corpusesIds = $model->corpuses()->pluck('corpuses.id');
                 if ($corpusesIds->isNotEmpty()) {
                     $hasCorpus = $this->scopedCorpuses()->whereIn('corpuses.id', $corpusesIds)->exists();
-                    if ($hasCorpus) return true;
-                    
+                    if ($hasCorpus) {
+                        return true;
+                    }
+
                     // On vérifie les fonds de ces corpus
                     $fondsIds = \App\Models\Corpus::whereIn('id', $corpusesIds)
                         ->with('fonds')
@@ -250,6 +254,7 @@ class User extends Authenticatable implements FilamentUser, Auditable
                         return $this->scopedFonds()->whereIn('fonds.id', $fondsIds)->exists();
                     }
                 }
+
                 return false;
             }
 
@@ -267,18 +272,22 @@ class User extends Authenticatable implements FilamentUser, Auditable
 
     public function hasAccessToItemable(?string $type, ?int $id): bool
     {
-        if (!$type || !$id) return false;
+        if (! $type || ! $id) {
+            return false;
+        }
 
-        $modelClass = $type; 
-        if (!class_exists($modelClass)) {
+        $modelClass = $type;
+        if (! class_exists($modelClass)) {
             return false;
         }
 
         $model = $modelClass::find($id);
-        if (!$model) return false;
+        if (! $model) {
+            return false;
+        }
 
         if ($model instanceof Item) {
-             return $this->hasAccessToItemable($model->itemable_type, $model->itemable_id);
+            return $this->hasAccessToItemable($model->itemable_type, $model->itemable_id);
         }
 
         return $this->hasAccessToModel($model);

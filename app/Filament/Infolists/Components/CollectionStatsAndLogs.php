@@ -2,7 +2,6 @@
 
 namespace App\Filament\Infolists\Components;
 
-use App\Filament\Resources\Collections\CollectionResource;
 use App\Filament\Resources\Items\ItemResource;
 use App\Models\Collection;
 use Filament\Infolists\Components\Entry;
@@ -11,13 +10,11 @@ class CollectionStatsAndLogs extends Entry
 {
     protected string $view = 'filament.infolists.components.collection-stats-and-logs';
 
-
-
     public function getState(): mixed
     {
         $collection = $this->getRecord();
 
-        if (!$collection instanceof Collection) {
+        if (! $collection instanceof Collection) {
             return null;
         }
 
@@ -49,10 +46,9 @@ class CollectionStatsAndLogs extends Entry
                 'action' => "Nouveau Item : {$recentitem->code}",
                 'user' => $recentitem->creator->name ?? 'Utilisateur inconnu',
                 'type' => 'item',
-                'url' => ItemResource::getUrl('view', ['record' => $recentitem->id])
+                'url' => ItemResource::getUrl('view', ['record' => $recentitem->id]),
             ];
         }
-
 
         return [
             'items_count' => $itemsCount,
@@ -85,13 +81,16 @@ class CollectionStatsAndLogs extends Entry
 
     private function formatFileSize(?int $bytes): string
     {
-        if (!$bytes) return '0 B';
+        if (! $bytes) {
+            return '0 B';
+        }
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $power = floor(log($bytes, 1024));
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
+
+        return round($size, 2).' '.$units[$power];
     }
 }

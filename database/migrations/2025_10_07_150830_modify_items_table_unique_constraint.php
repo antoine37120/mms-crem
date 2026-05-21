@@ -33,5 +33,4 @@ return new class extends Migration
             $table->unique('code');
         });
     }
-
 };

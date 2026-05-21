@@ -9,7 +9,6 @@ use App\Filament\Resources\Users\Pages\ViewUser;
 use App\Filament\Resources\Users\Schemas\UserForm;
 use App\Filament\Resources\Users\Schemas\UserInfolist;
 use App\Filament\Resources\Users\Tables\UsersTable;
-use App\Filament\Resources\Users\RelationManagers;
 use App\Models\User;
 use BackedEnum;
 use Filament\Resources\Resource;
@@ -23,7 +22,8 @@ class UserResource extends Resource
     protected static ?string $model = User::class;
 
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedUsers;
-    protected static string | UnitEnum | null $navigationGroup = 'Administration';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Administration';
 
     protected static ?string $recordTitleAttribute = 'name';
 

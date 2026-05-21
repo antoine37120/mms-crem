@@ -9,14 +9,13 @@ class CreateItem extends CreateRecord
 {
     protected static string $resource = ItemResource::class;
 
-
     protected function afterFill(): void
     {
 
         if (request()->has('collection_id')) {
 
-            $itemableType = 'App\Models\Collection' ;
-            $itemableId = request()->get('collection_id') ;
+            $itemableType = 'App\Models\Collection';
+            $itemableId = request()->get('collection_id');
             $model = app($itemableType)->find($itemableId);
 
             // Runs before the form fields are populated with their default values.

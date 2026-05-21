@@ -19,17 +19,21 @@ use Filament\Tables\Table;
 use Illuminate\Database\Eloquent\Builder;
 use Illuminate\Database\Eloquent\Model;
 use Illuminate\Database\Eloquent\SoftDeletingScope;
-use UnitEnum;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
+use UnitEnum;
 
 class MediaAssocieResource extends Resource
 {
     protected static ?string $model = Item::class;
 
     protected static ?string $modelLabel = 'Média associé';
+
     protected static ?string $pluralModelLabel = 'Médias associés';
+
     protected static string|BackedEnum|null $navigationIcon = Heroicon::OutlinedDocument;
-    protected static string | UnitEnum | null $navigationGroup = 'Médias associés';
+
+    protected static string|UnitEnum|null $navigationGroup = 'Médias associés';
+
     protected static ?int $navigationSort = 5;
 
     protected static ?string $recordTitleAttribute = 'code';

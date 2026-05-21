@@ -20,7 +20,7 @@ Route::prefix('hierarchy')->group(function () {
 });
 
 Route::get('/items/{item}/download', function (App\Models\Item $item) {
-    if (!$item->file_path || !Storage::exists($item->file_path)) {
+    if (! $item->file_path || ! Storage::exists($item->file_path)) {
         abort(404, 'Fichier non trouvé');
     }
 

@@ -7,15 +7,14 @@ use App\Models\Corpus;
 use App\Models\Fond;
 use App\Models\Item;
 use App\Models\ItemType;
+use Carbon\Carbon;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
-use Filament\Forms\Components\DatePicker;
-use Filament\Forms\Components\FileUpload;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\Toggle;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Components\FusedGroup;
 use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Text;
@@ -25,13 +24,11 @@ use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
 use Illuminate\Contracts\View\View;
-use Illuminate\Validation\Rules\Unique;
-use Livewire\Component;
+use Illuminate\Http\File;
 use Illuminate\Support\Facades\Log;
 use Illuminate\Support\Facades\Storage;
-use Carbon\Carbon;
-use Illuminate\Http\File;
-use Filament\Notifications\Notification;
+use Illuminate\Validation\Rules\Unique;
+use Livewire\Component;
 
 class UploadedFileToItem extends Component implements HasActions, HasSchemas
 {
@@ -39,7 +36,9 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
     use InteractsWithSchemas;
 
     public ?array $data = [];
+
     public $pending_file_to_item;
+
     public bool $is_sub = false;
 
     public function mount($pending_file_to_item, $is_sub = false): void
@@ -82,14 +81,13 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                         // Réinitialiser le champ langue si le type change
                         if ($get('itemable_type') && $get('itemable_id')) {
 
-                            $itemableType = $get('itemable_type') ;
-                            $itemableId = $get('itemable_id') ;
+                            $itemableType = $get('itemable_type');
+                            $itemableId = $get('itemable_id');
                             $model = app($itemableType)->find($itemableId);
                             $set('code_prefix', $model->code);
                         }
                     })
-                    ->modifyTypeSelectUsing(fn (Select $select): Select =>
-                        $select->default('App\Models\Collection')
+                    ->modifyTypeSelectUsing(fn (Select $select): Select => $select->default('App\Models\Collection')
                     )
 
                     ->required(),
@@ -108,7 +106,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                                 if ($value) {
                                     $itemType = ItemType::find($value);
                                     $fileExtension = $get('file_extension');
-                                    if ($itemType && $fileExtension && !$itemType->isExtensionAllowed($fileExtension)) {
+                                    if ($itemType && $fileExtension && ! $itemType->isExtensionAllowed($fileExtension)) {
                                         $fail("L'extension '{$fileExtension}' n'est pas autorisée pour ce type de média.");
                                     }
                                 }
@@ -117,13 +115,13 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ])
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         // Réinitialiser le champ langue si le type change
-                        if (!$state) {
+                        if (! $state) {
                             $set('language_code', null);
                         }
-                        if (!$state) {
-                            return ;
+                        if (! $state) {
+                            return;
                         }
-                        $suffix = ItemType::find($state)->suffix ;
+                        $suffix = ItemType::find($state)->suffix;
                         $itemLang = $get('language_code');
                         if ($suffix) {
                             $set('code_suffix', $suffix);
@@ -137,32 +135,38 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                     ->maxLength(5)
                     ->live()
                     ->visible(function (Get $get): bool {
-                        if (!$this->is_sub) return false;
+                        if (! $this->is_sub) {
+                            return false;
+                        }
                         $itemTypeId = $get('item_type_id');
-                        if (!$itemTypeId) {
+                        if (! $itemTypeId) {
                             return false;
                         }
                         $itemType = ItemType::find($itemTypeId);
+
                         return $itemType && $itemType->requires_language;
                     })
                     ->required(function (Get $get): bool {
-                        if (!$this->is_sub) return false;
+                        if (! $this->is_sub) {
+                            return false;
+                        }
                         $itemTypeId = $get('item_type_id');
-                        if (!$itemTypeId) {
+                        if (! $itemTypeId) {
                             return false;
                         }
                         $itemType = ItemType::find($itemTypeId);
+
                         return $itemType && $itemType->requires_language;
                     })
                     ->afterStateUpdated(function ($state, Set $set, Get $get) {
                         // Réinitialiser le champ langue si le type change
                         $itemTypeId = $get('item_type_id');
-                        $itemType = ItemType::find($itemTypeId)->suffix ;
-                        if($itemType) {
-                            if (!$state) {
+                        $itemType = ItemType::find($itemTypeId)->suffix;
+                        if ($itemType) {
+                            if (! $state) {
                                 $set('code_suffix', $itemType);
                             } else {
-                                $set('code_suffix', $itemType . '_' . $state);
+                                $set('code_suffix', $itemType.'_'.$state);
                             }
                         }
                     }),
@@ -173,23 +177,24 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                                 ->label('Code de l\'Item')
                                 ->autofocus(false)
                                 ->default(function ($state, Set $set, Get $get): string {
-                                    if (!$get('itemable_type') || !$get('itemable_id')) {
+                                    if (! $get('itemable_type') || ! $get('itemable_id')) {
                                         return '';
                                     }
-                                    $itemableType = $get('itemable_type') ;
-                                    $itemableId = $get('itemable_id') ;
+                                    $itemableType = $get('itemable_type');
+                                    $itemableId = $get('itemable_id');
                                     $model = app($itemableType)->find($itemableId);
 
-                                    return $model->code ;
+                                    return $model->code;
                                 })
                                 ->disabled()
                                 ->dehydrated()
                                 ->required()
-                                //->unique(ignoreRecord: true)
+                                // ->unique(ignoreRecord: true)
                                 ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
-                                    if($get('code_suffix') != '') {
+                                    if ($get('code_suffix') != '') {
                                         return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'));
                                     }
+
                                     return $rule->where('code', $get('code_prefix'));
                                 })
                                 ->placeholder('Ex: CNRSMH_Arnaud_001')
@@ -207,22 +212,26 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                                     return true;
                                 })*/
                                 ->required(function (Get $get): bool {
-                                    if (!$this->is_sub) return false;
-                                    $itemTypeId = $get('item_type_id');
-
-                                    if (!$itemTypeId) {
+                                    if (! $this->is_sub) {
                                         return false;
                                     }
+                                    $itemTypeId = $get('item_type_id');
+
+                                    if (! $itemTypeId) {
+                                        return false;
+                                    }
+
                                     return true;
                                 })
-                                //->unique(ignoreRecord: true)
+                                // ->unique(ignoreRecord: true)
                                 ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
-                                    if($get('code_suffix') != '') {
+                                    if ($get('code_suffix') != '') {
                                         return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'))
-                                            ->where('file_extension',$get('file_extension'));
+                                            ->where('file_extension', $get('file_extension'));
                                     }
+
                                     return $rule->where('code', $get('code_prefix'))
-                                        ->where('file_extension',$get('file_extension'));
+                                        ->where('file_extension', $get('file_extension'));
                                 })
                                 ->placeholder('Ex: TRA_en ou 02')
                                 ->columnSpan(1),
@@ -313,9 +322,9 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
     {
         $data = $this->form->getState();
 
-        $data['code'] = $data['code_prefix'] ;
+        $data['code'] = $data['code_prefix'];
         if (isset($data['code_suffix']) && $data['code_suffix'] != '') {
-            $data['code'] = $data['code'].'_'.$data['code_suffix'] ;
+            $data['code'] = $data['code'].'_'.$data['code_suffix'];
         }
 
         $data['md5'] = $this->pending_file_to_item->client_signature;
@@ -324,49 +333,48 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
         Log::info('Tentative de création d\'un item', [
             'form_data' => $data,
             'user_id' => auth()->id(),
-            'timestamp' => now()
+            'timestamp' => now(),
         ]);
 
         try {
 
-
             // Créer le chemin basé sur la date de création du pending file
             $createdAt = Carbon::parse($this->pending_file_to_item->created_at);
-            //$datePath = 'items/' . $createdAt->format('Y/m/d') . '';
+            // $datePath = 'items/' . $createdAt->format('Y/m/d') . '';
             // Pas de rangement spécifique à ce stade, le modèle s'en chargera au hook de sauvegarde
             $datePath = '';
 
             // Générer un nom de fichier unique pour éviter les conflits
-            $fileName = $data['code']  . '.' . $data['file_extension'] ;
+            $fileName = $data['code'].'.'.$data['file_extension'];
             $newFilePath = $fileName;
 
             // Déplacer le fichier depuis le storage temporaire vers original_medias
             $currentFilePath = $this->pending_file_to_item->file_path;
 
             // Vérifier si le fichier source existe
-            if (!Storage::disk('local')->exists($currentFilePath)) {
-                throw new \Exception("Le fichier source n'existe pas : " . $currentFilePath);
+            if (! Storage::disk('local')->exists($currentFilePath)) {
+                throw new \Exception("Le fichier source n'existe pas : ".$currentFilePath);
             }
 
             // Créer le répertoire de destination s'il n'existe pas
             Storage::disk('original_medias')->makeDirectory($datePath);
-            //$new_path = Storage::disk('original_medias')->path($datePath);
+            // $new_path = Storage::disk('original_medias')->path($datePath);
 
-            $old_file_path = Storage::disk('local')->path($currentFilePath) ;
+            $old_file_path = Storage::disk('local')->path($currentFilePath);
 
             // Log avant l'opération
             Log::info('Tentative de création du nouveau fichier', [
                 'old_file_path' => $old_file_path,
-                //'new_path' => $new_path,
+                // 'new_path' => $new_path,
                 'file_name' => $fileName,
                 '$newFilePath' => $newFilePath,
             ]);
 
             // Copier le fichier vers le nouveau storage
-            //$fileContent = Storage::disk('local')->get($currentFilePath);
-            //Storage::disk('original_medias')->put($newFilePath, $fileContent);
+            // $fileContent = Storage::disk('local')->get($currentFilePath);
+            // Storage::disk('original_medias')->put($newFilePath, $fileContent);
             // Ici, on met à la racine du dossier et on laisse le modèle ranger au hook d'enregistrement
-             Storage::disk('original_medias')->putFileAs($datePath, new File($old_file_path), $fileName);
+            Storage::disk('original_medias')->putFileAs($datePath, new File($old_file_path), $fileName);
 
             // Mettre à jour le chemin du fichier dans les données
             $data['file_path'] = $newFilePath;
@@ -376,7 +384,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                 'ancien_chemin' => $currentFilePath,
                 'nouveau_chemin' => $newFilePath,
                 'user_id' => auth()->id(),
-                'timestamp' => now()
+                'timestamp' => now(),
             ]);
 
             $record = Item::create($data);
@@ -387,7 +395,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
             Log::info('Ancien fichier temporaire supprimé', [
                 'chemin_supprime' => $currentFilePath,
                 'user_id' => auth()->id(),
-                'timestamp' => now()
+                'timestamp' => now(),
             ]);
 
             // Log après succès
@@ -395,7 +403,7 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                 'item_id' => $record->id,
                 'item_data' => $record->toArray(),
                 'user_id' => auth()->id(),
-                'timestamp' => now()
+                'timestamp' => now(),
             ]);
 
             Notification::make()
@@ -403,10 +411,9 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                 ->success()
                 ->send();
 
-            $this->dispatch('pending-file-to-item-end') ;
+            $this->dispatch('pending-file-to-item-end');
 
-            //$this->dispatch('close-modal', id: 'pending-files-to-item-modal');
-;
+            // $this->dispatch('close-modal', id: 'pending-files-to-item-modal');
 
         } catch (\Exception $e) {
             // Log de l'erreur
@@ -415,14 +422,13 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
                 'error_trace' => $e->getTraceAsString(),
                 'form_data' => $this->form->getState(),
                 'user_id' => auth()->id(),
-                'timestamp' => now()
+                'timestamp' => now(),
             ]);
 
-            $this->addError('form', 'Erreur lors de la création de l\'item : ' . $e->getMessage());
+            $this->addError('form', 'Erreur lors de la création de l\'item : '.$e->getMessage());
+
             return;
         }
-
-
 
         $this->form->model($record)->saveRelationships();
     }

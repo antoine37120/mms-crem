@@ -4,21 +4,21 @@ namespace App\Filament\Resources;
 
 use App\Filament\Resources\DocumentationPageResource\Pages;
 use App\Models\DocumentationPage;
+use BackedEnum;
+use Filament\Actions\DeleteAction;
+use Filament\Actions\EditAction;
+use Filament\Actions\ViewAction;
 use Filament\Forms\Components\MarkdownEditor;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
-use Filament\Schemas\Schema;
-use Filament\Resources\Resource;
-use Openplain\FilamentTreeView\Tree;
-use Openplain\FilamentTreeView\Fields\TextField;
-use Filament\Schemas\Components\Grid;
-use Filament\Schemas\Components\Section;
 use Filament\Infolists\Components\TextEntry;
 use Filament\Infolists\Components\ViewEntry;
-use Filament\Actions\ViewAction;
-use Filament\Actions\EditAction;
-use Filament\Actions\DeleteAction;
-use BackedEnum;
+use Filament\Resources\Resource;
+use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
+use Openplain\FilamentTreeView\Fields\TextField;
+use Openplain\FilamentTreeView\Tree;
 use UnitEnum;
 
 class DocumentationPageResource extends Resource
@@ -63,13 +63,13 @@ class DocumentationPageResource extends Resource
                                 TextEntry::make('content')
                                     ->hiddenLabel()
                                     ->markdown()
-                                    ->prose()
+                                    ->prose(),
                             ])
                             ->columnSpan(['sm' => 4, 'md' => 3]),
                         Section::make('Navigation')
                             ->schema([
                                 ViewEntry::make('navigation')
-                                    ->view('filament.infolists.entries.documentation-navigation')
+                                    ->view('filament.infolists.entries.documentation-navigation'),
                             ])
                             ->columnSpan(['sm' => 4, 'md' => 1]),
                     ])->columnSpanFull(),

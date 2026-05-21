@@ -2,14 +2,12 @@
 
 namespace App\Console\Commands;
 
-use App\Models\Fond;
-use App\Models\Corpus;
 use App\Models\Collection;
+use App\Models\Corpus;
+use App\Models\Fond;
 use App\Models\Item;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\DB;
-use Illuminate\Support\Facades\Storage;
-use Illuminate\Support\Str;
 
 class ImportFondsRelatedCommand extends Command
 {
@@ -21,12 +19,19 @@ class ImportFondsRelatedCommand extends Command
     protected $description = 'Importer les items depuis la table media_fonds_related';
 
     protected int $imported = 0;
+
     protected int $skipped = 0;
+
     protected int $errors = 0;
+
     protected array $errorMessages = [];
+
     protected string $sourceTable;
+
     protected string $relatedTable;
+
     protected string $parentModel;
+
     protected string $parentField;
 
     public function handle(): int
@@ -46,7 +51,7 @@ class ImportFondsRelatedCommand extends Command
                 'description',
                 'mime_type',
                 'date',
-                'credits'
+                'credits',
             ]);
 
         if ($limit = $this->option('limit')) {
@@ -57,6 +62,7 @@ class ImportFondsRelatedCommand extends Command
 
         if ($relatedItems->isEmpty()) {
             $this->warn("Aucun élément trouvé dans {$this->relatedTable}");
+
             return Command::SUCCESS;
         }
 
@@ -73,7 +79,7 @@ class ImportFondsRelatedCommand extends Command
             } catch (\Exception $e) {
                 $this->errors++;
                 $this->errorMessages[] = sprintf(
-                    "ID %d (%s): %s",
+                    'ID %d (%s): %s',
                     $relatedItem->id,
                     $relatedItem->filename,
                     $e->getMessage()
@@ -91,7 +97,6 @@ class ImportFondsRelatedCommand extends Command
 
         return Command::SUCCESS;
     }
-
 
     protected function determineSource(): void
     {
@@ -126,6 +131,7 @@ class ImportFondsRelatedCommand extends Command
 
         if (empty($relatedItem->filename)) {
             $this->skipped++;
+
             return;
         }
 
@@ -134,32 +140,30 @@ class ImportFondsRelatedCommand extends Command
             ->where('id', $relatedItem->resource_id)
             ->first();
 
-        if (!$mediaParent) {
+        if (! $mediaParent) {
             $this->skipped++;
             $this->errorMessages[] = "ID {$relatedItem->id}: {$this->sourceTable} introuvable pour resource_id {$relatedItem->resource_id}";
 
             $this->line("  [DRY-RUN] Créerait pas l'item pour le {$this->parentField} {$parent->code} ---------------------------ID {$relatedItem->id}: {$this->sourceTable} introuvable pour resource_id {$relatedItem->resource_id}");
+
             return;
         }
 
         // 2. Trouver le parent correspondant dans notre base
         $parent = $this->parentModel::where('code', $mediaParent->code)->first();
 
-        if (!$parent) {
-
+        if (! $parent) {
 
             $this->skipped++;
             $this->errorMessages[] = "ID {$relatedItem->id}: {$this->parentField} introuvable avec code {$mediaParent->code}";
 
             $this->line("  [DRY-RUN] Créerait pas l'item pour le {$this->parentField} {$parent->code} ---------------------------ID {$relatedItem->id}: {$this->parentField} introuvable avec code {$mediaParent->code}");
+
             return;
         }
 
-
-
-
         // 3. Extraire le code (nom de fichier sans extension)
-        //$code = pathinfo($relatedItem->filename, PATHINFO_FILENAME);
+        // $code = pathinfo($relatedItem->filename, PATHINFO_FILENAME);
         $pathInfo = pathinfo($relatedItem->filename);
         $extension = strtolower($pathInfo['extension'] ?? '');
         $filename = $pathInfo['basename'] ?? '';
@@ -170,9 +174,10 @@ class ImportFondsRelatedCommand extends Command
         // Vérifier s'il existe un conflit d'index unique sur code + file_extension
         if (Item::where('code', $itemCode)->where('file_extension', $extension)->exists()) {
             $this->skipped++;
-            //$this->logDuplicateConflict($conflictingItem->file_path, $filePath, $itemCode, $fileInfo['file_extension'], $lineNumber);
+            // $this->logDuplicateConflict($conflictingItem->file_path, $filePath, $itemCode, $fileInfo['file_extension'], $lineNumber);
             $this->errorMessages[] = "ID {$itemCode}: ext {$extension} existe déjà !";
             $this->line("  [DRY-RUN] Créerait pas l'item : {$itemCode} pour le {$this->parentField} {$parent->code} ---------------------------");
+
             return;
         }
 
@@ -180,6 +185,7 @@ class ImportFondsRelatedCommand extends Command
         if ($this->option('dry-run')) {
             $this->imported++;
             $this->line("  [DRY-RUN] Créerait l'item : {$itemCode} pour le {$this->parentField} {$parent->code}");
+
             return;
         }
 
@@ -226,7 +232,7 @@ class ImportFondsRelatedCommand extends Command
             ]
         );
 
-        if (!empty($this->errorMessages) && $this->errors > 0) {
+        if (! empty($this->errorMessages) && $this->errors > 0) {
             $this->newLine();
             $this->error('Détails des erreurs :');
             foreach (array_slice($this->errorMessages, 0, 20) as $message) {
@@ -234,10 +240,11 @@ class ImportFondsRelatedCommand extends Command
             }
 
             if (count($this->errorMessages) > 20) {
-                $this->line("  ... et " . (count($this->errorMessages) - 20) . " autres erreurs");
+                $this->line('  ... et '.(count($this->errorMessages) - 20).' autres erreurs');
             }
         }
     }
+
     /**
      * Obtenir le type MIME depuis l'extension
      */

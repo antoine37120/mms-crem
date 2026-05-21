@@ -2,8 +2,8 @@
 
 namespace App\Observers;
 
-use App\Models\Item;
 use App\Models\Collection;
+use App\Models\Item;
 use App\Services\MediaProcessor;
 use Illuminate\Contracts\Events\ShouldHandleEventsAfterCommit;
 
@@ -91,7 +91,7 @@ class ItemObserver implements ShouldHandleEventsAfterCommit
         }
 
         $collection = $item->itemable;
-        if (!$collection instanceof Collection) {
+        if (! $collection instanceof Collection) {
             return;
         }
 

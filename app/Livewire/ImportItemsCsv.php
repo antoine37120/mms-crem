@@ -8,34 +8,35 @@ use App\Models\Fond;
 use App\Models\Item;
 use App\Models\ItemType;
 use App\Models\PendingFile;
+use Carbon\Carbon;
+use Filament\Actions\Action as TableAction;
+use Filament\Actions\BulkAction;
+use Filament\Actions\Concerns\InteractsWithActions;
+use Filament\Actions\Contracts\HasActions;
 use Filament\Forms\Components\FileUpload;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Schemas\Schema;
-use Filament\Actions\BulkAction;
-use Filament\Actions\Contracts\HasActions;
-use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
 use Filament\Tables\Concerns\InteractsWithTable;
 use Filament\Tables\Contracts\HasTable;
 use Filament\Tables\Table;
-use Livewire\Component;
-use Filament\Actions\Action as TableAction;
+use Illuminate\Http\File;
+use Illuminate\Support\Arr;
 use Illuminate\Support\Collection as SupportCollection;
 use Illuminate\Support\Facades\Storage;
-use Illuminate\Http\File;
-use Carbon\Carbon;
-use Filament\Notifications\Notification;
-use Illuminate\Support\Arr;
+use Livewire\Component;
 
-class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActions
+class ImportItemsCsv extends Component implements HasActions, HasSchemas, HasTable
 {
+    use InteractsWithActions;
     use InteractsWithSchemas;
     use InteractsWithTable;
-    use InteractsWithActions;
 
     public ?array $data = [];
+
     public array $parsedCsvRows = [];
 
     public function mount(): void
@@ -54,7 +55,7 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
                     ->live()
                     ->afterStateUpdated(function ($state) {
                         $this->parseCsv($state);
-                    })
+                    }),
             ])
             ->statePath('data');
     }
@@ -62,36 +63,36 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
     protected function parseCsv($file)
     {
         $this->parsedCsvRows = [];
-        if (!$file) {
+        if (! $file) {
             return;
         }
 
         // We use the file path before clearing the state
         $path = is_string($file) ? $file : $file->getRealPath();
-        
-        // Clear the file from the component state immediately to prevent 
+
+        // Clear the file from the component state immediately to prevent
         // LaraDumps or Livewire serialization issues with large file objects.
         $this->data['csv_file'] = null;
 
         $handle = fopen($path, 'r');
-        
+
         if ($handle === false) {
             return;
         }
 
         // Lire l'en-tête (on force le BOM check si besoin)
         $header = fgetcsv($handle, 1000, ',');
-        
+
         // Remove BOM from the first header value if exists
-        if($header && isset($header[0])) {
+        if ($header && isset($header[0])) {
             $header[0] = preg_replace('/[\x00-\x1F\x80-\xFF]/', '', $header[0]);
         }
-        
+
         $rowIndex = 1;
 
         while (($row = fgetcsv($handle, 1000, ',')) !== false) {
             $rowIndex++;
-            
+
             // Ignorer les lignes vides
             if (empty(array_filter($row))) {
                 continue;
@@ -103,10 +104,10 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
             }
 
             $rowData = array_combine($header, $row);
-            
+
             // Clean keys just in case
             $cleanedRowData = [];
-            foreach($rowData as $k => $v) {
+            foreach ($rowData as $k => $v) {
                 $cleanedRowData[trim($k)] = trim($v);
             }
             $rowData = $cleanedRowData;
@@ -116,9 +117,9 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
         }
 
         fclose($handle);
-        
+
         // Final clean up of the temporary file if it was a TemporaryUploadedFile
-        if (!is_string($file) && method_exists($file, 'delete')) {
+        if (! is_string($file) && method_exists($file, 'delete')) {
             $file->delete();
         }
     }
@@ -139,14 +140,14 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
         // 1. Check PendingFile
         $pendingFile = null;
         if (empty($fileName)) {
-            $errors[] = "file_name est requis.";
+            $errors[] = 'file_name est requis.';
         } else {
             $pendingFile = PendingFile::where('user_id', auth()->id())
                 ->where('original_name', $fileName)
                 ->where('upload_status', PendingFile::STATUS_COMPLETED)
                 ->first();
 
-            if (!$pendingFile) {
+            if (! $pendingFile) {
                 $errors[] = "Fichier '{$fileName}' introuvable ou upload incomplet.";
             }
         }
@@ -154,7 +155,7 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
         // 2. Check Parent Entity
         $parentModel = null;
         if (empty($parentCode)) {
-            $errors[] = "parent_code est requis.";
+            $errors[] = 'parent_code est requis.';
         } else {
             // Find parent entity
             $parentModel = Fond::where('code', $parentCode)->first()
@@ -162,10 +163,10 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
                 ?? Collection::where('code', $parentCode)->first()
                 ?? Item::where('code', $parentCode)->first();
 
-            if (!$parentModel) {
+            if (! $parentModel) {
                 $errors[] = "parent_code '{$parentCode}' introuvable.";
             } else {
-                if (!auth()->user()->hasAccessToModel($parentModel)) {
+                if (! auth()->user()->hasAccessToModel($parentModel)) {
                     $errors[] = "Vous n'avez pas l'autorisation d'importer dans ce parent ({$parentCode}).";
                 }
             }
@@ -174,34 +175,34 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
         // 3. Check ItemType
         $itemType = null;
         if ($isSub && empty($itemTypeSuffix)) {
-            $errors[] = "item_type_suffix est requis pour un média associé (is_sub=true).";
-        } elseif (!empty($itemTypeSuffix)) {
+            $errors[] = 'item_type_suffix est requis pour un média associé (is_sub=true).';
+        } elseif (! empty($itemTypeSuffix)) {
             $itemType = ItemType::where('suffix', $itemTypeSuffix)->first();
-            if (!$itemType) {
+            if (! $itemType) {
                 $errors[] = "Suffixe de type '{$itemTypeSuffix}' invalide.";
             }
         }
 
         // 4. Determine Code Suffix and validate Language constraints
         $suffixParts = [];
-        
+
         if ($itemType) {
             $suffixParts[] = $itemType->suffix;
-            
+
             if ($itemType->requires_language) {
                 if (empty($languageCode)) {
                     $errors[] = "language_code est requis pour le type '{$itemType->name}'.";
                 } else {
                     $suffixParts[] = $languageCode;
                 }
-            } elseif (!empty($languageCode)) {
+            } elseif (! empty($languageCode)) {
                 // Si une langue est fournie même si non requise par le type, on l'ajoute ?
                 // Selon vos exemples : parent_code _ item_type_suffix _ language_code _ code_suffix
                 $suffixParts[] = $languageCode;
             }
         }
 
-        if (!empty($codeSuffix)) {
+        if (! empty($codeSuffix)) {
             $suffixParts[] = $codeSuffix;
         }
 
@@ -215,14 +216,14 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
 
         // 5. Code Uniqueness
         $finalCode = $parentCode;
-        if (!empty($calculatedCodeSuffix)) {
-            $finalCode .= '_' . $calculatedCodeSuffix;
+        if (! empty($calculatedCodeSuffix)) {
+            $finalCode .= '_'.$calculatedCodeSuffix;
         }
 
         if ($pendingFile) {
             $existingItemQuery = Item::where('code', $parentCode);
-            if (!empty($calculatedCodeSuffix)) {
-                $existingItemQuery->where('code', $parentCode . '_' . $calculatedCodeSuffix);
+            if (! empty($calculatedCodeSuffix)) {
+                $existingItemQuery->where('code', $parentCode.'_'.$calculatedCodeSuffix);
             }
             $existingItemQuery->where('file_extension', $pendingFile->file_extension);
 
@@ -230,10 +231,10 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
                 $errors[] = "L'Item avec la cote '{$finalCode}' et l'extension '{$pendingFile->file_extension}' existe déjà.";
             }
         }
-        
+
         // 6. Check Extension matches ItemType constraints
         if ($itemType && $pendingFile) {
-            if (!$itemType->isExtensionAllowed($pendingFile->file_extension)) {
+            if (! $itemType->isExtensionAllowed($pendingFile->file_extension)) {
                 $errors[] = "L'extension '{$pendingFile->file_extension}' n'est pas autorisée pour le type '{$itemType->name}'.";
             }
         }
@@ -271,7 +272,7 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
             'language_code' => $languageCode,
             'status' => $status,
             'errors' => implode(', ', $errors),
-            
+
             // Store resolved references to avoid re-querying during action
             '__pending_file_id' => $pendingFile ? $pendingFile->id : null,
             '__parent_type' => $parentModel ? get_class($parentModel) : null,
@@ -285,8 +286,8 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
         return $table
             ->records(fn () => $this->parsedCsvRows)
             ->resolveSelectedRecordsUsing(function (array $keys, bool $isTrackingDeselectedKeys, array $deselectedKeys): SupportCollection {
-                $baseRecords = $isTrackingDeselectedKeys 
-                    ? Arr::except($this->parsedCsvRows, $deselectedKeys) 
+                $baseRecords = $isTrackingDeselectedKeys
+                    ? Arr::except($this->parsedCsvRows, $deselectedKeys)
                     : Arr::only($this->parsedCsvRows, $keys);
 
                 return SupportCollection::make($baseRecords);
@@ -294,11 +295,11 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
             ->checkIfRecordIsSelectableUsing(fn ($record): bool => $record['status'] === 'ready')
             ->headerActions([
                 TableAction::make('import_all_ready')
-                    ->label("Importer tout ce qui est prêt")
+                    ->label('Importer tout ce qui est prêt')
                     ->icon('heroicon-o-check-circle')
                     ->color('success')
                     ->requiresConfirmation()
-                    ->hidden(fn () => !SupportCollection::make($this->parsedCsvRows)->contains('status', 'ready'))
+                    ->hidden(fn () => ! SupportCollection::make($this->parsedCsvRows)->contains('status', 'ready'))
                     ->action(function () {
                         $readyRecords = SupportCollection::make($this->parsedCsvRows)
                             ->filter(fn ($row) => $row['status'] === 'ready');
@@ -345,8 +346,8 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
                     ->label("Lancer l'import")
                     ->icon('heroicon-o-arrow-up-tray')
                     ->requiresConfirmation()
-                    ->modalHeading("Importer les lignes sélectionnées")
-                    ->modalDescription("Les items seront créés et les fichiers déplacés. Les lignes en erreur seront ignorées.")
+                    ->modalHeading('Importer les lignes sélectionnées')
+                    ->modalDescription('Les items seront créés et les fichiers déplacés. Les lignes en erreur seront ignorées.')
                     ->action(function (SupportCollection $records) {
                         $this->importRecords($records);
                     }),
@@ -366,8 +367,8 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
 
             try {
                 $pendingFile = PendingFile::find($record['__pending_file_id']);
-                if (!$pendingFile) {
-                    throw new \Exception("Fichier introuvable.");
+                if (! $pendingFile) {
+                    throw new \Exception('Fichier introuvable.');
                 }
 
                 $data = [
@@ -392,18 +393,18 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
                 // Fichier copy logic (similar to UploadedFileToItem)
                 $createdAt = Carbon::parse($pendingFile->created_at);
                 $datePath = ''; // Apparemment géré via le boot() de Item si c'est laissé vide, ou bien on le met à la racine.
-                
-                $fileName = $data['code'] . '.' . $data['file_extension'];
+
+                $fileName = $data['code'].'.'.$data['file_extension'];
                 $newFilePath = $fileName;
 
                 $currentFilePath = $pendingFile->file_path;
-                
-                if (!Storage::disk('local')->exists($currentFilePath)) {
-                    throw new \Exception("Le fichier source n'existe pas : " . $currentFilePath);
+
+                if (! Storage::disk('local')->exists($currentFilePath)) {
+                    throw new \Exception("Le fichier source n'existe pas : ".$currentFilePath);
                 }
 
                 Storage::disk('original_medias')->makeDirectory($datePath);
-                $old_file_path = Storage::disk('local')->path($currentFilePath) ;
+                $old_file_path = Storage::disk('local')->path($currentFilePath);
 
                 Storage::disk('original_medias')->putFileAs($datePath, new File($old_file_path), $fileName);
 
@@ -418,7 +419,7 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
                 // Remove from table on success
                 unset($this->parsedCsvRows[$record['__id']]);
                 $successCount++;
-                
+
             } catch (\Exception $e) {
                 \Log::error('Erreur import CSV', ['error' => $e->getMessage(), 'record' => $record]);
                 $this->updateRowStatus($record['__id'], 'error', $e->getMessage());
@@ -427,11 +428,11 @@ class ImportItemsCsv extends Component implements HasSchemas, HasTable, HasActio
         }
 
         Notification::make()
-            ->title("Import terminé")
+            ->title('Import terminé')
             ->body("{$successCount} items créés avec succès. {$errorCount} erreurs.")
             ->status($errorCount > 0 ? 'warning' : 'success')
             ->send();
-            
+
         $this->dispatch('import-csv-completed');
     }
 

@@ -31,7 +31,7 @@ class CalculateMissingMd5 extends Command
 
         $query = Item::query()->whereNotNull('file_path')->where('file_path', '!=', '');
 
-        if (!$force) {
+        if (! $force) {
             $query->where(function ($q) {
                 $q->whereNull('md5')->orWhere('md5', '');
             });
@@ -41,7 +41,8 @@ class CalculateMissingMd5 extends Command
         $total = $items->count();
 
         if ($total === 0) {
-            $this->info("Aucun item à traiter.");
+            $this->info('Aucun item à traiter.');
+
             return;
         }
 
@@ -54,11 +55,11 @@ class CalculateMissingMd5 extends Command
 
         foreach ($items as $item) {
             $fullPath = null;
-            
+
             // On vérifie d'abord si le chemin peut être résolu sur le disque original_medias
             if (Storage::disk('original_medias')->exists($item->file_path)) {
                 $fullPath = Storage::disk('original_medias')->path($item->file_path);
-            } 
+            }
             // Fallback (ex: chemins absolus ou disque par défaut)
             elseif (file_exists($item->file_path)) {
                 $fullPath = $item->file_path;
@@ -66,12 +67,12 @@ class CalculateMissingMd5 extends Command
 
             if ($fullPath && file_exists($fullPath)) {
                 $item->md5 = md5_file($fullPath);
-                
+
                 // Sauvegarde silencieuse (évite de déclencher d'autres observers non liés)
                 Item::withoutEvents(function () use ($item) {
                     $item->save();
                 });
-                
+
                 $updated++;
             } else {
                 $missingFiles++;
@@ -83,9 +84,9 @@ class CalculateMissingMd5 extends Command
         $bar->finish();
         $this->newLine(2);
 
-        $this->info("Terminé !");
+        $this->info('Terminé !');
         $this->comment("- {$updated} items mis à jour avec le hash MD5.");
-        
+
         if ($missingFiles > 0) {
             $this->error("- {$missingFiles} items ignorés car le fichier physique est introuvable.");
         }

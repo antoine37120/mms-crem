@@ -2,25 +2,21 @@
 
 namespace App\Filament\Resources\Items\Schemas;
 
-use App\Models\ItemType;
+use App\Models\Collection;
+use App\Models\Corpus;
+use App\Models\Fond;
+use App\Models\Item;
 use Filament\Forms\Components\DatePicker;
 use Filament\Forms\Components\Hidden;
-use Filament\Forms\Components\Select;
+use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Components\TextInput;
-use Filament\Forms\Components\FileUpload;
-use Filament\Resources\RelationManagers\RelationManager;
 use Filament\Schemas\Components\FusedGroup;
+use Filament\Schemas\Components\Grid;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
 use Filament\Schemas\Schema;
-use Filament\Forms\Components\MorphToSelect;
-use App\Models\Fond;
-use App\Models\Corpus;
-use App\Models\Collection;;
-use App\Models\Item;
 use Illuminate\Validation\Rules\Unique;
-use Filament\Schemas\Components\Grid;
 
 class ItemForm
 {
@@ -52,8 +48,8 @@ class ItemForm
                         // Réinitialiser le champ langue si le type change
                         if ($get('itemable_type') && $get('itemable_id')) {
 
-                            $itemableType = $get('itemable_type') ;
-                            $itemableId = $get('itemable_id') ;
+                            $itemableType = $get('itemable_type');
+                            $itemableId = $get('itemable_id');
                             $model = app($itemableType)->find($itemableId);
                             $set('code_prefix', $model->code);
                         }
@@ -66,26 +62,27 @@ class ItemForm
                                 ->label('Code de l\'Item')
                                 ->autofocus(false)
                                 ->default(function ($state, Set $set, Get $get): string {
-                                    if (!$get('itemable_type') || !$get('itemable_id')) {
+                                    if (! $get('itemable_type') || ! $get('itemable_id')) {
                                         return '';
                                     }
-                                    $itemableType = $get('itemable_type') ;
-                                    $itemableId = $get('itemable_id') ;
+                                    $itemableType = $get('itemable_type');
+                                    $itemableId = $get('itemable_id');
                                     $model = app($itemableType)->find($itemableId);
 
-                                    return $model->code ;
+                                    return $model->code;
                                 })
                                 ->disabled()
                                 ->dehydrated()
                                 ->required()
-                                //->unique(ignoreRecord: true)
+                                // ->unique(ignoreRecord: true)
                                 ->unique(modifyRuleUsing: function (Unique $rule, Get $get) {
-                                    if($get('code_suffix') != '') {
+                                    if ($get('code_suffix') != '') {
                                         return $rule->where('code', $get('code_prefix').'_'.$get('code_suffix'))
-                                            ->where('file_extension',$get('file_extension'));
+                                            ->where('file_extension', $get('file_extension'));
                                     }
+
                                     return $rule->where('code', $get('code_prefix'))
-                                        ->where('file_extension',$get('file_extension'));
+                                        ->where('file_extension', $get('file_extension'));
                                 })
                                 ->placeholder('Ex: CNRSMH_Arnaud_001')
                                 ->columnSpan(1),
@@ -96,11 +93,11 @@ class ItemForm
                                 ->required(false)
                                 ->placeholder('Ex: TRA_en ou 02')
                                 ->columnSpan(1),
-                            ])
+                        ])
                             ->label('Cote')
                             ->extraAttributes(['class' => 'item_code_wrapper'])
                             ->columns(2)
-                        ->columnSpan(2),
+                            ->columnSpan(2),
                         Text::make(<<<'JS'
                                     $get('code_suffix') ? `Cote enregistrée :
                                      ${$get('code_prefix')}_${$get('code_suffix')}` : `Cote enregistrée : ${$get('code_prefix')}`

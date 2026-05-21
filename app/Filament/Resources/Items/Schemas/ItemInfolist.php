@@ -7,8 +7,8 @@ use App\Models\Corpus;
 use App\Models\Fond;
 use App\Models\Item;
 use Filament\Infolists\Components\TextEntry;
-use Filament\Schemas\Schema;
 use Filament\Schemas\Components\Section;
+use Filament\Schemas\Schema;
 use Illuminate\Support\Number;
 
 class ItemInfolist
@@ -18,7 +18,7 @@ class ItemInfolist
         return $schema
             ->components([
                 Section::make('Informations générales')
-                    //->description('Prevent abuse by limiting the number of requests per period')
+                    // ->description('Prevent abuse by limiting the number of requests per period')
                     ->schema([
                         TextEntry::make('title')
                             ->inlineLabel()
@@ -36,7 +36,7 @@ class ItemInfolist
                         TextEntry::make('itemable_type')
                             ->label('Element parent')
                             ->inlineLabel()
-                            ->formatStateUsing(fn ($state) => match($state) {
+                            ->formatStateUsing(fn ($state) => match ($state) {
                                 Fond::class => 'Fonds',
                                 Corpus::class => 'Corpus',
                                 Collection::class => 'Collection',
@@ -73,38 +73,37 @@ class ItemInfolist
                     ->columns(1),
 
                 Section::make('Fichier')
-                    //->description('Prevent abuse by limiting the number of requests per period')
+                    // ->description('Prevent abuse by limiting the number of requests per period')
                     ->schema([
-                            TextEntry::make('file_path')
-                                ->inlineLabel()
-                                ->label('Chemin du fichier'),
-                            TextEntry::make('file_name')
-                                ->inlineLabel()
-                                ->label('Nom d\'origine du fichier'),
-                            TextEntry::make('file_size')
-                                ->formatStateUsing(fn (string $state): string =>
-                                    Number::fileSize(bytes:$state, precision: 2)
-                                    )
-                                ->inlineLabel()
-                                ->label('Taille'),
-                            TextEntry::make('file_type')
-                                ->inlineLabel()
-                                ->label('Type mime'),
-                            TextEntry::make('file_extension')
-                                ->inlineLabel()
-                                ->label('Extention de fichier'),
-                            TextEntry::make('duration')
-                                ->inlineLabel()
-                                ->label('Durée')
-                                ->time('H:i:s'),
-                            TextEntry::make('upload_date')
-                                ->inlineLabel()
-                                ->label('Envoyé le')
-                                ->date(),
-                            TextEntry::make('uploader.name')
-                                ->inlineLabel()
-                                ->label('Envoyer par'),
-                        ])
+                        TextEntry::make('file_path')
+                            ->inlineLabel()
+                            ->label('Chemin du fichier'),
+                        TextEntry::make('file_name')
+                            ->inlineLabel()
+                            ->label('Nom d\'origine du fichier'),
+                        TextEntry::make('file_size')
+                            ->formatStateUsing(fn (string $state): string => Number::fileSize(bytes: $state, precision: 2)
+                            )
+                            ->inlineLabel()
+                            ->label('Taille'),
+                        TextEntry::make('file_type')
+                            ->inlineLabel()
+                            ->label('Type mime'),
+                        TextEntry::make('file_extension')
+                            ->inlineLabel()
+                            ->label('Extention de fichier'),
+                        TextEntry::make('duration')
+                            ->inlineLabel()
+                            ->label('Durée')
+                            ->time('H:i:s'),
+                        TextEntry::make('upload_date')
+                            ->inlineLabel()
+                            ->label('Envoyé le')
+                            ->date(),
+                        TextEntry::make('uploader.name')
+                            ->inlineLabel()
+                            ->label('Envoyer par'),
+                    ])
                     ->columns(1),
                 MediaProcessingSchema::make(),
                 MediaInfoSchema::make(),

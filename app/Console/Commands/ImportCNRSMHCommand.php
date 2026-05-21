@@ -2,12 +2,12 @@
 
 namespace App\Console\Commands;
 
-use Illuminate\Console\Command;
-use Illuminate\Support\Facades\File;
-use Illuminate\Support\Facades\DB;
-use App\Models\Fond;
-use App\Models\Corpus;
 use App\Models\Collection;
+use App\Models\Corpus;
+use App\Models\Fond;
+use Illuminate\Console\Command;
+use Illuminate\Support\Facades\DB;
+use Illuminate\Support\Facades\File;
 
 class ImportCNRSMHCommand extends Command
 {
@@ -40,8 +40,9 @@ class ImportCNRSMHCommand extends Command
         $isDryRun = $this->option('dry-run');
 
         // Vérification que le fichier CSV existe
-        if (!File::exists($csvFile)) {
+        if (! File::exists($csvFile)) {
             $this->error("Le fichier CSV '{$csvFile}' n'existe pas.");
+
             return Command::FAILURE;
         }
 
@@ -49,7 +50,7 @@ class ImportCNRSMHCommand extends Command
         $this->info("Utilisateur créateur ID : {$userId}");
 
         if ($isDryRun) {
-            $this->warn("MODE DRY-RUN : Aucune donnée ne sera sauvegardée");
+            $this->warn('MODE DRY-RUN : Aucune donnée ne sera sauvegardée');
         }
 
         try {
@@ -57,7 +58,8 @@ class ImportCNRSMHCommand extends Command
             $csvData = $this->readCSV($csvFile);
 
             if (empty($csvData)) {
-                $this->error("Le fichier CSV est vide ou mal formaté");
+                $this->error('Le fichier CSV est vide ou mal formaté');
+
                 return Command::FAILURE;
             }
 
@@ -70,10 +72,10 @@ class ImportCNRSMHCommand extends Command
                 'collections_existing' => 0,
                 'items_created' => 0,
                 'items_existing' => 0,
-                'errors' => 0
+                'errors' => 0,
             ];
 
-            $this->info("Traitement de " . count($csvData) . " lignes...");
+            $this->info('Traitement de '.count($csvData).' lignes...');
 
             foreach ($csvData as $index => $row) {
                 $this->processRow($row, $userId, $isDryRun, $stats, $index + 1);
@@ -88,7 +90,8 @@ class ImportCNRSMHCommand extends Command
             return Command::SUCCESS;
 
         } catch (\Exception $e) {
-            $this->error("Erreur lors de l'importation : " . $e->getMessage());
+            $this->error("Erreur lors de l'importation : ".$e->getMessage());
+
             return Command::FAILURE;
         }
     }
@@ -114,12 +117,13 @@ class ImportCNRSMHCommand extends Command
             if (count($row) >= 2) {
                 $data[] = [
                     'ligne_complete' => $row[0],
-                    'pattern_trouve' => $row[1]
+                    'pattern_trouve' => $row[1],
                 ];
             }
         }
 
         fclose($file);
+
         return $data;
     }
 
@@ -138,9 +142,10 @@ class ImportCNRSMHCommand extends Command
             // Corpus: CNRSMH_I_1963
             // Collection: CNRSMH_I_1963_008_123
 
-            if (!preg_match('/CNRSMH_I_(\d{4})_(\d{3})/', $pattern, $matches)) {
+            if (! preg_match('/CNRSMH_I_(\d{4})_(\d{3})/', $pattern, $matches)) {
                 $this->warn("Ligne {$lineNumber}: Pattern invalide '{$pattern}' (attendu: CNRSMH_I_YYYY_XXX_XXX)");
                 $stats['errors']++;
+
                 return;
             }
 
@@ -157,22 +162,25 @@ class ImportCNRSMHCommand extends Command
 
             // Créer ou récupérer le fond
             $fond = $this->createOrGetFond($fondCode, $userId, $isDryRun, $stats);
-            if (!$fond && !$isDryRun) {
+            if (! $fond && ! $isDryRun) {
                 $stats['errors']++;
+
                 return;
             }
 
             // Créer ou récupérer le corpus
             $corpus = $this->createOrGetCorpus($corpusCode, $fond, $year, $userId, $isDryRun, $stats);
-            if (!$corpus && !$isDryRun) {
+            if (! $corpus && ! $isDryRun) {
                 $stats['errors']++;
+
                 return;
             }
 
             // Créer ou récupérer la collection
             $collection = $this->createOrGetCollection($collectionCode, $corpus, $year, $firstThreeDigits, $userId, $isDryRun, $stats);
-            if (!$collection && !$isDryRun) {
+            if (! $collection && ! $isDryRun) {
                 $stats['errors']++;
+
                 return;
             }
 
@@ -180,7 +188,7 @@ class ImportCNRSMHCommand extends Command
             $this->createOrGetItem($collection, $collectionCode, $filePath, $fileInfo, $userId, $isDryRun, $stats, $lineNumber);
 
         } catch (\Exception $e) {
-            $this->error("Erreur ligne {$lineNumber}: " . $e->getMessage());
+            $this->error("Erreur ligne {$lineNumber}: ".$e->getMessage());
             $stats['errors']++;
         }
     }
@@ -195,8 +203,8 @@ class ImportCNRSMHCommand extends Command
         $fileName = $pathInfo['basename'] ?? '';
 
         // Ajouter l'extension aux statistiques
-        if (!empty($extension)) {
-            if (!isset($this->foundExtensions[$extension])) {
+        if (! empty($extension)) {
+            if (! isset($this->foundExtensions[$extension])) {
                 $this->foundExtensions[$extension] = 0;
             }
             $this->foundExtensions[$extension]++;
@@ -210,7 +218,7 @@ class ImportCNRSMHCommand extends Command
             'file_extension' => $extension,
             'file_type' => $mimeType,
             'file_size' => 0, // Valeur par défaut
-            'duration' => 0   // Valeur par défaut
+            'duration' => 0,   // Valeur par défaut
         ];
     }
 
@@ -266,20 +274,22 @@ class ImportCNRSMHCommand extends Command
         if ($isDryRun) {
             $this->line("  [FOND] Créerait/récupérerait: {$code}");
             $stats['fonds_created']++;
-            return (object)['id' => 1, 'code' => $code];
+
+            return (object) ['id' => 1, 'code' => $code];
         }
 
         $fond = Fond::where('code', $code)->first();
 
         if ($fond) {
             $stats['fonds_existing']++;
+
             return $fond;
         }
 
         $fond = Fond::create([
             'code' => $code,
-            'title' => "Fonds CNRSMH I",
-            'created_by' => $userId
+            'title' => 'Fonds CNRSMH I',
+            'created_by' => $userId,
         ]);
 
         $this->info("  [FOND CRÉÉ] {$code}");
@@ -296,13 +306,15 @@ class ImportCNRSMHCommand extends Command
         if ($isDryRun) {
             $this->line("  [CORPUS] Créerait/récupérerait: {$code}");
             $stats['corpus_created']++;
-            return (object)['id' => 1, 'code' => $code];
+
+            return (object) ['id' => 1, 'code' => $code];
         }
 
         $corpus = Corpus::where('code', $code)->first();
 
         if ($corpus) {
             $stats['corpus_existing']++;
+
             return $corpus;
         }
 
@@ -310,7 +322,7 @@ class ImportCNRSMHCommand extends Command
             'fond_id' => $fond->id,
             'code' => $code,
             'title' => "Corpus I {$year}",
-            'created_by' => $userId
+            'created_by' => $userId,
         ]);
 
         $this->info("  [CORPUS CRÉÉ] {$code}");
@@ -327,13 +339,15 @@ class ImportCNRSMHCommand extends Command
         if ($isDryRun) {
             $this->line("  [COLLECTION] Créerait/récupérerait: {$code}");
             $stats['collections_created']++;
-            return (object)['id' => 1, 'code' => $code];
+
+            return (object) ['id' => 1, 'code' => $code];
         }
 
         $collection = Collection::where('code', $code)->first();
 
         if ($collection) {
             $stats['collections_existing']++;
+
             return $collection;
         }
 
@@ -341,7 +355,7 @@ class ImportCNRSMHCommand extends Command
             'corpus_id' => $corpus->id,
             'code' => $code,
             'title' => "Collection I {$year}_{$firstDigits}",
-            'created_by' => $userId
+            'created_by' => $userId,
         ]);
 
         $this->info("  [COLLECTION CRÉÉE] {$code}");
@@ -364,6 +378,7 @@ class ImportCNRSMHCommand extends Command
             $this->line("    Extension: {$fileInfo['file_extension']}");
             $this->line("    MIME: {$fileInfo['file_type']}");
             $stats['items_created']++;
+
             return;
         }
 
@@ -376,6 +391,7 @@ class ImportCNRSMHCommand extends Command
 
             if ($existingItem) {
                 $stats['items_existing']++;
+
                 return;
             }
 
@@ -389,23 +405,24 @@ class ImportCNRSMHCommand extends Command
                 $this->logDuplicateConflict($conflictingItem->file_path, $filePath, $itemCode, $fileInfo['file_extension'], $lineNumber);
                 $stats['items_existing']++;
                 $this->warn("  [CONFLIT] Item avec code '{$itemCode}' et extension '{$fileInfo['file_extension']}' existe déjà");
+
                 return;
             }
 
             // Insérer l'item avec une requête SQL brute
             $now = now()->format('Y-m-d H:i:s');
 
-            DB::insert("
+            DB::insert('
                 INSERT INTO items (
                     itemable_type, itemable_id, code, title, file_path, file_name,
                     file_size, file_type, file_extension, duration, upload_date,
                     uploaded_by, created_by, created_at, updated_at
                 ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?, ?)
-            ", [
+            ', [
                 'App\\Models\\Collection',
                 $collection->id,
                 $itemCode,
-                "Item " . $itemCode,
+                'Item '.$itemCode,
                 $filePath,
                 $fileInfo['file_name'],
                 $fileInfo['file_size'],
@@ -416,7 +433,7 @@ class ImportCNRSMHCommand extends Command
                 $userId,
                 $userId,
                 $now,
-                $now
+                $now,
             ]);
 
             $this->info("  [ITEM CRÉÉ] {$itemCode}");
@@ -427,7 +444,7 @@ class ImportCNRSMHCommand extends Command
             if (str_contains($e->getMessage(), 'Duplicate entry') || str_contains($e->getMessage(), 'UNIQUE constraint')) {
                 $this->handleDuplicateError($itemCode, $fileInfo['file_extension'], $filePath, $lineNumber, $stats);
             } else {
-                $this->error("Erreur création item ligne {$lineNumber}: " . $e->getMessage());
+                $this->error("Erreur création item ligne {$lineNumber}: ".$e->getMessage());
                 $stats['errors']++;
             }
         }
@@ -459,7 +476,7 @@ class ImportCNRSMHCommand extends Command
     private function logDuplicateConflict(string $existingFilePath, string $newFilePath, string $itemCode, string $extension, int $lineNumber): void
     {
         $conflictFile = storage_path('app/cnrsmh_conflicts.csv');
-        $isNewFile = !file_exists($conflictFile);
+        $isNewFile = ! file_exists($conflictFile);
 
         $file = fopen($conflictFile, 'a');
 
@@ -473,7 +490,7 @@ class ImportCNRSMHCommand extends Command
                 'extension',
                 'file_path_existant',
                 'file_path_nouveau',
-                'date_detection'
+                'date_detection',
             ], ';');
         }
 
@@ -484,7 +501,7 @@ class ImportCNRSMHCommand extends Command
             $extension,
             $existingFilePath,
             $newFilePath,
-            now()->format('Y-m-d H:i:s')
+            now()->format('Y-m-d H:i:s'),
         ], ';');
 
         fclose($file);
@@ -495,7 +512,7 @@ class ImportCNRSMHCommand extends Command
      */
     private function displayStats(array $stats, bool $isDryRun): void
     {
-        $this->info("\n=== STATISTIQUES I " . ($isDryRun ? "(DRY-RUN)" : "") . " ===");
+        $this->info("\n=== STATISTIQUES I ".($isDryRun ? '(DRY-RUN)' : '').' ===');
         $this->info("Fonds créés: {$stats['fonds_created']}");
         $this->info("Fonds existants: {$stats['fonds_existing']}");
         $this->info("Corpus créés: {$stats['corpus_created']}");
@@ -515,7 +532,7 @@ class ImportCNRSMHCommand extends Command
      */
     private function displayFoundExtensions(): void
     {
-        if (!empty($this->foundExtensions)) {
+        if (! empty($this->foundExtensions)) {
             $this->info("\n=== EXTENSIONS DE FICHIERS TROUVÉES ===");
 
             arsort($this->foundExtensions); // Trier par nombre décroissant

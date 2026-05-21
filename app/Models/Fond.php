@@ -5,17 +5,15 @@ namespace App\Models;
 use App\Traits\HasHierarchicalItems;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
+use Illuminate\Database\Eloquent\Relations\BelongsToMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Fond extends Model implements Auditable
 {
+    use HasFactory, HasHierarchicalItems, SoftDeletes;
     use \OwenIt\Auditing\Auditable;
-    use HasFactory, SoftDeletes, HasHierarchicalItems;
-
 
     protected $fillable = [
         'code',
@@ -29,7 +27,6 @@ class Fond extends Model implements Auditable
     ];
 
     protected $appends = ['full_code', 'stats'];
-
 
     /**
      * Code complet pour le Fond (identique au code simple)
@@ -46,7 +43,6 @@ class Fond extends Model implements Auditable
     {
         return $this->full_code;
     }
-
 
     /**
      * Un fonds appartient à un utilisateur (créateur)
@@ -88,6 +84,4 @@ class Fond extends Model implements Auditable
                 $q->withCount('collections');
             }]);
     }
-
-
 }

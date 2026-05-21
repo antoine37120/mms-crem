@@ -2,23 +2,20 @@
 
 namespace App\Filament\Infolists\Components;
 
-use Filament\Infolists\Components\Entry;
-use Illuminate\Support\HtmlString;
-use App\Models\Corpus;
 use App\Filament\Resources\Collections\CollectionResource;
 use App\Filament\Resources\Items\ItemResource;
-
+use App\Models\Corpus;
+use Filament\Infolists\Components\Entry;
 
 class CorpusStatsAndLogs extends Entry
 {
     protected string $view = 'filament.infolists.components.corpus-stats-and-logs';
 
-
     public function getState(): mixed
     {
         $corpus = $this->getRecord();
 
-        if (!$corpus instanceof Corpus) {
+        if (! $corpus instanceof Corpus) {
             return null;
         }
 
@@ -26,9 +23,9 @@ class CorpusStatsAndLogs extends Entry
         $collectionsCount = $corpus->collections()->count();
         $itemsCount = $corpus->secondaryItems()->count();
         $totalItemsCount = $itemsCount + $corpus->collections()
-                ->withCount('items')
-                ->get()
-                ->sum('items_count');
+            ->withCount('items')
+            ->get()
+            ->sum('items_count');
 
         // Calcul de la taille totale
         $directItemsSize = $corpus->items()->sum('file_size') ?? 0;
@@ -61,7 +58,7 @@ class CorpusStatsAndLogs extends Entry
                 'action' => "Nouvelle collection : {$collection->code}",
                 'user' => $collection->creator->name ?? 'Utilisateur inconnu',
                 'type' => 'collection',
-                'url' => CollectionResource::getUrl('view', ['record' => $collection->id])
+                'url' => CollectionResource::getUrl('view', ['record' => $collection->id]),
             ];
         }
 
@@ -79,23 +76,23 @@ class CorpusStatsAndLogs extends Entry
                 'action' => "Nouveau fichier : {$item->file_name}",
                 'user' => $item->uploader->name ?? 'Utilisateur inconnu',
                 'type' => 'item',
-                'url' => ItemResource::getUrl('view', ['record' => $item->id])
+                'url' => ItemResource::getUrl('view', ['record' => $item->id]),
             ];
         }
 
         // Tri par date (plus récent d'abord)
-        usort($recentActivity, function($a, $b) {
+        usort($recentActivity, function ($a, $b) {
             return strtotime($b['date']) - strtotime($a['date']);
         });
 
         // Collections avec liens pour la vue
-        $collectionsWithLinks = $corpus->collections()->limit(5)->get()->map(function($collection) {
+        $collectionsWithLinks = $corpus->collections()->limit(5)->get()->map(function ($collection) {
             return [
                 'id' => $collection->id,
                 'code' => $collection->code,
                 'title' => $collection->title,
                 'items_count' => $collection->items()->count(),
-                'url' => CollectionResource::getUrl('view', ['record' => $collection->id])
+                'url' => CollectionResource::getUrl('view', ['record' => $collection->id]),
             ];
         });
 
@@ -135,13 +132,16 @@ class CorpusStatsAndLogs extends Entry
 
     private function formatFileSize(?int $bytes): string
     {
-        if (!$bytes) return '0 B';
+        if (! $bytes) {
+            return '0 B';
+        }
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $power = floor(log($bytes, 1024));
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
+
+        return round($size, 2).' '.$units[$power];
     }
 }

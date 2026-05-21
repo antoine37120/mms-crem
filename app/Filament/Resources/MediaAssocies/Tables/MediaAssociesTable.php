@@ -2,23 +2,21 @@
 
 namespace App\Filament\Resources\MediaAssocies\Tables;
 
+use App\Models\Collection;
+use App\Models\Corpus;
+use App\Models\Fond;
+use App\Models\Item;
+use Filament\Actions\ActionGroup;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\DeleteBulkAction;
 use Filament\Actions\EditAction;
 use Filament\Actions\ForceDeleteBulkAction;
 use Filament\Actions\RestoreBulkAction;
 use Filament\Actions\ViewAction;
-use Filament\Actions\ActionGroup;
-use Filament\Tables\Columns\IconColumn;
 use Filament\Tables\Columns\TextColumn;
-use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Filters\SelectFilter;
+use Filament\Tables\Filters\TrashedFilter;
 use Filament\Tables\Table;
-use Filament\Tables\Filters\TernaryFilter;
-use App\Models\Item;
-use App\Models\Fond;
-use App\Models\Corpus;
-use App\Models\Collection;
 
 class MediaAssociesTable
 {
@@ -41,14 +39,14 @@ class MediaAssociesTable
                     ->toggleable(isToggledHiddenByDefault: false),
                 TextColumn::make('itemable.code')
                     ->label('Associé à')
-                    ->icon(fn ($record) => match($record->itemable_type) {
+                    ->icon(fn ($record) => match ($record->itemable_type) {
                         \App\Models\Fond::class => \Filament\Support\Icons\Heroicon::OutlinedBuildingLibrary,
                         \App\Models\Corpus::class => \Filament\Support\Icons\Heroicon::OutlinedBookOpen,
                         \App\Models\Collection::class => \Filament\Support\Icons\Heroicon::OutlinedArchiveBoxArrowDown,
                         \App\Models\Item::class => \Filament\Support\Icons\Heroicon::OutlinedDocument,
                         default => null,
                     })
-                    ->url(fn ($record) => match($record->itemable_type) {
+                    ->url(fn ($record) => match ($record->itemable_type) {
                         \App\Models\Fond::class => \App\Filament\Resources\Fonds\FondResource::getUrl('view', ['record' => $record->itemable_id]),
                         \App\Models\Corpus::class => \App\Filament\Resources\Corpuses\CorpusResource::getUrl('view', ['record' => $record->itemable_id]),
                         \App\Models\Collection::class => \App\Filament\Resources\Collections\CollectionResource::getUrl('view', ['record' => $record->itemable_id]),
@@ -148,7 +146,7 @@ class MediaAssociesTable
                 ActionGroup::make([
                     ViewAction::make(),
                     EditAction::make(),
-                ])
+                ]),
             ])
             ->toolbarActions([
                 BulkActionGroup::make([

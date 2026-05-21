@@ -5,18 +5,15 @@ namespace App\Models;
 use App\Traits\HasHierarchicalItems;
 use Illuminate\Database\Eloquent\Factories\HasFactory;
 use Illuminate\Database\Eloquent\Model;
-use Illuminate\Database\Eloquent\Relations\HasMany;
 use Illuminate\Database\Eloquent\Relations\BelongsTo;
 use Illuminate\Database\Eloquent\Relations\BelongsToMany;
-use Illuminate\Database\Eloquent\Relations\MorphMany;
 use Illuminate\Database\Eloquent\SoftDeletes;
 use OwenIt\Auditing\Contracts\Auditable;
 
 class Collection extends Model implements Auditable
 {
+    use HasFactory, HasHierarchicalItems, SoftDeletes;
     use \OwenIt\Auditing\Auditable;
-    use HasFactory, SoftDeletes, HasHierarchicalItems;
-
 
     protected $fillable = [
         'code',
@@ -31,13 +28,12 @@ class Collection extends Model implements Auditable
 
     protected $appends = ['full_code', 'stats'];
 
-
     /**
      * Code complet assemblé avec corpus et fonds
      */
     public function getFullCodeAttribute(): string
     {
-        return $this->code ;
+        return $this->code;
     }
 
     /**
@@ -79,5 +75,4 @@ class Collection extends Model implements Auditable
     {
         return $query->with(['corpus.fond:id,code,title']);
     }
-
 }

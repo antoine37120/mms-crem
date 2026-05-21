@@ -2,15 +2,20 @@
 
 namespace App\Providers\Filament;
 
+use Filament\Actions\Action;
 use Filament\Http\Middleware\Authenticate;
 use Filament\Http\Middleware\AuthenticateSession;
 use Filament\Http\Middleware\DisableBladeIconComponents;
 use Filament\Http\Middleware\DispatchServingFilamentEvent;
+use Filament\Navigation\NavigationGroup;
+use Filament\Navigation\NavigationItem;
 use Filament\Pages\Dashboard;
 use Filament\Panel;
 use Filament\PanelProvider;
-use Filament\Actions\Action;
+use Filament\Support\Assets\Css;
+use Filament\Support\Assets\Js;
 use Filament\Support\Colors\Color;
+use Filament\Support\Enums\Width;
 use Filament\Widgets\AccountWidget;
 use Filament\Widgets\FilamentInfoWidget;
 use Illuminate\Cookie\Middleware\AddQueuedCookiesToResponse;
@@ -19,15 +24,6 @@ use Illuminate\Foundation\Http\Middleware\VerifyCsrfToken;
 use Illuminate\Routing\Middleware\SubstituteBindings;
 use Illuminate\Session\Middleware\StartSession;
 use Illuminate\View\Middleware\ShareErrorsFromSession;
-use Filament\Navigation\NavigationGroup;
-use Filament\Support\Enums\Width;
-use Filament\Support\Assets\AlpineComponent;
-use Filament\Support\Facades\FilamentAsset;
-use Filament\Support\Assets\Css;
-use Filament\Support\Assets\Js;
-use Filament\Navigation\NavigationItem;
-
-use Livewire\Livewire;
 
 class MmsAdminPanelProvider extends PanelProvider
 {
@@ -70,19 +66,19 @@ class MmsAdminPanelProvider extends PanelProvider
             ])
             ->navigationGroups([
                 NavigationGroup::make('Gestion des Archives')
-                    //->icon('heroicon-o-archive-box')
+                    // ->icon('heroicon-o-archive-box')
                     ->collapsible(),
                 NavigationGroup::make('Médias associés')
-                    //->icon('heroicon-o-photo')
+                    // ->icon('heroicon-o-photo')
                     ->collapsible(),
                 NavigationGroup::make('Recherche & Exploration')
-                    //->icon('heroicon-o-folder-tree')
+                    // ->icon('heroicon-o-folder-tree')
                     ->collapsible(),
                 NavigationGroup::make('Aide')
-                    //->icon('heroicon-o-photo')
+                    // ->icon('heroicon-o-photo')
                     ->collapsible(),
                 NavigationGroup::make('Administration')
-                    //->icon('heroicon-o-cog-6-tooth')
+                    // ->icon('heroicon-o-cog-6-tooth')
                     ->collapsible(),
             ])
             ->navigationItems([
@@ -92,7 +88,7 @@ class MmsAdminPanelProvider extends PanelProvider
                     ->label(fn (): string => 'Traitements médias')
                     ->icon('heroicon-o-command-line')
                     ->url(fn (): string => route('vantage.dashboard'))
-                    ->visible(fn(): bool => auth()->user()->isAdmin()),
+                    ->visible(fn (): bool => auth()->user()->isAdmin()),
             ])
             ->userMenuItems([
                 'profile' => fn (Action $action) => $action->label('Edit profile'),

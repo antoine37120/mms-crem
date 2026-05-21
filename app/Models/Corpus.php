@@ -12,8 +12,8 @@ use OwenIt\Auditing\Contracts\Auditable;
 
 class Corpus extends Model implements Auditable
 {
+    use HasFactory, HasHierarchicalItems, SoftDeletes;
     use \OwenIt\Auditing\Auditable;
-    use HasFactory, SoftDeletes, HasHierarchicalItems;
 
     protected $fillable = [
         'code',
@@ -27,7 +27,6 @@ class Corpus extends Model implements Auditable
     ];
 
     protected $appends = ['full_code', 'stats'];
-
 
     /**
      * Code complet assemblé avec le fonds parent
@@ -47,7 +46,6 @@ class Corpus extends Model implements Auditable
     {
         return $this->full_code;
     }
-
 
     /**
      * Un corpus peut appartenir à plusieurs fonds
@@ -73,7 +71,6 @@ class Corpus extends Model implements Auditable
         return $this->belongsToMany(Collection::class);
     }
 
-
     /**
      * Scope avec statistiques complètes
      */
@@ -83,5 +80,4 @@ class Corpus extends Model implements Auditable
             ->withCount(['collections'])
             ->with(['fonds:id,code,title']);
     }
-
 }

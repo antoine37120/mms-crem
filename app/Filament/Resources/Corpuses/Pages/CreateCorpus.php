@@ -9,8 +9,6 @@ class CreateCorpus extends CreateRecord
 {
     protected static string $resource = CorpusResource::class;
 
-
-
     protected function getRedirectUrl(): string
     {
         return $this->previousUrl ?? $this->getResource()::getUrl('index');

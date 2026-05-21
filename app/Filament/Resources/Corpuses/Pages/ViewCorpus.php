@@ -2,27 +2,21 @@
 
 namespace App\Filament\Resources\Corpuses\Pages;
 
-
+use App\Filament\Infolists\Components\CorpusStatsAndLogs;
 use App\Filament\Resources\Corpuses\CorpusResource;
-use App\Filament\Resources\Collections\CollectionResource;
 use App\Filament\Resources\Fonds\FondResource;
-
-use Filament\Actions\EditAction;
 use Filament\Actions\Action;
-use Filament\Resources\Pages\ViewRecord;
-use Filament\Support\Enums\Width;
-use Filament\Schemas\Components\Section;
+use Filament\Actions\EditAction;
 use Filament\Infolists\Components\TextEntry;
+use Filament\Resources\Pages\ViewRecord;
 use Filament\Schemas\Components\Flex;
 use Filament\Schemas\Components\Grid;
-use Filament\Infolists\Components\RepeatableEntry;
-use Filament\Infolists;
-use Illuminate\Support\HtmlString;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
-use Filament\Support\Icons\Heroicon;
 use Filament\Support\Enums\IconPosition;
-use App\Filament\Infolists\Components\CorpusStatsAndLogs;
 use Filament\Support\Enums\TextSize;
+use Filament\Support\Icons\Heroicon;
+use Illuminate\Support\HtmlString;
 use Tapp\FilamentAuditing\RelationManagers\AuditsRelationManager;
 
 class ViewCorpus extends ViewRecord
@@ -37,6 +31,7 @@ class ViewCorpus extends ViewRecord
             AuditsRelationManager::class,
         ];
     }
+
     protected function getHeaderActions(): array
     {
         return [
@@ -50,7 +45,7 @@ class ViewCorpus extends ViewRecord
                 ->color('info')
                 ->url(fn () => route('filament.mms-admin.pages.hierarchy-explorer', [
                     'focus' => 'corpus',
-                    'id' => $this->record->id
+                    'id' => $this->record->id,
                 ])),
         ];
     }
@@ -64,10 +59,13 @@ class ViewCorpus extends ViewRecord
                     ->schema([
                         TextEntry::make('id')
                             ->hiddenLabel()
-                            ->formatStateUsing(function ($record) { if ($record->fonds->isEmpty()) { return 'Aucun fonds associé'; }
+                            ->formatStateUsing(function ($record) {
+                                if ($record->fonds->isEmpty()) {
+                                    return 'Aucun fonds associé';
+                                }
                                 $fondsLinks = $record->fonds->map(function ($fond) {
-                                    return '<a href="' . FondResource::getUrl('view', ['record' => $fond->id]) . '" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">' .
-                                        $fond->code . '</a>';
+                                    return '<a href="'.FondResource::getUrl('view', ['record' => $fond->id]).'" class="text-gray-600 hover:text-primary-800 font-medium underline decoration-dotted">'.
+                                        $fond->code.'</a>';
                                 })->implode(' | ');
 
                                 return new HtmlString($fondsLinks);
@@ -97,7 +95,7 @@ class ViewCorpus extends ViewRecord
                                     TextEntry::make('title')
                                         ->label('Titre')
                                         ->placeholder('Aucun titre défini')
-                                        //->icon('heroicon-o-tag')
+                                        // ->icon('heroicon-o-tag')
                                         ->size(TextSize::Large),
                                 ]),
 
@@ -115,10 +113,10 @@ class ViewCorpus extends ViewRecord
 
                                             $fonds = $record->fonds->map(function ($fond) {
                                                 return '
-                                                <a href="' . FondResource::getUrl('view', ['record' => $fond->id]) . '" class="text-primary-600 hover:text-primary-800 underline">
+                                                <a href="'.FondResource::getUrl('view', ['record' => $fond->id]).'" class="text-primary-600 hover:text-primary-800 underline">
                                                 <div class="fi-in-text-item  fi-in-text-has-badges fi-wrapped  fi-in-text">
-                                                <span class="fi-color fi-color-primary fi-text-color-600 dark:fi-text-color-200 fi-badge fi-size-sm">' .
-                                                    $fond->code . '</span></div></a>';
+                                                <span class="fi-color fi-color-primary fi-text-color-600 dark:fi-text-color-200 fi-badge fi-size-sm">'.
+                                                    $fond->code.'</span></div></a>';
                                             })->implode('');
 
                                             return new HtmlString($fonds);
@@ -137,7 +135,7 @@ class ViewCorpus extends ViewRecord
                                         ->since()
                                         ->tooltip(fn ($state) => $state?->format('d/m/Y à H:i:s')),
                                 ]),
-                        ])
+                        ]),
                     ])
                     ->compact()
                     ->columnSpanFull(),
@@ -150,8 +148,8 @@ class ViewCorpus extends ViewRecord
                             ->schema([
                                 CorpusStatsAndLogs::make('id')
                                     ->hiddenLabel()
-                                    ->columnSpanFull()
-                            ])
+                                    ->columnSpanFull(),
+                            ]),
                     ])
                     ->collapsible()
                     ->columnSpanFull(),
@@ -161,14 +159,17 @@ class ViewCorpus extends ViewRecord
 
     protected function formatFileSize(?int $bytes): string
     {
-        if (!$bytes) return '0 B';
+        if (! $bytes) {
+            return '0 B';
+        }
 
         $units = ['B', 'KB', 'MB', 'GB', 'TB'];
         $power = floor(log($bytes, 1024));
         $power = min($power, count($units) - 1);
 
         $size = $bytes / pow(1024, $power);
-        return round($size, 2) . ' ' . $units[$power];
+
+        return round($size, 2).' '.$units[$power];
     }
 
     protected function getStatusColor(): string
