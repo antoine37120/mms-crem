@@ -1,6 +1,7 @@
 /.phpunit.cache
 /node_modules
 /public/build
+/public/vendor
 /public/js/app
 /public/css/app
 /public/hot
@@ -34,4 +35,5 @@ laradumps.yaml
 /.dockerignore
 /.env.docker
 /DOCKER.md
+/deploy.sh
 /deploy-docker.sh
