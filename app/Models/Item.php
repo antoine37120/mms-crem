@@ -183,6 +183,13 @@ class Item extends Model implements Auditable
         $datePath = 'items/'.$createdAt->format('Y/m/d').'';
         $fileName = $this->code.'.'.$this->file_extension;
         $newFilePath = $datePath.'/'.$fileName;
+
+        // Si le fichier est déjà au bon endroit, pas besoin de le recopier
+        // (évite la corruption de fichier par self-copy via Flysystem)
+        if ($this->file_path === $newFilePath) {
+            return;
+        }
+
         // Créer le répertoire de destination s'il n'existe pas
         Storage::disk('original_medias')->makeDirectory($datePath);
         Storage::disk('original_medias')->putFileAs($datePath, new File($fullPath), $fileName);
