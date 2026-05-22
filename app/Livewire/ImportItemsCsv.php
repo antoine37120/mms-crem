@@ -392,10 +392,10 @@ class ImportItemsCsv extends Component implements HasActions, HasSchemas, HasTab
 
                 // Fichier copy logic (similar to UploadedFileToItem)
                 $createdAt = Carbon::parse($pendingFile->created_at);
-                $datePath = ''; // Apparemment géré via le boot() de Item si c'est laissé vide, ou bien on le met à la racine.
+                $datePath = 'items/'.$createdAt->format('Y/m/d');
 
                 $fileName = $data['code'].'.'.$data['file_extension'];
-                $newFilePath = $fileName;
+                $newFilePath = $datePath.'/'.$fileName;
 
                 $currentFilePath = $pendingFile->file_path;
 
