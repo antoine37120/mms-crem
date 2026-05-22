@@ -340,13 +340,11 @@ class UploadedFileToItem extends Component implements HasActions, HasSchemas
 
             // Créer le chemin basé sur la date de création du pending file
             $createdAt = Carbon::parse($this->pending_file_to_item->created_at);
-            // $datePath = 'items/' . $createdAt->format('Y/m/d') . '';
-            // Pas de rangement spécifique à ce stade, le modèle s'en chargera au hook de sauvegarde
-            $datePath = '';
+            $datePath = 'items/'.$createdAt->format('Y/m/d');
 
             // Générer un nom de fichier unique pour éviter les conflits
             $fileName = $data['code'].'.'.$data['file_extension'];
-            $newFilePath = $fileName;
+            $newFilePath = $datePath.'/'.$fileName;
 
             // Déplacer le fichier depuis le storage temporaire vers original_medias
             $currentFilePath = $this->pending_file_to_item->file_path;
