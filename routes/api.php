@@ -19,7 +19,15 @@ Route::prefix('hierarchy')->group(function () {
     Route::get('/stats', [App\Http\Controllers\Api\HierarchyController::class, 'getStats']);
 });
 
-Route::get('/items/{item}/download', function (App\Models\Item $item) {
+Route::get('/items/{item}/download', function (Request $request, App\Models\Item $item) {
+    // Check public access with hierarchical logic
+    if (! is_publicly_accessible($item)) {
+        $token = $request->query('token');
+        if (! $token || ! verify_media_token($token, $item->code)) {
+            abort(403, "Token d'accès requis ou invalide");
+        }
+    }
+
     if (! $item->file_path || ! Storage::exists($item->file_path)) {
         abort(404, 'Fichier non trouvé');
     }

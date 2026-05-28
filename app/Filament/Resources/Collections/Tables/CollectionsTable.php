@@ -28,6 +28,14 @@ class CollectionsTable
                     ->sortable()
                     ->label('Titre')
                     ->searchable(),
+                TextColumn::make('public_access')
+                    ->label('Accès')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'full' => 'success',
+                        'restricted' => 'warning',
+                        default => 'danger',
+                    }),
                 TextColumn::make('corpuses.code')
                     ->label('Corpuses')
                     ->html()

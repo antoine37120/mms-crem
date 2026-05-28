@@ -49,9 +49,9 @@ class MediaInfoSchema
                                     ->badge()
                                     ->color('primary')
                                     ->url(fn (MediaVariation $record): ?string => match (true) {
-                                        $record->is_streaming => route('media.master', ['code' => $record->item->code]),
-                                        $record->profile_name === 'original' => route('media.master', ['code' => $record->item->code]),
-                                        $record->profile_name === 'waveform_json' => route('media.waveform', ['code' => $record->item->code]),
+                                        $record->is_streaming => route('media.master', ['code' => $record->item->code]).'?token='.\generate_media_token($record->item),
+                                        $record->profile_name === 'original' => route('media.master', ['code' => $record->item->code]).'?token='.\generate_media_token($record->item),
+                                        $record->profile_name === 'waveform_json' => route('media.waveform', ['code' => $record->item->code]).'?token='.\generate_media_token($record->item),
                                         default => null,
                                     })
                                     ->visible(fn (MediaVariation $record): bool => match (true) {

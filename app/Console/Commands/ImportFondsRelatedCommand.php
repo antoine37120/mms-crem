@@ -52,6 +52,7 @@ class ImportFondsRelatedCommand extends Command
                 'mime_type',
                 'date',
                 'credits',
+                'public_access',
             ]);
 
         if ($limit = $this->option('limit')) {
@@ -201,6 +202,9 @@ class ImportFondsRelatedCommand extends Command
             'is_sub' => true,
             'file_extension' => $extension,
             'file_type' => $mimeType,
+            'public_access' => (isset($relatedItem->public_access) && $relatedItem->public_access !== '' && $relatedItem->public_access !== null)
+                ? $relatedItem->public_access
+                : config('mms.access.defaults.media'),
             'file_size' => 0, // Valeur par défaut
             'duration' => 0,   // Valeur par défaut
             'created_by' => 1, // ID utilisateur par défaut

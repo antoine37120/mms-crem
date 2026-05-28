@@ -37,3 +37,10 @@ laradumps.yaml
 /DOCKER.md
 /deploy.sh
 /deploy-docker.sh
+mms-creds.txt
+deploy-mms-crem.sh
+install-docker-rocky.sh
+install-rocky.sh
+prod.env
+issues.md
+issues.md

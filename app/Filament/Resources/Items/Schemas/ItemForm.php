@@ -12,6 +12,7 @@ use Filament\Forms\Components\MorphToSelect;
 use Filament\Forms\Components\TextInput;
 use Filament\Schemas\Components\FusedGroup;
 use Filament\Schemas\Components\Grid;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Components\Text;
 use Filament\Schemas\Components\Utilities\Get;
 use Filament\Schemas\Components\Utilities\Set;
@@ -115,6 +116,14 @@ class ItemForm
                     ->label('Chemin du fichier')
                     ->disabled()
                     ->visible(fn ($record) => $record && $record->file_path),
+                Section::make('Accès')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('public_access')
+                            ->label('Accès public')
+                            ->options(config('mms.access.options'))
+                            ->default(config('mms.access.defaults.item'))
+                            ->helperText('Détermine si ce fichier est accessible publiquement. "Public" = accessible sans token. "Restreint" = token requis.'),
+                    ]),
 
                 TextInput::make('file_extension')
                     ->label('Extension du fichier'),

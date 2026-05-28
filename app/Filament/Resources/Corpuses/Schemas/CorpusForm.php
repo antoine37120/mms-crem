@@ -6,6 +6,7 @@ use App\Models\Fond;
 use Filament\Forms\Components\Hidden;
 use Filament\Forms\Components\Select;
 use Filament\Forms\Components\TextInput;
+use Filament\Schemas\Components\Section;
 use Filament\Schemas\Schema;
 
 class CorpusForm
@@ -48,6 +49,13 @@ class CorpusForm
                 // Auto-remplir l'utilisateur connecté
                 Hidden::make('created_by')
                     ->default(auth()->id()),
+                Section::make('Accès')
+                    ->schema([
+                        \Filament\Forms\Components\Select::make('public_access')
+                            ->label('Accès public')
+                            ->options(config('mms.access.options'))
+                            ->default(config('mms.access.defaults.corpus')),
+                    ]),
 
             ])
             ->columns(2);

@@ -30,6 +30,14 @@ class CorpusesTable
                     ->wrap()
                     ->sortable()
                     ->searchable(),
+                TextColumn::make('public_access')
+                    ->label('Accès')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'full' => 'success',
+                        'restricted' => 'warning',
+                        default => 'danger',
+                    }),
                 TextColumn::make('fonds.code')
                     ->label('Fonds')
                     ->wrap()

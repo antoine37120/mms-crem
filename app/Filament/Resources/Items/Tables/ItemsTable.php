@@ -36,6 +36,14 @@ class ItemsTable
                     ->label('Titre')
                     ->searchable()
                     ->toggleable(isToggledHiddenByDefault: false),
+                TextColumn::make('public_access')
+                    ->label('Accès')
+                    ->badge()
+                    ->color(fn (string $state): string => match ($state) {
+                        'full' => 'success',
+                        'restricted' => 'warning',
+                        default => 'danger',
+                    }),
                 TextColumn::make('itemable.code')
                     ->label('Cote parent')
                     ->url(fn ($record) => match ($record->itemable_type) {

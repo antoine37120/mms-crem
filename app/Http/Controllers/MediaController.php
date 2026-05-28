@@ -14,6 +14,68 @@ use Illuminate\Support\Facades\Storage;
 class MediaController extends Controller
 {
     /**
+     * Détermine si une entité est accessible publiquement selon son public_access
+     * et celui de sa hiérarchie (pour les items non-sub).
+     */
+    private function isPubliclyAccessible(\Illuminate\Database\Eloquent\Model $entity): bool
+    {
+        return is_publicly_accessible($entity);
+    }
+
+    /**
+     * Autorise l'accès par token HMAC obligatoire, puis crée une session PHP.
+     */
+    private function authorizeAccess(Request $request, \Illuminate\Database\Eloquent\Model $entity)
+    {
+        // 1. TOUJOURS vérifier le token d'abord
+        $token = $request->query('token');
+        if (! $token) {
+            abort(403, "Token d'accès requis");
+        }
+
+        $code = $entity->code ?? null;
+        if (! $code || ! verify_media_token($token, $code)) {
+            abort(403, "Token d'accès invalide ou expiré");
+        }
+
+        // 2. Déduire le client depuis le payload du token
+        $parts = explode('.', $token);
+        $payload = json_decode(base64_decode($parts[0] ?? ''), true);
+        $client = $payload ? \App\Models\MediaClient::where('app_id', $payload['app'] ?? '')->where('is_active', true)->first() : null;
+
+        // 3. Si l'entité n'est PAS publique, vérifier que le client a le droit
+        if (! $this->isPubliclyAccessible($entity)) {
+            if (! $client || ! $client->can_access_not_public) {
+                abort(403, 'Accès restreint — client non autorisé pour ce contenu');
+            }
+        }
+
+        // 4. Token valide + droits OK → créer la session pour les segments HLS
+        session([
+            'media_access_code' => $code,
+            'media_access_at' => time(),
+        ]);
+    }
+
+    /**
+     * Vérifie la session PHP (pour les segments HLS sans ?token=).
+     */
+    private function authorizeSession(Request $request, \Illuminate\Database\Eloquent\Model $entity)
+    {
+        $code = $entity->code ?? null;
+
+        if (session('media_access_code') !== $code) {
+            abort(403, 'Session invalide');
+        }
+
+        if (session('media_access_at') < time() - 900) {
+            abort(403, 'Session expirée');
+        }
+
+        session(['media_access_at' => time()]);
+    }
+
+    /**
      * Serve the master media file.
      * Logic:
      * 1. If HLS streaming variation exists -> Serve .m3u8 playlist.
@@ -22,6 +84,7 @@ class MediaController extends Controller
     public function master(Request $request, string $code)
     {
         $item = Item::where('code', $code)->firstOrFail();
+        $this->authorizeAccess($request, $item);
 
         // Record View
         RecordItemView::dispatch(
@@ -44,7 +107,18 @@ class MediaController extends Controller
             $path = $streamingVariation->file_path;
 
             if (Storage::disk($disk)->exists($path)) {
-                return Storage::disk($disk)->response($path, null, [
+                $playlistContent = Storage::disk($disk)->get($path);
+                $token = $request->query('token');
+
+                if ($token) {
+                    $playlistContent = preg_replace(
+                        '/^([a-zA-Z0-9_][^#].*?)\.ts$/m',
+                        '$1.ts?token=' . urlencode($token),
+                        $playlistContent
+                    );
+                }
+
+                return response($playlistContent, 200, [
                     'Content-Type' => 'application/x-mpegURL',
                     'Access-Control-Allow-Origin' => '*',
                 ]);
@@ -70,7 +144,7 @@ class MediaController extends Controller
     /**
      * Serve HLS segments (.ts files).
      */
-    public function segment(string $code, string $segment)
+    public function segment(Request $request, string $code, string $segment)
     {
         // Security check: ensure segment belongs to the code
         if (! str_starts_with($segment, $code.'_')) {
@@ -78,6 +152,19 @@ class MediaController extends Controller
         }
 
         $item = Item::where('code', $code)->firstOrFail();
+
+        // Essayer la session d'abord (même domaine), puis le token en fallback (cross-domaine)
+        if (session('media_access_code') !== $item->code) {
+            $token = $request->query('token');
+            if (! $token || ! verify_media_token($token, $item->code)) {
+                abort(403, "Token d'accès requis");
+            }
+        } else {
+            if (session('media_access_at') < time() - 900) {
+                abort(403, 'Session expirée');
+            }
+            session(['media_access_at' => time()]);
+        }
 
         // We need to know the disk. We can look up any streaming variation for this item.
         $variation = MediaVariation::where('item_id', $item->id)
@@ -102,9 +189,10 @@ class MediaController extends Controller
     /**
      * Serve Waveform JSON.
      */
-    public function waveform(string $code)
+    public function waveform(Request $request, string $code)
     {
         $item = Item::where('code', $code)->firstOrFail();
+        $this->authorizeAccess($request, $item);
 
         $variation = MediaVariation::where('item_id', $item->id)
             ->where('profile_name', 'waveform_json')
@@ -126,7 +214,7 @@ class MediaController extends Controller
     /**
      * List all media variations for a specific item, filtered by item type suffix.
      */
-    public function variations(string $code, string $type)
+    public function variations(Request $request, string $code, string $type)
     {
         // 0. Find the parent object by code (can be Item, Collection, Corpus or Fond)
         $parent = Item::where('code', $code)->first()
@@ -137,6 +225,8 @@ class MediaController extends Controller
         if (! $parent) {
             abort(404, 'Parent not found with code: '.$code);
         }
+
+        $this->authorizeAccess($request, $parent);
 
         $variationsList = [];
 
@@ -176,9 +266,10 @@ class MediaController extends Controller
     /**
      * Serve a specific variation file by its profile name.
      */
-    public function serve(string $code, string $profile)
+    public function serve(Request $request, string $code, string $profile)
     {
         $item = Item::where('code', $code)->firstOrFail();
+        $this->authorizeAccess($request, $item);
 
         $variation = MediaVariation::where('item_id', $item->id)
             ->where('profile_name', $profile)

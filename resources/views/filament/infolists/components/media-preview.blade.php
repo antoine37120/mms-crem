@@ -6,7 +6,8 @@
     $isVideo = str_starts_with($type, 'video/');
     $isImage = str_starts_with($type, 'image/');
     $isPdf = $type === 'application/pdf';
-    $mediaUrl = $code ? route('media.master', ['code' => $code]) : '';
+    $token = $code ? \generate_media_token($state) : '';
+    $mediaUrl = $code ? route('media.master', ['code' => $code]) . '?token=' . $token : '';
 @endphp
 
 @if($code && ($isAudio || $isVideo || $isImage || $isPdf))
@@ -128,9 +129,9 @@
 
             <div x-ref="previewContainer" class="w-full flex justify-center items-center bg-transparent" :class="{'bg-gray-100 dark:bg-gray-900 h-full': fullscreen}">
                 @if($isImage)
-                    <img src="{{ route('media.master', ['code' => $code]) }}" class="max-h-[600px] object-contain w-full rounded" :class="{'max-h-screen h-full': fullscreen}" alt="Aperçu" />
+                    <img src="{{ route('media.master', ['code' => $code]) }}?token={{ $token }}" class="max-h-[600px] object-contain w-full rounded" :class="{'max-h-screen h-full': fullscreen}" alt="Aperçu" />
                 @elseif($isPdf)
-                    <iframe src="{{ route('media.master', ['code' => $code]) }}" class="w-full h-[600px] rounded border-0 bg-white" :class="{'h-screen': fullscreen}"></iframe>
+                    <iframe src="{{ route('media.master', ['code' => $code]) }}?token={{ $token }}" class="w-full h-[600px] rounded border-0 bg-white" :class="{'h-screen': fullscreen}"></iframe>
                 @endif
             </div>
         </div>

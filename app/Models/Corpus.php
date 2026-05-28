@@ -19,6 +19,7 @@ class Corpus extends Model implements Auditable
         'code',
         'title',
         'created_by',
+        'public_access',
     ];
 
     protected $casts = [

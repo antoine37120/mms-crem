@@ -153,4 +153,19 @@ return [
             ],
         ],
     ],
+
+    'access' => [
+        'defaults' => [
+            'fond' => 'metadata',
+            'corpus' => 'metadata',
+            'collection' => 'metadata',
+            'item' => 'metadata',
+            'media' => 'full',
+        ],
+        'options' => [
+            'full' => 'Full',
+            'mixed' => 'Mixed',
+            'metadata' => 'Metadata',
+        ],
+    ],
 ];
