@@ -2,13 +2,9 @@
 
 namespace App\Console\Commands;
 
-use App\Enums\ItemProcessingStatus;
-use App\Enums\ItemProcessingType;
 use App\Enums\MediaVariationStatus;
+use App\Jobs\ComputeItemMetadata;
 use App\Models\Item;
-use App\Models\ItemProcessingState;
-use App\Models\MediaVariation;
-use App\Services\MediaProcessor;
 use Illuminate\Console\Command;
 use Illuminate\Support\Facades\Storage;
 
@@ -69,48 +65,13 @@ class ProcessPendingMedia extends Command
 
         $successCount = 0;
         $missingFileCount = 0;
-        $notAudioVideoCount = 0;
 
-        $query->chunkById(100, function ($items) use ($bar, $force, &$successCount, &$missingFileCount, &$notAudioVideoCount) {
+        $query->chunkById(100, function ($items) use ($bar, $force, &$successCount, &$missingFileCount) {
             foreach ($items as $item) {
                 $disk = Storage::disk('original_medias');
 
                 if (! $disk->exists($item->file_path)) {
-                    // $this->warn("\nFichier introuvable pour l'item #{$item->id} : {$item->file_path}");
                     $missingFileCount++;
-                    $bar->advance();
-
-                    continue;
-                } else {
-                    $this->warn("\nFichier trouvé pour l'item #{$item->id} : {$item->file_path}");
-                }
-
-                $fullPath = $disk->path($item->file_path);
-
-                // Mise à jour des métadonnées si NULL
-                $needsSave = false;
-                if (is_null($item->file_type)) {
-                    $item->file_type = mime_content_type($fullPath);
-                    $needsSave = true;
-                }
-
-                if (is_null($item->file_size)) {
-                    $item->file_size = filesize($fullPath);
-                    $needsSave = true;
-                }
-
-                if (is_null($item->md5)) {
-                    $item->md5 = md5_file($fullPath);
-                    $needsSave = true;
-                }
-
-                if ($needsSave) {
-                    $item->saveQuietly();
-                }
-
-                // Limiter aux fichiers audio/vidéo uniquement
-                if (! $item->isAudio() && ! $item->isVideo()) {
-                    $notAudioVideoCount++;
                     $bar->advance();
 
                     continue;
@@ -122,21 +83,23 @@ class ProcessPendingMedia extends Command
                         ->whereIn('profile_name', ['hls_standard', 'waveform_json'])
                         ->delete();
 
-                    // Réinitialiser les ItemProcessingState à PENDING
+                    // Réinitialiser les ItemProcessingState
                     $item->processingStates()
-                        ->whereIn('process_type', [ItemProcessingType::DIFFUSION, ItemProcessingType::WAVEFORM])
+                        ->whereIn('process_type', [\App\Enums\ItemProcessingType::DIFFUSION, \App\Enums\ItemProcessingType::WAVEFORM])
                         ->update([
-                            'status' => ItemProcessingStatus::PENDING,
+                            'status' => \App\Enums\ItemProcessingStatus::PENDING,
                             'message' => 'Re-traitement forcé via commande artisan',
                             'started_at' => null,
                             'finished_at' => null,
                         ]);
                 }
 
-                // Dispatcher les jobs
-                app(MediaProcessor::class)->processItem($item);
-                $successCount++;
+                // Dispatcher le job de calcul des métadonnées (file_type, file_size, md5)
+                // Ce job enchaînera automatiquement sur la génération diffusion/waveform si nécessaire
+                ComputeItemMetadata::dispatch($item)
+                    ->onQueue('media_processing');
 
+                $successCount++;
                 $bar->advance();
             }
         });
@@ -148,9 +111,8 @@ class ProcessPendingMedia extends Command
         $this->table(
             ['Catégorie', 'Nombre'],
             [
-                ['Items traités avec succès', $successCount],
+                ['Items dispatchés avec succès', $successCount],
                 ['Fichiers physiques manquants', $missingFileCount],
-                ['Types non supportés (ni audio ni vidéo)', $notAudioVideoCount],
                 ['Items déjà traités (sautés)', $alreadyTreatedCount],
             ]
         );
