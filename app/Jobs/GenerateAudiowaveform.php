@@ -70,7 +70,7 @@ class GenerateAudiowaveform implements ShouldQueue
             // 3. Command
             if ($this->item->isVideo()) {
                 // For video, we extract audio using ffmpeg and pipe it to audiowaveform
-                $result = Process::pipe(function ($pipe) use ($ffmpegPath, $inputPath, $audiowaveformPath, $outputFileAbsolute, $pixelsPerSecond, $bits) {
+                $result = Process::timeout($this->timeout)->pipe(function ($pipe) use ($ffmpegPath, $inputPath, $audiowaveformPath, $outputFileAbsolute, $pixelsPerSecond, $bits) {
                     $pipe->command([
                         $ffmpegPath,
                         '-i', $inputPath,
@@ -97,7 +97,7 @@ class GenerateAudiowaveform implements ShouldQueue
                     '--pixels-per-second', (string) $pixelsPerSecond,
                     '--bits', (string) $bits,
                 ];
-                $result = Process::run($command);
+                $result = Process::timeout($this->timeout)->run($command);
                 $commandLog = implode(' ', $command);
             }
 

@@ -163,7 +163,7 @@ class GenerateDiffusionMedia implements ShouldQueue
             }
 
             // 4. Execute
-            $result = Process::run($command);
+            $result = Process::timeout($this->timeout)->run($command);
 
             if ($result->failed()) {
                 throw new \Exception('FFmpeg failed: '.$result->errorOutput());
