@@ -71,25 +71,10 @@ class GenerateAudiowaveform implements ShouldQueue
 
             // 3. Command
             if ($this->item->isVideo()) {
-                // For video, we extract audio using ffmpeg and pipe it to audiowaveform
-                $result = Process::timeout($this->timeout)->pipe(function ($pipe) use ($ffmpegPath, $inputPath, $audiowaveformPath, $outputFileAbsolute, $pixelsPerSecond, $bits) {
-                    $pipe->command([
-                        $ffmpegPath,
-                        '-i', $inputPath,
-                        '-vn', // No video
-                        '-ac', '1', // Mono is enough for waveform
-                        '-f', 'wav',
-                        '-',
-                    ]);
-                    $pipe->command([
-                        $audiowaveformPath,
-                        '--input-format', 'wav',
-                        '-o', $outputFileAbsolute,
-                        '--pixels-per-second', (string) $pixelsPerSecond,
-                        '--bits', (string) $bits,
-                    ]);
-                });
-                $commandLog = "{$ffmpegPath} -i {$inputPath} -vn -ac 1 -f wav - | {$audiowaveformPath} --input-format wav -o {$outputFileAbsolute} --pixels-per-second {$pixelsPerSecond} --bits {$bits}";
+                // For video, extract audio via ffmpeg and pipe to audiowaveform
+                $command = "{$ffmpegPath} -i {$inputPath} -vn -ac 1 -f wav - | {$audiowaveformPath} --input-format wav -o {$outputFileAbsolute} --pixels-per-second {$pixelsPerSecond} --bits {$bits}";
+                $result = Process::timeout($this->timeout)->run($command);
+                $commandLog = $command;
             } else {
                 // For audio, audiowaveform can handle it directly (most formats)
                 $command = [
