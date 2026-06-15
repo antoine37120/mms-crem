@@ -20,13 +20,13 @@ class GenerateAudiowaveform implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $queue = 'media_processing';
-
     public int $timeout = 1800;
 
     public function __construct(
         public Item $item
-    ) {}
+    ) {
+        $this->onQueue('media_processing');
+    }
 
     public function handle(): void
     {

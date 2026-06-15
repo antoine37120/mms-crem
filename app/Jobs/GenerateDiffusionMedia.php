@@ -20,13 +20,13 @@ class GenerateDiffusionMedia implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
-    public $queue = 'media_processing';
-
     public int $timeout = 3600; // 1 hour max
 
     public function __construct(
         public Item $item
-    ) {}
+    ) {
+        $this->onQueue('media_processing');
+    }
 
     public function handle(): void
     {

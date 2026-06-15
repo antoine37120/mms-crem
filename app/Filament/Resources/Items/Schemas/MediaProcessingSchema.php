@@ -54,13 +54,13 @@ class MediaProcessingSchema
                                 ->requiresConfirmation()
                                 ->action(function (ItemProcessingState $record) {
                                     if ($record->process_type === ItemProcessingType::WAVEFORM) {
-                                        GenerateAudiowaveform::dispatch($record->item);
+                                        GenerateAudiowaveform::dispatch($record->item)->onQueue('media_processing');
                                         Notification::make()
                                             ->title('Génération de la waveform lancée')
                                             ->success()
                                             ->send();
                                     } elseif ($record->process_type === ItemProcessingType::DIFFUSION) {
-                                        GenerateDiffusionMedia::dispatch($record->item);
+                                        GenerateDiffusionMedia::dispatch($record->item)->onQueue('media_processing');
                                         Notification::make()
                                             ->title('Génération du média de diffusion lancée')
                                             ->success()
