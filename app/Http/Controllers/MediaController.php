@@ -226,8 +226,9 @@ class MediaController extends Controller
             abort(404, 'Parent not found with code: '.$code);
         }
 
-        $this->authorizeAccess($request, $parent);
-
+        // Pas de vérification de token : cette route liste les fichiers disponibles
+        // (métadonnées, pas de contenu sensible). Le token est ajouté côté client
+        // par l'appelant (Omeka) sur les URLs individuelles retournées.
         $variationsList = [];
 
         // 1. Find all items associated with this parent that match the suffix
