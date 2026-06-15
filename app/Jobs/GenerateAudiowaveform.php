@@ -20,6 +20,8 @@ class GenerateAudiowaveform implements ShouldQueue
 {
     use Dispatchable, InteractsWithQueue, Queueable, SerializesModels;
 
+    public string $queue = 'media_processing';
+
     public int $timeout = 1800;
 
     public function __construct(
