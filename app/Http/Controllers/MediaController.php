@@ -226,9 +226,10 @@ class MediaController extends Controller
             abort(404, 'Parent not found with code: '.$code);
         }
 
-        // Pas de vérification de token : cette route liste les fichiers disponibles
-        // (métadonnées, pas de contenu sensible). Le token est ajouté côté client
-        // par l'appelant (Omeka) sur les URLs individuelles retournées.
+        // Vérification token : le caller (Omeka) transmet le token dans l'URL
+        // pour que le navigateur puisse récupérer le JSON et les URLs signées.
+        $this->authorizeAccess($request, $parent);
+
         $variationsList = [];
 
         // 1. Find all items associated with this parent that match the suffix
@@ -248,13 +249,18 @@ class MediaController extends Controller
             ->get();
 
         foreach ($matchedItems as $item) {
+            // Réutiliser le même app que le token de la requête
+            $tokenParts = explode('.', $request->query('token', ''));
+            $tokenPayload = count($tokenParts) === 2 ? json_decode(base64_decode($tokenParts[0]), true) : null;
+            $appId = $tokenPayload['app'] ?? 'mms';
+            $token = $this->generateChildToken($item, $appId);
             // Include the item itself (original)
-            $variationsList[] = $this->formatMediaEntry($item, null);
+            $variationsList[] = $this->formatMediaEntry($item, null, $token);
 
             // Include its technical variations (HLS, etc.)
             foreach ($item->mediaVariations as $variation) {
                 if ($variation->status->value === 'ready') {
-                    $variationsList[] = $this->formatMediaEntry($item, $variation);
+                    $variationsList[] = $this->formatMediaEntry($item, $variation, $token);
                 }
             }
         }
@@ -292,9 +298,15 @@ class MediaController extends Controller
     /**
      * Format a media entry (original or variation) for JSON response.
      */
-    protected function formatMediaEntry(Item $item, ?MediaVariation $variation): array
+    protected function formatMediaEntry(Item $item, ?MediaVariation $variation, ?string $token = null): array
     {
         $isOriginal = is_null($variation);
+
+        $url = $this->determineUrl($item, $variation);
+        if ($token) {
+            $separator = str_contains($url, '?') ? '&' : '?';
+            $url .= $separator . 'token=' . urlencode($token);
+        }
 
         return [
             'code' => $item->code,
@@ -310,8 +322,29 @@ class MediaController extends Controller
             'uploaded_by' => $item->uploader?->name,
             'created_by' => $item->creator?->name,
             'md5' => $isOriginal ? $item->md5 : null, // MD5 typically for original
-            'url' => $this->determineUrl($item, $variation),
+            'url' => $url,
         ];
+    }
+
+    /**
+     * Generate a token for a child item, reusing the app_id from the parent request.
+     */
+    private function generateChildToken(Item $item, string $appId): string
+    {
+        $client = \App\Models\MediaClient::where('app_id', $appId)->where('is_active', true)->first();
+        if (! $client) {
+            return '';
+        }
+        $secret = decrypt_secret($client->encrypted_secret);
+        $payload = json_encode([
+            'app' => $appId,
+            'code' => $item->code,
+            'exp' => time() + 300, // 5 min
+        ]);
+        $payloadBase64 = base64_encode($payload);
+        $signature = hash_hmac('sha256', $payloadBase64, $secret);
+
+        return $payloadBase64 . '.' . $signature;
     }
 
     /**
