@@ -82,6 +82,28 @@ return [
             ]) : [],
         ],
 
+        // Base contenant les tables Telemeta (media_*) utilisées par import:telemeta.
+        // Hérite des identifiants de la connexion principale si non surchargé.
+        'telemeta' => [
+            'driver' => 'mariadb',
+            'url' => env('DB_URL'),
+            'host' => env('DB_TELEMETA_HOST', env('DB_HOST', '127.0.0.1')),
+            'port' => env('DB_TELEMETA_PORT', env('DB_PORT', '3306')),
+            'database' => env('DB_TELEMETA_DATABASE', 'mms_telemeta'),
+            'username' => env('DB_TELEMETA_USERNAME', env('DB_USERNAME', 'root')),
+            'password' => env('DB_TELEMETA_PASSWORD', env('DB_PASSWORD', '')),
+            'unix_socket' => env('DB_SOCKET', ''),
+            'charset' => env('DB_CHARSET', 'utf8mb4'),
+            'collation' => env('DB_COLLATION', 'utf8mb4_unicode_ci'),
+            'prefix' => '',
+            'prefix_indexes' => true,
+            'strict' => true,
+            'engine' => null,
+            'options' => extension_loaded('pdo_mysql') ? array_filter([
+                PDO::MYSQL_ATTR_SSL_CA => env('MYSQL_ATTR_SSL_CA'),
+            ]) : [],
+        ],
+
         'pgsql' => [
             'driver' => 'pgsql',
             'url' => env('DB_URL'),
