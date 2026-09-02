@@ -25,9 +25,9 @@ it('importe fonds, corpus, collections, items et fichiers liés depuis media_*',
         ->and(DB::table('collections')->count())->toBe(2)
         ->and(DB::table('corpus_fond')->count())->toBe(2)
         ->and(DB::table('collection_corpus')->count())->toBe(1)
-        // 2 items principaux (la fiche sans code ni fichier est ignorée)
+        // 2 items principaux (la fiche sans code ni fichier est ignorée, la fiche avec code sans fichier est importée)
         // + 1 sous-item media_item_related + 3 fichiers liés fonds/corpus/collection
-        ->and(DB::table('items')->count())->toBe(6);
+        ->and(DB::table('items')->count())->toBe(7);
 
     $item = DB::table('items')->where('code', 'CNRSMH_I_1963_001_001')->first();
 
@@ -43,6 +43,15 @@ it('importe fonds, corpus, collections, items et fichiers liés depuis media_*',
     $item2 = DB::table('items')->where('code', 'CNRSMH_I_1963_001_002')->first();
     expect($item2->file_type)->toBe('audio/mpeg')
         ->and($item2->upload_date)->toBe(now()->toDateString());
+
+    // Fiche avec code mais sans fichier : importée sans aucun champ fichier
+    $fiche = DB::table('items')->where('code', 'CNRSMH_I_1963_001_003')->first();
+    expect($fiche)->not->toBeNull()
+        ->and($fiche->file_path)->toBeNull()
+        ->and($fiche->file_name)->toBeNull()
+        ->and($fiche->file_extension)->toBeNull()
+        ->and($fiche->file_type)->toBeNull()
+        ->and($fiche->is_sub)->toBe(0);
 
     // Fichier lié attaché à l'item principal
     $sub = DB::table('items')->where('code', 'CNRSMH_I_1963_001_001_livret')->first();
@@ -89,7 +98,7 @@ it('est idempotent : un second import ne crée aucun doublon', function () {
         ->and(DB::table('collections')->count())->toBe(2)
         ->and(DB::table('corpus_fond')->count())->toBe(2)
         ->and(DB::table('collection_corpus')->count())->toBe(1)
-        ->and(DB::table('items')->count())->toBe(6);
+        ->and(DB::table('items')->count())->toBe(7);
 });
 
 it('n\'écrit rien en dry-run', function () {
@@ -250,6 +259,17 @@ function seedTelemetaFixtures(): void
             'collection_id' => 100,
             'code' => null,
             'title' => 'Fiche sans rien',
+            'filename' => null,
+            'mimetype' => '',
+            'public_access' => 'metadata',
+            'digitization_date' => null,
+        ],
+        [
+            // Fiche avec code mais sans fichier : importée en métadonnées seules
+            'id' => 1003,
+            'collection_id' => 100,
+            'code' => 'CNRSMH_I_1963_001_003',
+            'title' => 'Fiche sans fichier',
             'filename' => null,
             'mimetype' => '',
             'public_access' => 'metadata',
