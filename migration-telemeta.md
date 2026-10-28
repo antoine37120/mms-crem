@@ -252,6 +252,7 @@ php vendor/pestphp/pest/bin/pest tests/Feature/ImportTelemetaCommandTest.php
 | Symptôme | Cause / solution |
 |---|---|
 | « table doesn't exist » au lancement | Les tables `media_*` ne sont pas (encore) dans la base `DB_TELEMETA_DATABASE` |
+| `1048 Column 'file_name' cannot be null` | Base avec l'ancien schéma (NOT NULL) : lancer `php artisan migrate` — la migration `2026_09_02_000001_make_file_name_nullable_on_items_table` aligne `file_name` sur `file_path` (nullable, nécessaire aux fiches sans fichier) |
 | Items « collection introuvable » au résumé | L'étape collections n'a pas tourné avant items → rejouer avec `--only=collections` puis `--only=items` |
 | Fichiers physiques manquants en post-traitement | Les chemins `media_items.filename` doivent correspondre aux fichiers réellement présents sur le disque médias |
 | Import interrompu | Relancer `php artisan import:telemeta` : idempotent |

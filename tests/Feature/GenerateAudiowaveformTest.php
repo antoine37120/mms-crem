@@ -29,12 +29,12 @@ beforeEach(function () {
     $this->user = $user;
 });
 
-it('uses direct audiowaveform for audio items', function () {
+it('uses direct audiowaveform for wav/flac audio items', function () {
     $item = Item::create([
         'code' => 'ITEM001',
-        'file_path' => 'test.mp3',
-        'file_name' => 'test.mp3',
-        'file_type' => 'audio/mpeg',
+        'file_path' => 'test.wav',
+        'file_name' => 'test.wav',
+        'file_type' => 'audio/wav',
         'itemable_type' => 'App\Models\Collection',
         'itemable_id' => 1,
         'created_by' => $this->user->id,
@@ -42,7 +42,7 @@ it('uses direct audiowaveform for audio items', function () {
     ]);
 
     // Mock existence of source file
-    Storage::disk('original_medias')->put('test.mp3', 'dummy content');
+    Storage::disk('original_medias')->put('test.wav', 'dummy content');
 
     Process::fake([
         'audiowaveform*' => function ($process) {
@@ -63,6 +63,50 @@ it('uses direct audiowaveform for audio items', function () {
         return str_contains($command, 'audiowaveform') &&
                str_contains($command, '-i') &&
                ! str_contains($command, 'ffmpeg');
+    });
+});
+
+it('uses ffmpeg pipe for aiff audio items', function () {
+    $item = Item::create([
+        'code' => 'ITEM004',
+        'file_path' => 'test.aiff',
+        'file_name' => 'test.aiff',
+        'file_type' => 'audio/aiff',
+        'itemable_type' => 'App\Models\Collection',
+        'itemable_id' => 1,
+        'created_by' => $this->user->id,
+        'uploaded_by' => $this->user->id,
+    ]);
+
+    // Mock existence of source file
+    Storage::disk('original_medias')->put('test.aiff', 'dummy content');
+
+    Process::fake([
+        '*' => function ($process) {
+            if (str_contains(is_array($process->command) ? implode(' ', $process->command) : $process->command, 'audiowaveform')) {
+                Storage::disk('diffusion_medias')->put('items/ITEM004/waveform/ITEM004.json', '{}');
+            }
+
+            return Process::result('ok');
+        },
+    ]);
+
+    // Manually create the output file
+    Storage::disk('diffusion_medias')->put('items/ITEM004/waveform/ITEM004.json', '{}');
+
+    (new GenerateAudiowaveform($item))->handle();
+
+    // AIFF n'est pas lu nativement par audiowaveform : il doit passer par ffmpeg
+    Process::assertRan(function ($process) {
+        $command = is_array($process->command) ? implode(' ', $process->command) : $process->command;
+
+        return str_contains($command, 'ffmpeg') && str_contains($command, 'aiff');
+    });
+
+    Process::assertRan(function ($process) {
+        $command = is_array($process->command) ? implode(' ', $process->command) : $process->command;
+
+        return str_contains($command, 'audiowaveform') && str_contains($command, '--input-format wav');
     });
 });
 

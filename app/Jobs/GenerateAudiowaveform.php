@@ -70,13 +70,11 @@ class GenerateAudiowaveform implements ShouldQueue
             $outputFileAbsolute = Storage::disk($diffusionDisk)->path($outputDir.'/'.$fileName);
 
             // 3. Command
-            if ($this->item->isVideo()) {
-                // For video, extract audio via ffmpeg and pipe to audiowaveform
-                $command = "{$ffmpegPath} -i {$inputPath} -vn -ac 1 -f wav - | {$audiowaveformPath} --input-format wav -o {$outputFileAbsolute} --pixels-per-second {$pixelsPerSecond} --bits {$bits}";
-                $result = Process::timeout($this->timeout)->run($command);
-                $commandLog = $command;
-            } else {
-                // For audio, audiowaveform can handle it directly (most formats)
+            // audiowaveform ne lit nativement que le WAV et le FLAC :
+            // tout le reste (aiff, mp3, vidéo…) est transcodé en WAV mono via ffmpeg.
+            $extension = strtolower(pathinfo($inputPath, PATHINFO_EXTENSION));
+
+            if (in_array($extension, ['wav', 'flac'], true)) {
                 $command = [
                     $audiowaveformPath,
                     '-i', $inputPath,
@@ -86,6 +84,14 @@ class GenerateAudiowaveform implements ShouldQueue
                 ];
                 $result = Process::timeout($this->timeout)->run($command);
                 $commandLog = implode(' ', $command);
+            } else {
+                $command = escapeshellarg($ffmpegPath).' -i '.escapeshellarg($inputPath)
+                    .' -vn -ac 1 -f wav - | '.escapeshellarg($audiowaveformPath)
+                    .' --input-format wav -o '.escapeshellarg($outputFileAbsolute)
+                    .' --pixels-per-second '.(int) $pixelsPerSecond
+                    .' --bits '.(int) $bits;
+                $result = Process::timeout($this->timeout)->run($command);
+                $commandLog = $command;
             }
 
             // 4. Execute (result already obtained above)
