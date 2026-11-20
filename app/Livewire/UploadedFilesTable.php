@@ -2,12 +2,18 @@
 
 namespace App\Livewire;
 
+use App\Exceptions\ItemFileReplacementException;
+use App\Models\Item;
 use App\Models\PendingFile;
+use App\Services\ItemFileReplacer;
 use Filament\Actions\Action;
 use Filament\Actions\BulkActionGroup;
 use Filament\Actions\Concerns\InteractsWithActions;
 use Filament\Actions\Contracts\HasActions;
 use Filament\Actions\DeleteAction;
+use Filament\Forms\Components\Checkbox;
+use Filament\Forms\Components\Select;
+use Filament\Notifications\Notification;
 use Filament\Schemas\Concerns\InteractsWithSchemas;
 use Filament\Schemas\Contracts\HasSchemas;
 use Filament\Tables\Columns\TextColumn;
@@ -101,6 +107,89 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
                         $this->dispatch('actionPendingFileToItem', pendingFileId: $record->id, isSub: true);
                     })
                     ->color('primary'),
+                Action::make('replaceItemFile')
+                    ->label("Remplacer le fichier d'un item")
+                    ->icon('heroicon-o-arrow-path')
+                    ->color('warning')
+                    ->modalHeading('Remplacer le fichier d’un item existant')
+                    ->modalDescription(
+                        'Le fichier envoyé remplace l’original de l’item choisi. '
+                        .'L’identifiant, la cote et les métadonnées descriptives sont conservés.'
+                    )
+                    ->modalSubmitActionLabel('Remplacer')
+                    ->schema([
+                        Select::make('item_id')
+                            ->label('Item (cote)')
+                            ->placeholder('Rechercher une cote…')
+                            ->required()
+                            ->searchable()
+                            ->getSearchResultsUsing(fn (string $search): array => $this->itemOptions($search))
+                            ->getOptionLabelUsing(fn ($value): ?string => $this->itemLabel($value)),
+                        Checkbox::make('delete_old')
+                            ->label("Supprimer l'ancien original")
+                            ->helperText(
+                                'Décoché, l’ancien fichier est archivé dans items/_remplaces. '
+                                .'Cochée, il est définitivement supprimé.'
+                            )
+                            ->default(false),
+                    ])
+                    ->action(function (PendingFile $record, array $data): void {
+                        $item = Item::find($data['item_id'] ?? null);
+
+                        if (! $item instanceof Item) {
+                            Notification::make()
+                                ->title('Item introuvable')
+                                ->body("L'item sélectionné n'existe plus.")
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        try {
+                            $result = app(ItemFileReplacer::class)->replace(
+                                $item,
+                                $record,
+                                (bool) ($data['delete_old'] ?? false),
+                            );
+                        } catch (ItemFileReplacementException $exception) {
+                            Notification::make()
+                                ->title('Remplacement impossible')
+                                ->body($exception->getMessage())
+                                ->danger()
+                                ->send();
+
+                            return;
+                        }
+
+                        $body = $result->oldPath !== null
+                            ? "Ancien fichier : {$result->oldPath} → nouveau : {$result->newPath}."
+                            : "Nouveau fichier : {$result->newPath}.";
+
+                        if ($result->archivePath !== null) {
+                            $body .= " Ancien original archivé dans {$result->archivePath}.";
+                        }
+
+                        if ($result->oldDeleted) {
+                            $body .= ' Ancien original supprimé.';
+                        }
+
+                        Notification::make()
+                            ->title("Fichier de l'item {$result->item->code} remplacé")
+                            ->body($body)
+                            ->success()
+                            ->send();
+
+                        foreach ($result->warnings as $warning) {
+                            Notification::make()
+                                ->title('Avertissement')
+                                ->body($warning)
+                                ->warning()
+                                ->send();
+                        }
+
+                        $this->dispatch('pending-file-deleted');
+                    }),
                 DeleteAction::make(),
             ])
             ->toolbarActions([
@@ -117,6 +206,54 @@ class UploadedFilesTable extends Component implements HasActions, HasSchemas, Ha
     {
         // Cette méthode sera appelée quand l'événement 'pending-file-deleted' est émis
         // Le tableau se rafraîchira automatiquement
+    }
+
+    /**
+     * Items modifiables par l'utilisateur courant, recherchés par cote.
+     *
+     * @return array<int, string>
+     */
+    public function itemOptions(string $search): array
+    {
+        $user = auth()->user();
+
+        if ($user === null) {
+            return [];
+        }
+
+        $candidates = Item::query()
+            ->when(filled($search), fn (Builder $query) => $query->where('code', 'like', "%{$search}%"))
+            ->orderBy('code')
+            ->limit(200)
+            ->get();
+
+        return $candidates
+            ->filter(fn (Item $item): bool => $user->can('update', $item))
+            ->take(50)
+            ->mapWithKeys(fn (Item $item): array => [$item->id => $this->formatItem($item)])
+            ->all();
+    }
+
+    public function itemLabel(mixed $value): ?string
+    {
+        $item = Item::find($value);
+
+        if (! $item instanceof Item) {
+            return null;
+        }
+
+        $user = auth()->user();
+
+        if ($user !== null && ! $user->can('update', $item)) {
+            return null;
+        }
+
+        return $this->formatItem($item);
+    }
+
+    private function formatItem(Item $item): string
+    {
+        return $item->title ? "{$item->code} — {$item->title}" : $item->code;
     }
 
     public function render()

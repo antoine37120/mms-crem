@@ -55,7 +55,11 @@ class MediaScan extends Command
 
         // Initialize Finder
         $finder = new Finder;
-        $finder->files()->in($scanPath)->ignoreDotFiles(true);
+        $finder->files()->in($scanPath)
+            ->ignoreDotFiles(true)
+            // Les originaux remplacés sont archivés ici : ne pas les scanner
+            // comme des fichiers orphelins.
+            ->notPath('#(^|/)_remplaces(/|$)#');
         // Add more filters if needed (e.g. valid extensions)
 
         if (! $finder->hasResults()) {

@@ -2,7 +2,9 @@
 
 namespace App\Filament\Resources\MediaAssocies\Pages;
 
+use App\Filament\Actions\ReplaceItemFileAction;
 use App\Filament\Resources\MediaAssocies\MediaAssocieResource;
+use App\Models\Item;
 use Filament\Actions\Action;
 use Filament\Actions\EditAction;
 use Filament\Resources\Pages\ViewRecord;
@@ -29,6 +31,7 @@ class ViewMediaAssocie extends ViewRecord
                     'id' => $record->id,
                 ]))
                 ->openUrlInNewTab(),
+            ReplaceItemFileAction::make(fn (): ?Item => $this->record instanceof Item ? $this->record : null),
             EditAction::make(),
         ];
     }
