@@ -26,7 +26,7 @@ class UploadManager extends Component
         $this->countCompletedPendingFiles();
     }
 
-    // #[On('pending-file-deleted')]
+    #[On('pending-file-deleted')]
     public function countCompletedPendingFiles()
     {
         $this->pending_files_count = PendingFile::completed()->byUser(auth()->id())->count();

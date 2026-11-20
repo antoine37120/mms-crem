@@ -61,6 +61,13 @@ class Item extends Model implements Auditable
     protected $appends = ['full_code', 'stats'];
 
     /**
+     * Drapeau transitoire (non persisté) : quand il est vrai, l'ItemObserver
+     * ne relance pas les traitements média. Utilisé par ItemFileReplacer qui
+     * gère lui-même un dispatch unique après le remplacement.
+     */
+    public bool $skipMediaProcessingOnUpdate = false;
+
+    /**
      * Attributes to exclude from the Audit.
      *
      * @var array
@@ -163,8 +170,11 @@ class Item extends Model implements Auditable
             return;
         }
 
+        // Chemin courant du fichier (source de la copie éventuelle)
+        $sourcePath = $this->file_path;
+
         // Déterminer le chemin complet du fichier
-        $fullPath = Storage::disk('original_medias')->path($this->file_path);
+        $fullPath = Storage::disk('original_medias')->path($sourcePath);
 
         if (! file_exists($fullPath)) {
             return;
@@ -175,9 +185,7 @@ class Item extends Model implements Auditable
         $this->file_type = mime_content_type($fullPath);
 
         // Extraire le nom et l'extension
-        $pathInfo = pathinfo($this->file_path);
-        /*$this->file_name = $pathInfo['basename'];
-        $this->file_name = "nnnnnn";*/
+        $pathInfo = pathinfo($sourcePath);
         $this->file_extension = strtolower($pathInfo['extension'] ?? '');
 
         $createdAt = now();
@@ -187,7 +195,7 @@ class Item extends Model implements Auditable
 
         // Si le fichier est déjà au bon endroit, pas besoin de le recopier
         // (évite la corruption de fichier par self-copy via Flysystem)
-        if ($this->file_path === $newFilePath) {
+        if ($sourcePath === $newFilePath) {
             return;
         }
 
@@ -195,29 +203,36 @@ class Item extends Model implements Auditable
         Storage::disk('original_medias')->makeDirectory($datePath);
         Storage::disk('original_medias')->putFileAs($datePath, new File($fullPath), $fileName);
 
-        $old_file = $this->getOriginal('file_path');
-        if ($old_file !== null) {
-            $old_file_path = Storage::disk('original_medias')->path($old_file);
-            if (file_exists($old_file_path)) {
-                Storage::disk('original_medias')->delete($old_file);
-            }
+        $oldFilePath = $this->getOriginal('file_path');
+
+        // Ne jamais supprimer la cible qui vient d'être écrite : si l'ancien
+        // chemin est aussi le chemin cible (même jour, même extension), le
+        // fichier qui s'y trouve est le nouveau.
+        if ($oldFilePath !== null
+            && $oldFilePath !== $newFilePath
+            && Storage::disk('original_medias')->exists($oldFilePath)) {
+            Storage::disk('original_medias')->delete($oldFilePath);
         }
 
-        // Possible que le fichier soit déjà au bon endroit mais qu'il ai été réécrit
-        if ($this->file_path != $newFilePath) {
-            Storage::disk('original_medias')->delete($this->file_path);
+        // Ne supprimer la source que si ce n'est ni la cible ni l'ancien
+        // chemin déjà traité ci-dessus.
+        if ($sourcePath !== $newFilePath
+            && $sourcePath !== $oldFilePath
+            && Storage::disk('original_medias')->exists($sourcePath)) {
+            Storage::disk('original_medias')->delete($sourcePath);
         }
+
         // Mettre à jour le chemin du fichier dans les données
         $this->file_path = $newFilePath;
 
         // Traitement spécifique selon le type de fichier
-        $this->processByFileType($fullPath);
+        $this->processByFileType(Storage::disk('original_medias')->path($newFilePath));
     }
 
     /**
      * Traitement spécifique selon le type de fichier
      */
-    private function processByFileType(string $fullPath): void
+    public function processByFileType(string $fullPath): void
     {
         if ($this->isAudio() || $this->isVideo()) {
             $this->extractMediaDuration($fullPath);
@@ -259,7 +274,10 @@ class Item extends Model implements Auditable
 
             // Méthode alternative avec FFMpeg si disponible
             if (function_exists('exec')) {
-                $ffprobePath = env('FFPROBE_BINARIES', 'ffprobe');
+                // `?:` et non la valeur par défaut : .env.example définit
+                // FFPROBE_BINARIES= (chaîne vide), ce qui produisait
+                // « sh: 1: : Permission denied ».
+                $ffprobePath = env('FFPROBE_BINARIES') ?: 'ffprobe';
 
                 $command = '"'.$ffprobePath.'" -v quiet -show_entries format=duration -hide_banner -of csv="p=0" "'.$fullPath.'"';
                 // log de la commande

@@ -26,26 +26,34 @@ class ItemObserver implements ShouldHandleEventsAfterCommit
      */
     public function updated(Item $item): void
     {
-        if ($item->isDirty('file_path') && $item->file_path) {
+        // L'observer est exécuté après le commit (ShouldHandleEventsAfterCommit) :
+        // isDirty() est alors toujours faux et getOriginal() renvoie déjà les
+        // nouvelles valeurs. wasChanged()/getPrevious() s'appuient sur le
+        // tableau `changes`, qui survit au commit.
+        if (! $item->skipMediaProcessingOnUpdate
+            && $item->wasChanged('file_path')
+            && $item->file_path) {
             app(MediaProcessor::class)->processItem($item);
         }
 
+        $previous = $item->getPrevious();
+
         // Si is_sub a changé, on doit recalculer
-        if ($item->isDirty('is_sub')) {
-            $this->decrementCounter($item, $item->getOriginal('is_sub'));
+        if ($item->wasChanged('is_sub')) {
+            $this->decrementCounter($item, (bool) ($previous['is_sub'] ?? false));
             $this->incrementCounter($item, $item->is_sub);
         }
 
         // Si itemable a changé (changement de collection)
-        if ($item->isDirty('itemable_id') || $item->isDirty('itemable_type')) {
+        if ($item->wasChanged('itemable_id') || $item->wasChanged('itemable_type')) {
             // Décrémenter l'ancienne collection
-            $originalType = $item->getOriginal('itemable_type');
-            $originalId = $item->getOriginal('itemable_id');
+            $originalType = $previous['itemable_type'] ?? null;
+            $originalId = $previous['itemable_id'] ?? null;
 
             if ($originalType === Collection::class) {
                 $oldCollection = Collection::find($originalId);
                 if ($oldCollection) {
-                    $this->updateCounter($oldCollection, $item->getOriginal('is_sub') ?? false, -1);
+                    $this->updateCounter($oldCollection, (bool) ($previous['is_sub'] ?? false), -1);
                 }
             }
 

@@ -2,6 +2,7 @@
 
 namespace App\Filament\Resources\Items\RelationManagers;
 
+use App\Filament\Actions\ReplaceItemFileAction;
 use App\Models\Item;
 use App\Models\ItemType;
 use Filament\Actions\Action;
@@ -211,6 +212,11 @@ class SubItemsRelationManager extends RelationManager
             ])
             ->recordActions([
                 ActionGroup::make([
+                    ReplaceItemFileAction::make(
+                        fn (): ?Item => $this->getMountedTableActionRecord() instanceof Item
+                            ? $this->getMountedTableActionRecord()
+                            : null
+                    ),
                     ViewAction::make()
                         ->url(fn ($record) => $record->is_sub
                             ? route('filament.mms-admin.resources.media-associes.view', ['record' => $record])
