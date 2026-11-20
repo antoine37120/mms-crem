@@ -85,7 +85,10 @@ class GenerateAudiowaveform implements ShouldQueue
                 $result = Process::timeout($this->timeout)->run($command);
                 $commandLog = implode(' ', $command);
             } else {
-                $command = escapeshellarg($ffmpegPath).' -i '.escapeshellarg($inputPath)
+                // -hide_banner -loglevel error : sans cela ffmpeg déverse son banner et sa
+                // progression sur stderr, que Symfony capture intégralement en mémoire.
+                $command = escapeshellarg($ffmpegPath).' -hide_banner -loglevel error'
+                    .' -i '.escapeshellarg($inputPath)
                     .' -vn -ac 1 -f wav - | '.escapeshellarg($audiowaveformPath)
                     .' --input-format wav -o '.escapeshellarg($outputFileAbsolute)
                     .' --pixels-per-second '.(int) $pixelsPerSecond
@@ -96,7 +99,8 @@ class GenerateAudiowaveform implements ShouldQueue
 
             // 4. Execute (result already obtained above)
             if ($result->failed()) {
-                throw new \Exception('Audiowaveform failed: '.$result->errorOutput());
+                // On ne garde que la fin de la sortie : le début est le banner ffmpeg.
+                throw new \Exception('Audiowaveform failed: '.substr($result->errorOutput(), -2000));
             }
 
             $fileSize = Storage::disk($diffusionDisk)->size($outputDir.'/'.$fileName);

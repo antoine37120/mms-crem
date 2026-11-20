@@ -108,6 +108,16 @@ it('uses ffmpeg pipe for aiff audio items', function () {
 
         return str_contains($command, 'audiowaveform') && str_contains($command, '--input-format wav');
     });
+
+    // ffmpeg doit être silencieux : sans ces flags il déverse son banner et sa progression
+    // sur stderr, que Symfony accumule en mémoire (cf. fatal « Allowed memory size exhausted »).
+    Process::assertRan(function ($process) {
+        $command = is_array($process->command) ? implode(' ', $process->command) : $process->command;
+
+        return str_contains($command, 'ffmpeg')
+            && str_contains($command, '-hide_banner')
+            && str_contains($command, '-loglevel error');
+    });
 });
 
 it('uses ffmpeg pipe for video items', function () {

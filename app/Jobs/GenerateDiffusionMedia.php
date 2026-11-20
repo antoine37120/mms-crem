@@ -115,6 +115,8 @@ class GenerateDiffusionMedia implements ShouldQueue
 
                 $command = [
                     $ffmpegPath,
+                    '-hide_banner',
+                    '-loglevel', 'error',
                     '-y',
                     '-i', $inputPath,
                     '-c:v', $videoCodec,
@@ -145,6 +147,8 @@ class GenerateDiffusionMedia implements ShouldQueue
 
                 $command = [
                     $ffmpegPath,
+                    '-hide_banner',
+                    '-loglevel', 'error',
                     '-y',
                     '-i', $inputPath,
                     '-c:a', $audioCodec,
@@ -168,7 +172,8 @@ class GenerateDiffusionMedia implements ShouldQueue
             $result = Process::timeout($this->timeout)->run($command);
 
             if ($result->failed()) {
-                throw new \Exception('FFmpeg failed: '.$result->errorOutput());
+                // On ne garde que la fin de la sortie : le début est le banner ffmpeg.
+                throw new \Exception('FFmpeg failed: '.substr($result->errorOutput(), -2000));
             }
 
             // Calculate total size of the generated folder
